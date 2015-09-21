@@ -29,8 +29,8 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTarget;
 import org.eclipse.swt.dnd.DropTargetAdapter;
 import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.polymap.core.runtime.i18n.IMessages;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
@@ -48,9 +48,11 @@ import org.polymap.rap.updownload.upload.Upload;
 import org.polymap.rhei.batik.DefaultPanel;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.app.SvgImageRegistryHelper;
+import org.polymap.rhei.batik.toolkit.md.ActionConfiguration;
 import org.polymap.rhei.batik.toolkit.md.MdListViewer;
+import org.polymap.rhei.batik.toolkit.md.MdToast;
+import org.polymap.rhei.batik.toolkit.md.MdToolbar;
 import org.polymap.rhei.batik.toolkit.md.MdToolkit;
-import org.polymap.rhei.batik.toolkit.md.Toast;
 
 /**
  * 
@@ -83,19 +85,23 @@ public class ShapeImportPanel
     @Override
     public void createContents( Composite parent ) {
         setTitle();
-        
+
         parent.setLayout( FormLayoutFactory.defaults().spacing( dp( 16 ).pix() ).create() );
         MdToolkit tk = (MdToolkit)getSite().toolkit();
 
-        Button importFab = createImportFAB( tk );
-        Toast toast = tk.createToast( 70, SWT.NONE );
+        MdToast toast = tk.createToast( 70, SWT.NONE );
+
+        ActionConfiguration importActionConfiguration = new ActionConfiguration().image.put( P4Plugin.images()
+                .svgImage( "import.svg", SvgImageRegistryHelper.NORMAL24 ) ).showName.put( false ).priority.put( 1 );
+        MdToolbar toolbar = tk.createToolbar( parent, "Import", false, SWT.NONE, importActionConfiguration );
+        toolbar.getControl().setData( RWT.CUSTOM_VARIANT, "atlas-panel-header" );
 
         MdListViewer fileList = tk.createListViewer( parent, SWT.VIRTUAL, SWT.FULL_SELECTION );
 
         IssueReporter issueReporter = new IssueReporter( toast );
         List<FileDescription> files = new ArrayList<FileDescription>();
-        ShapeImportPanelUpdater shapeImportPanelUpdater = createShapeImportPanelUpdater( importFab, issueReporter,
-                files, fileList );
+        ShapeImportPanelUpdater shapeImportPanelUpdater = createShapeImportPanelUpdater( importActionConfiguration,
+                issueReporter, files, fileList );
 
         final UploadHelper uploadHelper = new UploadHelper( files, shapeImportPanelUpdater, issueReporter );
         DropTargetAdapter dropTargetAdapter = uploadHelper.createDropTargetAdapter();
@@ -110,8 +116,7 @@ public class ShapeImportPanel
         Upload upload = new Upload( parent, SWT.NONE/* , Upload.SHOW_PROGRESS */);
         upload.setImage( P4Plugin.images().svgImage( "upload.svg", SvgImageRegistryHelper.NORMAL48 ) );
         upload.setText( "" );
-        upload.setData( RWT.TOOLTIP_MARKUP_ENABLED, true );
-        upload.setData( /*MarkupValidator.MARKUP_VALIDATION_DISABLED*/"org.eclipse.rap.rwt.markupValidationDisabled", false ); 
+        enableMarkup( upload );
         upload.setToolTipText( "<b>Drop</b> files here<br/>or <b>click</b> to open file dialog" );
         upload.setHandler( uploadHelper );
         FormDataFactory.on( upload ).fill().bottom( 100, -5 ).top( 90 );
@@ -120,6 +125,13 @@ public class ShapeImportPanel
         DropTarget labelDropTarget = new DropTarget( upload, DND.DROP_MOVE );
         labelDropTarget.setTransfer( new Transfer[] { ClientFileTransfer.getInstance() } );
         labelDropTarget.addDropListener( dropTargetAdapter );
+    }
+
+
+    private void enableMarkup( Control control ) {
+        control.setData( RWT.TOOLTIP_MARKUP_ENABLED, true );
+        control.setData( /* MarkupValidator.MARKUP_VALIDATION_DISABLED */"org.eclipse.rap.rwt.markupValidationDisabled",
+                false );
     }
 
 
@@ -139,20 +151,18 @@ public class ShapeImportPanel
 
         ColumnViewerToolTipSupport.enableFor( fileList );
 
-        fileList.getControl().setData( RWT.MARKUP_ENABLED, true );
-        fileList.getControl().setData(
-                /* MarkupValidator.MARKUP_VALIDATION_DISABLED */"org.eclipse.rap.rwt.markupValidationDisabled", false );
+        enableMarkup(fileList.getControl());
 
         FormDataFactory.on( fileList.getControl() ).fill().bottom( 90, -5 );
         return fileList;
     }
 
 
-    private ShapeImportPanelUpdater createShapeImportPanelUpdater( Button importFab, IssueReporter issueReporter,
-            List<FileDescription> files, MdListViewer fileList ) {
+    private ShapeImportPanelUpdater createShapeImportPanelUpdater( ActionConfiguration importActionConfiguration,
+            IssueReporter issueReporter, List<FileDescription> files, MdListViewer fileList ) {
         ShapeFileImporter shapeFileImporter = new ShapeFileImporter( this );
-        ShapeImportPanelUpdater shapeImportPanelUpdater = new ShapeImportPanelUpdater( files, fileList, importFab,
-                issueReporter, shapeFileImporter );
+        ShapeImportPanelUpdater shapeImportPanelUpdater = new ShapeImportPanelUpdater( files, fileList,
+                importActionConfiguration, issueReporter, shapeFileImporter );
         return shapeImportPanelUpdater;
     }
 
@@ -184,7 +194,6 @@ public class ShapeImportPanel
         fileList.firstLineLabelProvider.set( new ShapeImportCellLabelProvider() );
         fileList.secondLineLabelProvider.set( new MessageCellLabelProvider() );
         fileList.firstSecondaryActionProvider.set( new ShapeFileDeleteActionProvider( files, shapeImportPanelUpdater ) );
-//        fileList.setLabelProvider( new ShapeImportCellLabelProvider() );
     }
 
 
@@ -194,18 +203,5 @@ public class ShapeImportPanel
         fileList.setInput( files );
         InitFileListHelper initFileListHelper = new InitFileListHelper( files, shapeImportPanelUpdater, issueReporter );
         initFileListHelper.initFileList();
-    }
-
-
-    private Button createImportFAB( MdToolkit tk ) {
-        Button fab = tk.createFab( /*
-                                    * P4Plugin.instance().imageForName(
-                                    * "resources/icons/png/gray/16/import.png" ),
-                                    * SWT.UP | SWT.RIGHT
-                                    */);
-        fab.setToolTipText( "Import this uploaded Shapefile" );
-        fab.setVisible( false );
-        fab.moveAbove( null );
-        return fab;
     }
 }
