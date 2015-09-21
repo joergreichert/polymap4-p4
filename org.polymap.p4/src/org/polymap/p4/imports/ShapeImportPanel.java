@@ -107,6 +107,8 @@ public class ShapeImportPanel
         DropTargetAdapter dropTargetAdapter = uploadHelper.createDropTargetAdapter();
 
         initFileList( fileList, shapeImportPanelUpdater, issueReporter, dropTargetAdapter, files );
+        FormDataFactory.on( fileList.getControl() ).fill().top( toolbar.getControl() ).bottom( 90, -5 );
+        
         createUpload( parent, uploadHelper, dropTargetAdapter );
     }
 
@@ -116,7 +118,7 @@ public class ShapeImportPanel
         Upload upload = new Upload( parent, SWT.NONE/* , Upload.SHOW_PROGRESS */);
         upload.setImage( P4Plugin.images().svgImage( "upload.svg", SvgImageRegistryHelper.NORMAL48 ) );
         upload.setText( "" );
-        enableMarkup( upload );
+        getSite().toolkit().enableMarkup( upload );
         upload.setToolTipText( "<b>Drop</b> files here<br/>or <b>click</b> to open file dialog" );
         upload.setHandler( uploadHelper );
         FormDataFactory.on( upload ).fill().bottom( 100, -5 ).top( 90 );
@@ -126,14 +128,6 @@ public class ShapeImportPanel
         labelDropTarget.setTransfer( new Transfer[] { ClientFileTransfer.getInstance() } );
         labelDropTarget.addDropListener( dropTargetAdapter );
     }
-
-
-    private void enableMarkup( Control control ) {
-        control.setData( RWT.TOOLTIP_MARKUP_ENABLED, true );
-        control.setData( /* MarkupValidator.MARKUP_VALIDATION_DISABLED */"org.eclipse.rap.rwt.markupValidationDisabled",
-                false );
-    }
-
 
     private MdListViewer initFileList( MdListViewer fileList, ShapeImportPanelUpdater shapeImportPanelUpdater,
             IssueReporter issueReporter, DropTargetAdapter dropTargetAdapter, List<FileDescription> files ) {
@@ -151,9 +145,8 @@ public class ShapeImportPanel
 
         ColumnViewerToolTipSupport.enableFor( fileList );
 
-        enableMarkup(fileList.getControl());
+        getSite().toolkit().enableMarkup(fileList.getControl());
 
-        FormDataFactory.on( fileList.getControl() ).fill().bottom( 90, -5 );
         return fileList;
     }
 

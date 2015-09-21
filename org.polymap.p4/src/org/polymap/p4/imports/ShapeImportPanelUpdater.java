@@ -68,14 +68,16 @@ public class ShapeImportPanelUpdater
         boolean valid = new ShapeFileValidator().validateAll( files );
         if (valid) {
             List<FileDescription> shps = files.stream().flatMap( file -> file.getContainedFiles().stream() )
-                    .filter( cf -> cf.name.get().toLowerCase().endsWith( "." + ShapeFileFormats.SHP ) )
+                    .filter( cf -> cf.format.isPresent() && cf.format.get() == ShapeFileFormats.SHP )
                     .collect( Collectors.toList() );
             if (shps.size() > 0) {
                 callback = ( Object o ) -> {
-                    for (Object shp : shps) {
-                        UIUtils.activateCallback( "importFiles" );
-                        shapeFileImporter.importFiles( (File)shp );
-                        UIUtils.deactivateCallback( "importFiles" );
+                    for (FileDescription shp : shps) {
+                        if(shp.file.isPresent()) {
+                            UIUtils.activateCallback( "importFiles" );
+                            shapeFileImporter.importFiles( shp.file.get() );
+                            UIUtils.deactivateCallback( "importFiles" );
+                        }
                     }
                 };
                 importActionConfiguration.setCallback( callback );
@@ -83,7 +85,8 @@ public class ShapeImportPanelUpdater
                     issueReporter.showIssue( AbstractFeedbackComponent.MessageType.SUCCESS, root
                             + " successfully uploaded." );
                 }
-            } else {
+            }
+            else {
                 importActionConfiguration.setCallback( null );
             }
         }
