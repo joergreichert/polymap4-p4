@@ -12,7 +12,7 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  */
-package org.polymap.p4;
+package org.polymap.p4.ui;
 
 import org.eclipse.rap.selenium.RapBot;
 import org.junit.After;
