@@ -26,7 +26,11 @@ import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.p4.P4Plugin;
 import org.polymap.rhei.batik.IPanelSite;
@@ -61,7 +65,7 @@ public class StylePage
         this.panelSite = panelSite;
         this.styleDao = styleDao;
 
-        List<String> names = Lists.newArrayList( "Simple icon places", "Pin of maps", "Maki icons" );
+        List<String> names = Lists.newArrayList( "Predefined", "Simple icon places", "Pin of maps", "Maki icons" );
 
         Comparator<Pair<String,String>> comparator = ( Pair<String,String> pair1, Pair<String,String> pair2 ) -> Integer
                 .valueOf( names.indexOf( pair1.getLeft() ) ).compareTo( names.indexOf( pair2.getLeft() ) );
@@ -69,13 +73,17 @@ public class StylePage
 
         addToImageLibrary(
                 names.get( 0 ),
+                "well_known.lst",
+                "Predefined shapes by SLD" );
+        addToImageLibrary(
+                names.get( 1 ),
                 "simple-icon-places.lst",
                 "<a href=\"http://www.flaticon.com/packs/simpleicon-places/\">SimpleIcons Places</a>, designed by <a href=\"http://freepik.com\">freepik</a>" );
         addToImageLibrary(
-                names.get( 1 ),
+                names.get( 2 ),
                 "pin-of-maps.lst",
                 "<a href=\"http://www.flaticon.com/packs/pins-of-maps/\">Pin of maps</a>, designed by <a href=\"http://freepik.com\">freepik</a>" );
-        addToImageLibrary( names.get( 2 ), "mapzone_maki.lst",
+        addToImageLibrary( names.get( 3 ), "mapzone_maki.lst",
                 "<a href=\"https://github.com/mapbox/maki\">Maki icons</a>, designed by <a href=\"http://mapbox.com/\">Mapbox</a>" );
     }
 
