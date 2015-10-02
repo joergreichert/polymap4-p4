@@ -15,7 +15,11 @@
 package org.polymap.p4.style;
 
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
+import org.geotools.styling.SLD;
+import org.geotools.styling.StyledLayerDescriptor;
+import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -32,6 +36,8 @@ public class StylerDAO {
     public static final String          MARKER_SIZE                = "markerSize";
 
     public static final String          MARKER_FILL                = "markerFill";
+
+    public static final String          MARKER_ICON                = "markerIcon";
 
     public static final String          MARKER_TRANSPARENCY        = "markerTransparency";
 
@@ -58,6 +64,8 @@ public class StylerDAO {
     private Integer                     markerSize;
 
     private RGB                         markerFill;
+
+    private Image                       markerIcon;
 
     private Integer                     markerTransparency;
 
@@ -99,7 +107,7 @@ public class StylerDAO {
 
 
     public String getLabelFont() {
-        if(getLabelFontData() != null) {
+        if (getLabelFontData() != null) {
             labelFont = getLabelFontData().getName();
         }
         return labelFont;
@@ -107,7 +115,7 @@ public class StylerDAO {
 
 
     public Integer getLabelFontSize() {
-        if(getLabelFontData() != null) {
+        if (getLabelFontData() != null) {
             labelFontSize = getLabelFontData().getHeight();
         }
         return labelFontSize;
@@ -115,7 +123,7 @@ public class StylerDAO {
 
 
     public RGB getLabelFontColor() {
-        if(getLabelFontData() != null) {
+        if (getLabelFontData() != null) {
             labelFontSize = getLabelFontData().getStyle();
         }
         return labelFontColor;
@@ -149,6 +157,16 @@ public class StylerDAO {
 
     public void setMarkerFill( RGB markerFill ) {
         this.markerFill = markerFill;
+    }
+
+
+    public Image getMarkerIcon() {
+        return markerIcon;
+    }
+
+
+    public void setMarkerIcon( Image markerIcon ) {
+        this.markerIcon = markerIcon;
     }
 
 
@@ -189,5 +207,11 @@ public class StylerDAO {
 
     public void setMarkerStrokeTransparency( Integer markerStrokeTransparency ) {
         this.markerStrokeTransparency = markerStrokeTransparency;
+    }
+    
+    public StyledLayerDescriptor toSLD() {
+        StyledLayerDescriptorBuilder builder = new StyledLayerDescriptorBuilder();
+        
+        return builder.build();
     }
 }
