@@ -72,16 +72,25 @@ import org.polymap.core.data.pipeline.PipelineProcessorConfiguration;
 import org.polymap.core.data.pipeline.ProcessorResponse;
 import org.polymap.core.data.pipeline.ResponseHandler;
 import org.polymap.core.mapeditor.MapViewer;
+import org.polymap.p4.P4Plugin;
 import org.polymap.p4.data.P4PipelineIncubator;
 import org.polymap.p4.map.ProjectMapPanel;
+import org.polymap.p4.style.StylerDAO.FeatureType;
+import org.polymap.p4.style.color.IColorInfo;
+import org.polymap.p4.style.icon.IImageInfo;
+import org.polymap.p4.style.pages.LabelPage;
+import org.polymap.p4.style.pages.StyleIdentPage;
+import org.polymap.p4.style.pages.StylePage;
 import org.polymap.rap.openlayers.style.FillStyle;
 import org.polymap.rap.openlayers.style.StrokeStyle;
 import org.polymap.rap.openlayers.style.Style;
 import org.polymap.rap.openlayers.types.Color;
+import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.DefaultPanel;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.PanelIdentifier;
+import org.polymap.rhei.batik.Scope;
 import org.polymap.rhei.batik.toolkit.md.MdTabFolder;
 import org.polymap.rhei.batik.toolkit.md.MdToolkit;
 import org.polymap.rhei.form.batik.BatikFormContainer;
@@ -101,13 +110,15 @@ import com.vividsolutions.jts.geom.Polygon;
 public class StylerPanel
         extends DefaultPanel {
 
-    private static Log                  log = LogFactory.getLog( StylerPanel.class );
+    private static Log                  log         = LogFactory.getLog( StylerPanel.class );
 
-    public static final PanelIdentifier ID  = PanelIdentifier.parse( "styler" );
+    public static final PanelIdentifier ID          = PanelIdentifier.parse( "styler" );
 
     private IPanelSite                  site;
 
     private IAppContext                 context;
+
+    private BatikFormContainer          styleIdentPageContainer;
 
     private BatikFormContainer          labelPageContainer;
 
@@ -116,6 +127,18 @@ public class StylerPanel
     private Geometry                    geometry;
 
     private MapViewer                   mapViewer;
+
+    private StylerDAO                   styleDAO;
+
+    @Scope(P4Plugin.Scope)
+    private Context<IImageInfo>         imageInfo;
+
+    @Scope(P4Plugin.Scope)
+    private Context<IColorInfo>         colorInfo;
+
+    private StylePage                   stylePage;
+
+    private String                      lastOpenTab = null;
 
 
     @Override
@@ -138,9 +161,11 @@ public class StylerPanel
         setTitle();
         parent.setLayout( new GridLayout( 1, false ) );
 
-        StylerDAO styleDAO = new StylerDAO();
+        styleDAO = new StylerDAO();
+        styleIdentPageContainer = new BatikFormContainer( new StyleIdentPage( getSite(), styleDAO ) );
         labelPageContainer = new BatikFormContainer( new LabelPage( getSite(), styleDAO ) );
-        stylePageContainer = new BatikFormContainer( new StylePage( getSite(), styleDAO ) );
+        stylePage = new StylePage( getContext(), getSite(), styleDAO, imageInfo, colorInfo );
+        stylePageContainer = new BatikFormContainer( stylePage );
 
         internalCreateContents( parent );
     }
@@ -148,27 +173,59 @@ public class StylerPanel
 
     private void internalCreateContents( Composite parent ) {
         MdToolkit tk = (MdToolkit)getSite().toolkit();
+        Function<Composite,Composite> styleIdentTabItemContent = createStyleIdentTabItemContent( tk );
         Function<Composite,Composite> labelTabItemContent = createLabelTabItemContent( tk );
         Function<Composite,Composite> styleTabItemContent = createStyleTabItemContent( tk );
-        String labelStr = "Label", styleStr = "Geometry Style";
+        String styleIdentStr = "Identification", labelStr = "Label", styleStr = "Geometry Style";
         List<String> tabItems = new ArrayList<String>();
+        tabItems.add( styleIdentStr );
         tabItems.add( labelStr );
         tabItems.add( styleStr );
         Map<String,Function<Composite,Composite>> tabContents = new HashMap<String,Function<Composite,Composite>>();
+        tabContents.put( labelStr, styleIdentTabItemContent );
         tabContents.put( labelStr, labelTabItemContent );
         tabContents.put( styleStr, styleTabItemContent );
         MdTabFolder tabFolder = tk.createTabFolder( parent, tabItems, tabContents );
+        tabFolder.openTab( getLastOpenTab() );
+        tabFolder.addSelectionListener( new SelectionAdapter() {
+
+            @Override
+            public void widgetSelected( SelectionEvent e ) {
+                setLastOpenTab( ((Button)e.widget).getText() );
+            }
+        } );
         GridData gd = new GridData();
         gd.grabExcessHorizontalSpace = true;
         gd.horizontalAlignment = SWT.FILL;
         tabFolder.setLayoutData( gd );
-        try {
-            internalCreateMap( parent );
-        }
-        catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        // try {
+        // internalCreateMap( parent );
+        // }
+        // catch (Exception e) {
+        // // TODO Auto-generated catch block
+        // e.printStackTrace();
+        // }
+    }
+
+
+    public String getLastOpenTab() {
+        return this.lastOpenTab;
+    }
+
+
+    public void setLastOpenTab( String tabname ) {
+        this.lastOpenTab = tabname;
+    }
+
+
+    private Function<Composite,Composite> createStyleIdentTabItemContent( MdToolkit tk ) {
+        return new Function<Composite,Composite>() {
+
+            @Override
+            public Composite apply( Composite parent ) {
+                return createStyleIdentTabItemContent( tk, parent );
+            }
+        };
     }
 
 
@@ -194,6 +251,13 @@ public class StylerPanel
     }
 
 
+    private Composite createStyleIdentTabItemContent( MdToolkit tk, Composite parent ) {
+        Composite labelComposite = tk.createComposite( parent, SWT.NONE );
+        styleIdentPageContainer.createContents( labelComposite );
+        return labelComposite;
+    }
+
+
     private Composite createLabelTabItemContent( MdToolkit tk, Composite parent ) {
         Composite labelComposite = tk.createComposite( parent, SWT.NONE );
         labelPageContainer.createContents( labelComposite );
@@ -205,6 +269,31 @@ public class StylerPanel
         Composite styleComposite = tk.createComposite( parent, SWT.NONE );
         // FeatureSource fs = null;
         // Style style = new DefaultStyles().findStyle( fs );
+        FeatureType featureType = styleDAO.getFeatureType();
+        switch (featureType) {
+            case POINT: {
+                stylePageContainer.createContents( styleComposite );
+                break;
+            }
+            case LINE_STRING: {
+                stylePageContainer.createContents( styleComposite );
+                break;
+            }
+            case POLYGON: {
+                stylePageContainer.createContents( styleComposite );
+                break;
+            }
+            case RASTER: {
+                stylePageContainer.createContents( styleComposite );
+                break;
+            }
+        }
+        // createByGeometry( styleComposite );
+        return styleComposite;
+    }
+
+
+    private void createByGeometry( Composite styleComposite ) {
         Object geometry = getLayerDefaultGeometry();
         if (geometry instanceof com.vividsolutions.jts.geom.Point) {
             stylePageContainer.createContents( styleComposite );
@@ -218,7 +307,6 @@ public class StylerPanel
         else {
             stylePageContainer.createContents( styleComposite );
         }
-        return styleComposite;
     }
 
 

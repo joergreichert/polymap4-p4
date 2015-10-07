@@ -12,14 +12,13 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  */
-package org.polymap.p4.style;
+package org.polymap.p4.style.pages;
 
 import java.util.HashSet;
 
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.ui.ColumnLayoutFactory;
+import org.polymap.p4.style.StylerDAO;
 import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.field.BeanPropertyAdapter;
 import org.polymap.rhei.field.FontFormField;
@@ -40,15 +39,15 @@ public class LabelPage
         extends DefaultFormPage
         implements IFormFieldListener {
 
-    private final IPanelSite panelSite;
+    private final IPanelSite  panelSite;
 
-    private final StylerDAO  styleDao;
+    private final StylerDAO   styleDao;
 
     private PicklistFormField labelTextField;
 
-    private FontFormField fontFormField;
+    private FontFormField     fontFormField;
 
-    private SpinnerFormField spinnerFormField;
+    private SpinnerFormField  spinnerFormField;
 
 
     public LabelPage( IPanelSite panelSite, StylerDAO styleDao ) {
@@ -94,10 +93,13 @@ public class LabelPage
 
 
     private void createLabelTabItemContent( IFormPageSite site ) {
-        HashSet<String> labels = Sets.newHashSet( "", "TODO1", "TODO2" );
+        HashSet<String> labels = Sets.newHashSet( "", "<Placeholder>" );
         labelTextField = new PicklistFormField( labels );
         site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.LABEL_TEXT ) ).label.put( "Label text" ).field
-                .put( labelTextField ).tooltip.put( "" ).create();
+                .put( labelTextField ).tooltip.put(
+                "The actual label value can be assigned later when "
+                        + "combining this style with a layer resp. a feature type of that layer. "
+                        + "If you don't want to use labels, just leave this field blank." ).create();
         fontFormField = new FontFormField();
         fontFormField.setEnabled( false );
         site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.LABEL_FONT_DATA ) ).label
@@ -119,15 +121,16 @@ public class LabelPage
     @Override
     public void fieldChange( FormFieldEvent ev ) {
         if (ev.getEventCode() == VALUE_CHANGE) {
-            if(ev.getSource() ==  labelTextField) {
+            if (ev.getSource() == labelTextField) {
                 boolean newValueNotNull = ev.getNewFieldValue() != null;
                 fontFormField.setEnabled( newValueNotNull );
                 spinnerFormField.setEnabled( newValueNotNull );
             }
-//            Button okBtn = getButton( IDialogConstants.OK_ID );
-//            if (okBtn != null) {
-//                okBtn.setEnabled( pageContainer.isValid() && pageContainer.isValid() );
-//            }
+            // Button okBtn = getButton( IDialogConstants.OK_ID );
+            // if (okBtn != null) {
+            // okBtn.setEnabled( pageContainer.isValid() && pageContainer.isValid()
+            // );
+            // }
         }
     }
 }

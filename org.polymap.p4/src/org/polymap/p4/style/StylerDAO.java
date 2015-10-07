@@ -15,7 +15,6 @@
 package org.polymap.p4.style;
 
 import org.eclipse.swt.graphics.FontData;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.geotools.styling.StyledLayerDescriptor;
 import org.geotools.styling.builder.MarkBuilder;
@@ -25,6 +24,7 @@ import org.geotools.styling.builder.RuleBuilder;
 import org.geotools.styling.builder.StrokeBuilder;
 import org.geotools.styling.builder.StyleBuilder;
 import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
+import org.polymap.rhei.field.ImageDescription;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -32,7 +32,19 @@ import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
  */
 public class StylerDAO {
 
+    public enum FeatureType {
+        POINT, LINE_STRING, POLYGON, RASTER
+    }
+
+
+
     public static final String          LAYER_NAME                 = "layerName";
+
+    public static final String          USER_STYLE_NAME            = "userStyleName";
+
+    public static final String          USER_STYLE_TITLE           = "userStyleTitle";
+
+    public static final String          FEATURE_TYPE               = "featureType";
 
     public static final String          LABEL_TEXT                 = "labelText";
 
@@ -62,7 +74,7 @@ public class StylerDAO {
 
     private String                      userStyleTitle;
 
-    private String                      featureType;
+    private FeatureType                 featureType                = FeatureType.POINT;
 
     private String                      labelText;
 
@@ -82,7 +94,7 @@ public class StylerDAO {
 
     private RGB                         markerFill;
 
-    private Image                       markerIcon;
+    private ImageDescription            markerIcon;
 
     private Integer                     markerTransparency;
 
@@ -133,12 +145,12 @@ public class StylerDAO {
     }
 
 
-    public String getFeatureType() {
+    public FeatureType getFeatureType() {
         return featureType;
     }
 
 
-    public void setFeatureType( String featureType ) {
+    public void setFeatureType( FeatureType featureType ) {
         this.featureType = featureType;
     }
 
@@ -227,12 +239,12 @@ public class StylerDAO {
     }
 
 
-    public Image getMarkerIcon() {
+    public ImageDescription getMarkerIcon() {
         return markerIcon;
     }
 
 
-    public void setMarkerIcon( Image markerIcon ) {
+    public void setMarkerIcon( ImageDescription markerIcon ) {
         this.markerIcon = markerIcon;
     }
 
@@ -284,40 +296,45 @@ public class StylerDAO {
         StyleBuilder userStyle = namedLayer.style();
         userStyle.name( getUserStyleName() ).title( getUserStyleTitle() );
         RuleBuilder ruleBuilder = userStyle.featureTypeStyle().rule();
-        if ("point".equals( getFeatureType() )) {
-            PointSymbolizerBuilder pointBuilder = ruleBuilder.point();
-            pointBuilder.graphic().size( getMarkerSize() );
-            MarkBuilder markBuilder = pointBuilder.graphic().mark();
-            if (getMarkerWellKnownName() != null) {
-                markBuilder.name( getMarkerWellKnownName() );
-            }
-            if (getMarkerFill() != null) {
-                markBuilder.fill().color( toAwtColor( getMarkerFill() ) );
-            }
-            if (getMarkerTransparency() != null) {
-                markBuilder.fill().opacity( getMarkerTransparency() );
-            }
-            StrokeBuilder strokeBuilder = markBuilder.stroke();
-            if (getMarkerStrokeSize() != null && getMarkerStrokeSize() > 0) {
-                strokeBuilder.width( getMarkerStrokeSize() );
-                if (getMarkerStrokeColor() != null) {
-                    strokeBuilder.color( toAwtColor( getMarkerStrokeColor() ) );
+        switch (getFeatureType()) {
+            case POINT: {
+                PointSymbolizerBuilder pointBuilder = ruleBuilder.point();
+                pointBuilder.graphic().size( getMarkerSize() );
+                MarkBuilder markBuilder = pointBuilder.graphic().mark();
+                if (getMarkerWellKnownName() != null) {
+                    markBuilder.name( getMarkerWellKnownName() );
                 }
-                if (getMarkerStrokeTransparency() != null) {
-                    strokeBuilder.opacity( getMarkerStrokeTransparency() );
+                if (getMarkerFill() != null) {
+                    markBuilder.fill().color( toAwtColor( getMarkerFill() ) );
                 }
+                if (getMarkerTransparency() != null) {
+                    markBuilder.fill().opacity( getMarkerTransparency() );
+                }
+                StrokeBuilder strokeBuilder = markBuilder.stroke();
+                if (getMarkerStrokeSize() != null && getMarkerStrokeSize() > 0) {
+                    strokeBuilder.width( getMarkerStrokeSize() );
+                    if (getMarkerStrokeColor() != null) {
+                        strokeBuilder.color( toAwtColor( getMarkerStrokeColor() ) );
+                    }
+                    if (getMarkerStrokeTransparency() != null) {
+                        strokeBuilder.opacity( getMarkerStrokeTransparency() );
+                    }
+                }
+                break;
+            }
+            case LINE_STRING: {
+                ruleBuilder.line();
+                break;
+            }
+            case POLYGON: {
+                ruleBuilder.polygon();
+                break;
+            }
+            case RASTER: {
+                ruleBuilder.raster();
+                break;
             }
         }
-        else if ("line".equals( getFeatureType() )) {
-            ruleBuilder.line();
-        }
-        else if ("polygon".equals( getFeatureType() )) {
-            ruleBuilder.polygon();
-        }
-        else if ("raster".equals( getFeatureType() )) {
-            ruleBuilder.raster();
-        }
-
         return builder.build();
     }
 

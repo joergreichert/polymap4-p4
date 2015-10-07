@@ -71,6 +71,14 @@
             class="org.polymap.p4.style.StylerPanel"
             id="org.polymap.p4.StylerPanel">
       </panel>
+      <panel
+            class="org.polymap.p4.style.color.ColorPanel"
+            id="org.polymap.p4.ColorPanel">
+      </panel>
+      <panel
+            class="org.polymap.p4.style.icon.ImagePanel"
+            id="org.polymap.p4.ImagePanel">
+      </panel>
    </extension>
    <extension
          point="org.polymap.service.fs.contentProviders">

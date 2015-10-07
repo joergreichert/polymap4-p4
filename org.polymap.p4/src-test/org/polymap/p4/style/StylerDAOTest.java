@@ -25,6 +25,7 @@ import org.geotools.styling.SLDTransformer;
 import org.geotools.styling.StyledLayerDescriptor;
 import org.junit.Assert;
 import org.junit.Test;
+import org.polymap.p4.style.StylerDAO.FeatureType;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -36,7 +37,7 @@ public class StylerDAOTest {
     public void testStyleDAO() throws Exception {
         StylerDAO dao = new StylerDAO();
         dao.setUserStyleName( "MeinStyle" );
-        dao.setFeatureType( "point" );
+        dao.setFeatureType( FeatureType.POINT );
         dao.setMarkerWellKnownName( "Circle" );
         dao.setMarkerSize( 12 );
         dao.setMarkerFill( new RGB( 255, 255, 255 ) );
