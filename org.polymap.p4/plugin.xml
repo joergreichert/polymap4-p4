@@ -79,6 +79,10 @@
             class="org.polymap.p4.style.icon.ImagePanel"
             id="org.polymap.p4.ImagePanel">
       </panel>
+      <panel
+            class="org.polymap.p4.style.font.FontPanel"
+            id="org.polymap.p4.FontPanel">
+      </panel>
    </extension>
    <extension
          point="org.polymap.service.fs.contentProviders">

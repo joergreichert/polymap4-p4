@@ -16,9 +16,17 @@ package org.polymap.p4.style.pages;
 
 import java.util.HashSet;
 
+import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
+import org.polymap.core.runtime.event.EventManager;
 import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.p4.style.StylerDAO;
+import org.polymap.p4.style.font.FontInfo;
+import org.polymap.p4.style.font.FontPanel;
+import org.polymap.p4.style.font.IFontInfo;
+import org.polymap.rhei.batik.Context;
+import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.field.BeanPropertyAdapter;
 import org.polymap.rhei.field.FontFormField;
@@ -39,20 +47,32 @@ public class LabelPage
         extends DefaultFormPage
         implements IFormFieldListener {
 
-    private final IPanelSite  panelSite;
+    private final IAppContext        context;
 
-    private final StylerDAO   styleDao;
+    private final IPanelSite         panelSite;
 
-    private PicklistFormField labelTextField;
+    private final StylerDAO          styleDao;
 
-    private FontFormField     fontFormField;
+    private PicklistFormField        labelTextField;
 
-    private SpinnerFormField  spinnerFormField;
+    private FontFormField            fontFormField;
+
+    private SpinnerFormField         labelOffsetFormField;
+
+    private final Context<IFontInfo> fontInfoInContext;
 
 
-    public LabelPage( IPanelSite panelSite, StylerDAO styleDao ) {
+    public LabelPage( IAppContext context, IPanelSite panelSite, StylerDAO styleDao,
+            Context<IFontInfo> fontInfoInContext ) {
+        this.context = context;
         this.panelSite = panelSite;
         this.styleDao = styleDao;
+        this.fontInfoInContext = fontInfoInContext;
+
+        FontInfo fontInfo = new FontInfo();
+        fontInfoInContext.set( fontInfo );
+
+        EventManager.instance().subscribe( fontInfo, ev -> ev.getSource() instanceof IFontInfo );
     }
 
 
@@ -81,14 +101,6 @@ public class LabelPage
                 .margins( getPanelSite().getLayoutPreference().getSpacing() / 2 ).create() );
         createLabelTabItemContent( site );
         site.addFieldListener( this );
-
-        // init button state after fields and dialog have been initialized
-        // UIUtils.sessionDisplay().asyncExec( new Runnable() {
-        // public void run() {
-        // getButton( IDialogConstants.OK_ID ).setEnabled( pageContainer.isValid() &&
-        // pageContainer.isValid() );
-        // }
-        // });
     }
 
 
@@ -104,10 +116,10 @@ public class LabelPage
         fontFormField.setEnabled( false );
         site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.LABEL_FONT_DATA ) ).label
                 .put( "Label font" ).field.put( fontFormField ).tooltip.put( "" ).create();
-        spinnerFormField = new SpinnerFormField( -128, 128, -16 );
-        spinnerFormField.setEnabled( false );
+        labelOffsetFormField = new SpinnerFormField( -128, 128, -16 );
+        labelOffsetFormField.setEnabled( false );
         site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.LABEL_OFFSET ) ).label
-                .put( "Label offset" ).field.put( spinnerFormField ).tooltip.put( "" ).create();
+                .put( "Label offset" ).field.put( labelOffsetFormField ).tooltip.put( "" ).create();
     }
 
 
@@ -124,13 +136,17 @@ public class LabelPage
             if (ev.getSource() == labelTextField) {
                 boolean newValueNotNull = ev.getNewFieldValue() != null;
                 fontFormField.setEnabled( newValueNotNull );
-                spinnerFormField.setEnabled( newValueNotNull );
+                labelOffsetFormField.setEnabled( newValueNotNull );
             }
-            // Button okBtn = getButton( IDialogConstants.OK_ID );
-            // if (okBtn != null) {
-            // okBtn.setEnabled( pageContainer.isValid() && pageContainer.isValid()
-            // );
-            // }
+            else if (ev.getSource() == fontFormField) {
+                fontInfoInContext.get().setFormField( fontFormField );
+                Object[] array = (Object[])ev.getNewFieldValue();
+                if (array != null && array.length == 2) {
+                    fontInfoInContext.get().setFontData( new FontData[] { (FontData)array[0] } );
+                    fontInfoInContext.get().setColor( (RGB)array[1] );
+                }
+                context.openPanel( panelSite.getPath(), FontPanel.ID );
+            }
         }
     }
 }

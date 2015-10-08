@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.swt.widgets.Text;
 import org.polymap.core.runtime.event.EventManager;
 import org.polymap.p4.P4Plugin;
 import org.polymap.rhei.batik.Context;
@@ -129,7 +130,7 @@ public class ColorPanel
 
     private Spinner             spGreen;
 
-    private Label               colorHex;
+    private Text                colorHex;
 
     private MdToolkit           toolkit;
 
@@ -189,14 +190,19 @@ public class ColorPanel
 
 
     private void createControls( Composite panelBody ) {
-        
         createColorArea( panelBody );
         createPalette( panelBody );
+        createButtonBar( panelBody );
+    }
+
+
+    private void createButtonBar( Composite panelBody ) {
         Composite buttonBar = toolkit.createComposite( panelBody, SWT.NONE );
-        buttonBar.setLayout( new GridLayout(1, false) );
+        buttonBar.setLayout( new GridLayout( 1, false ) );
         applyButton = createApplyButton( buttonBar );
         GridData gridData = new GridData();
         gridData.horizontalAlignment = SWT.RIGHT;
+        gridData.grabExcessHorizontalSpace = true;
         applyButton.setData( gridData );
     }
 

@@ -14,6 +14,9 @@
  */
 package org.polymap.p4.style;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.RGB;
 import org.geotools.styling.StyledLayerDescriptor;
@@ -33,10 +36,32 @@ import org.polymap.rhei.field.ImageDescription;
 public class StylerDAO {
 
     public enum FeatureType {
-        POINT, LINE_STRING, POLYGON, RASTER
+        POINT("Point"), LINE_STRING("Line string"), POLYGON("Polygon"), RASTER("Raster");
+
+        private String label;
+
+
+        FeatureType( String label ) {
+            this.label = label;
+
+        }
+
+
+        public static List<FeatureType> getOrdered() {
+            return Arrays.asList( POINT, LINE_STRING, POLYGON, RASTER );
+        }
+
+
+        public String getLabel() {
+            return label;
+        }
+
+
+        public FeatureType getTypeForLabel( String label ) {
+            return Arrays.asList( values() ).stream().filter( value -> value.getLabel().equals( label ) ).findFirst()
+                    .get();
+        }
     }
-
-
 
     public static final String          LAYER_NAME                 = "layerName";
 

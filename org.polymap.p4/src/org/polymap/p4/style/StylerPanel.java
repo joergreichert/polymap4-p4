@@ -77,6 +77,7 @@ import org.polymap.p4.data.P4PipelineIncubator;
 import org.polymap.p4.map.ProjectMapPanel;
 import org.polymap.p4.style.StylerDAO.FeatureType;
 import org.polymap.p4.style.color.IColorInfo;
+import org.polymap.p4.style.font.IFontInfo;
 import org.polymap.p4.style.icon.IImageInfo;
 import org.polymap.p4.style.pages.LabelPage;
 import org.polymap.p4.style.pages.StyleIdentPage;
@@ -136,6 +137,9 @@ public class StylerPanel
     @Scope(P4Plugin.Scope)
     private Context<IColorInfo>         colorInfo;
 
+    @Scope(P4Plugin.Scope)
+    private Context<IFontInfo>          fontInfo;
+
     private StylePage                   stylePage;
 
     private String                      lastOpenTab = null;
@@ -163,7 +167,7 @@ public class StylerPanel
 
         styleDAO = new StylerDAO();
         styleIdentPageContainer = new BatikFormContainer( new StyleIdentPage( getSite(), styleDAO ) );
-        labelPageContainer = new BatikFormContainer( new LabelPage( getSite(), styleDAO ) );
+        labelPageContainer = new BatikFormContainer( new LabelPage( getContext(), getSite(), styleDAO, fontInfo ) );
         stylePage = new StylePage( getContext(), getSite(), styleDAO, imageInfo, colorInfo );
         stylePageContainer = new BatikFormContainer( stylePage );
 
@@ -182,7 +186,7 @@ public class StylerPanel
         tabItems.add( labelStr );
         tabItems.add( styleStr );
         Map<String,Function<Composite,Composite>> tabContents = new HashMap<String,Function<Composite,Composite>>();
-        tabContents.put( labelStr, styleIdentTabItemContent );
+        tabContents.put( styleIdentStr, styleIdentTabItemContent );
         tabContents.put( labelStr, labelTabItemContent );
         tabContents.put( styleStr, styleTabItemContent );
         MdTabFolder tabFolder = tk.createTabFolder( parent, tabItems, tabContents );
@@ -252,9 +256,9 @@ public class StylerPanel
 
 
     private Composite createStyleIdentTabItemContent( MdToolkit tk, Composite parent ) {
-        Composite labelComposite = tk.createComposite( parent, SWT.NONE );
-        styleIdentPageContainer.createContents( labelComposite );
-        return labelComposite;
+        Composite styleIdentComposite = tk.createComposite( parent, SWT.NONE );
+        styleIdentPageContainer.createContents( styleIdentComposite );
+        return styleIdentComposite;
     }
 
 

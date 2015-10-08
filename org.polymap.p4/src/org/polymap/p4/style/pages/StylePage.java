@@ -57,11 +57,15 @@ public class StylePage
 
     private final StylerDAO           styleDao;
 
+    private SpinnerFormField          markerSizeField;
+    
     private IconFormField             iconFormField;
 
     private EnablableFormField        backgroundFormEnabledField;
 
     private ColorFormField            backgroundFormField;
+
+    private SpinnerFormField          markerTransparencyField;
 
     private SpinnerFormField          markerStrokeSizeField;
 
@@ -125,8 +129,9 @@ public class StylePage
 
 
     private void createStyleTabItemForPoint( IFormPageSite site ) {
+        markerSizeField = new SpinnerFormField( 1, 128, 12 );
         site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.MARKER_SIZE ) ).label.put( "Marker size" ).field
-                .put( new SpinnerFormField( 1, 128, 12 ) ).tooltip.put( "" ).create();
+                .put( markerSizeField ).tooltip.put( "" ).create();
         backgroundFormField = new ColorFormField();
         if (colorInfoInContext.get().getColor() != null) {
             iconFormField.setValue( colorInfoInContext.get().getColor() );
@@ -144,8 +149,9 @@ public class StylePage
         }
         site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.MARKER_ICON ) ).label.put( "Marker icon" ).field
                 .put( iconFormField ).tooltip.put( "" ).create();
+        markerTransparencyField = new SpinnerFormField( 0, 1, 0.1, 1, 1 );
         site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.MARKER_TRANSPARENCY ) ).label
-                .put( "Marker transparency" ).field.put( new SpinnerFormField( 0, 1, 0.1, 1, 1 ) ).tooltip.put( "" )
+                .put( "Marker transparency" ).field.put( markerTransparencyField ).tooltip.put( "" )
                 .create();
         markerStrokeSizeField = new SpinnerFormField( 0, 32, 1 );
         site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.MARKER_STROKE_SIZE ) ).label
@@ -153,7 +159,7 @@ public class StylePage
         markerStrokeColorField = new ColorFormField();
         site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.MARKER_STROKE_COLOR ) ).label
                 .put( "Marker border color" ).field.put( markerStrokeColorField ).tooltip.put( "" ).create();
-        markerStrokeTransparencyField = new SpinnerFormField( 0, 1, 1 );
+        markerStrokeTransparencyField = new SpinnerFormField( 0, 1, 0.1, 1, 1 );
         site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.MARKER_STROKE_TRANSPARENCY ) ).label
                 .put( "Marker border transparency" ).field.put( markerStrokeTransparencyField ).tooltip.put( "" )
                 .create();
@@ -170,7 +176,29 @@ public class StylePage
     @Override
     public void fieldChange( FormFieldEvent ev ) {
         if (ev.getEventCode() == VALUE_CHANGE) {
-            if (ev.getSource() == markerStrokeSizeField) {
+            if (ev.getSource() == backgroundFormEnabledField) {
+                colorInfoInContext.get().setFormField( backgroundFormField );
+                Object [] array = (Object []) ev.getNewFieldValue();
+                if(array[0] == Boolean.TRUE) {
+                    colorInfoInContext.get().setColor( (RGB) array[1] );
+                    context.openPanel( panelSite.getPath(), ColorPanel.ID );
+                } else {
+                    styleDao.setMarkerFill( null );
+                }
+            }
+            else if (ev.getSource() == iconFormField) {
+                imageInfoInContext.get().setFormField( iconFormField );
+                imageInfoInContext.get().setImageDescription( ev.getNewFieldValue() );
+                context.openPanel( panelSite.getPath(), ImagePanel.ID );
+            }
+            else if (ev.getSource() == markerTransparencyField) {
+                boolean markerIsVisible = ev.getNewFieldValue() instanceof Integer
+                        && ((Integer)ev.getNewFieldValue()).intValue() > 0;
+                markerSizeField.setEnabled( markerIsVisible );
+                iconFormField.setEnabled( markerIsVisible );
+                backgroundFormEnabledField.setEnabled( markerIsVisible );
+            }
+            else if (ev.getSource() == markerStrokeSizeField) {
                 boolean strokeIsVisible = ev.getNewFieldValue() instanceof Integer
                         && ((Integer)ev.getNewFieldValue()).intValue() > 0;
                 markerStrokeColorField.setEnabled( strokeIsVisible );
@@ -181,21 +209,6 @@ public class StylePage
                         && ((Integer)ev.getNewFieldValue()).intValue() > 0;
                 markerStrokeSizeField.setEnabled( strokeIsVisible );
                 markerStrokeColorField.setEnabled( strokeIsVisible );
-            }
-            else if (ev.getSource() == iconFormField) {
-                imageInfoInContext.get().setFormField( iconFormField );
-                imageInfoInContext.get().setImageDescription( ev.getNewFieldValue() );
-                context.openPanel( panelSite.getPath(), ImagePanel.ID );
-            }
-            else if (ev.getSource() == backgroundFormEnabledField) {
-                colorInfoInContext.get().setFormField( backgroundFormField );
-                Object [] array = (Object []) ev.getNewFieldValue();
-                if(array[0] == Boolean.TRUE) {
-                    colorInfoInContext.get().setColor( (RGB) array[1] );
-                    context.openPanel( panelSite.getPath(), ColorPanel.ID );
-                } else {
-                    styleDao.setMarkerFill( null );
-                }
             }
             else if (ev.getSource() == markerStrokeColorField) {
                 colorInfoInContext.get().setFormField( markerStrokeColorField );
