@@ -390,7 +390,9 @@ public class ImagePanel
                 if (cell != null) {
                     Image image = imageMap.get( imgDesc );
                     if (image != null) {
-                        cell.setImage( image );
+                        if(!cell.getItem().isDisposed()) {
+                            cell.setImage( image );
+                        }
                     }
                 }
             }
