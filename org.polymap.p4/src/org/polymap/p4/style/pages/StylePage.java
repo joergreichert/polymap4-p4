@@ -14,6 +14,7 @@
  */
 package org.polymap.p4.style.pages;
 
+import org.eclipse.rap.rwt.service.ServerPushSession;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.runtime.event.EventManager;
@@ -37,6 +38,7 @@ import org.polymap.rhei.field.EnablableFormField;
 import org.polymap.rhei.field.FormFieldEvent;
 import org.polymap.rhei.field.IFormFieldListener;
 import org.polymap.rhei.field.IconFormField;
+import org.polymap.rhei.field.ImageDescription;
 import org.polymap.rhei.field.SpinnerFormField;
 import org.polymap.rhei.form.DefaultFormPage;
 import org.polymap.rhei.form.IFormPageSite;
@@ -90,6 +92,7 @@ public class StylePage
 
         ImageInfo imageInfo = new ImageInfo();
         imageInfo.setImageLibrary( iconLibraryInitializer.getImageLibrary() );
+        imageInfo.setPathToImageDescription(iconLibraryInitializer.getPathToImageDescription());
         imageInfoInContext.set( imageInfo );
 
         ColorInfo colorInfo = new ColorInfo();
@@ -145,7 +148,8 @@ public class StylePage
             iconFormField.setValue( imageInfoInContext.get().getImageDescription() );
         }
         else {
-            iconFormField.setValue( new ImageHelper().createImageDescription( DEFAULT_ICON_PATH ) );
+            ImageDescription imageDescription = new ImageHelper().createImageDescription( DEFAULT_ICON_PATH );
+            iconFormField.setValue( imageDescription );
         }
         site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.MARKER_ICON ) ).label.put( "Marker icon" ).field
                 .put( iconFormField ).tooltip.put( "" ).create();
@@ -189,7 +193,10 @@ public class StylePage
             else if (ev.getSource() == iconFormField) {
                 imageInfoInContext.get().setFormField( iconFormField );
                 imageInfoInContext.get().setImageDescription( ev.getNewFieldValue() );
+                final ServerPushSession pushSession = new ServerPushSession();
+                pushSession.start();
                 context.openPanel( panelSite.getPath(), ImagePanel.ID );
+                pushSession.stop();
             }
             else if (ev.getSource() == markerTransparencyField) {
                 boolean markerIsVisible = ev.getNewFieldValue() instanceof Integer

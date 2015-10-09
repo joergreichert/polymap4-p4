@@ -33,6 +33,7 @@ public interface IImageInfo
      */
     SortedMap<Pair<String,String>,List<ImageDescription>> getImageLibrary();
 
+    ImageDescription getImageDescriptionByPath(String path);
 
     /**
      * @param imageDescription

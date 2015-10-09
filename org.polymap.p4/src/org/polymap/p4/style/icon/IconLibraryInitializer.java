@@ -19,7 +19,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -38,6 +40,8 @@ public class IconLibraryInitializer {
 
     private final SortedMap<Pair<String,String>,List<ImageDescription>> imageLibrary;
 
+    private final Map<String,ImageDescription>                          pathToImageDescription;
+
 
     public IconLibraryInitializer() {
         imageHelper = new ImageHelper();
@@ -45,30 +49,39 @@ public class IconLibraryInitializer {
         Comparator<Pair<String,String>> comparator = ( Pair<String,String> pair1, Pair<String,String> pair2 ) -> Integer
                 .valueOf( names.indexOf( pair1.getLeft() ) ).compareTo( names.indexOf( pair2.getLeft() ) );
         imageLibrary = new TreeMap<Pair<String,String>,List<ImageDescription>>( comparator );
+        pathToImageDescription = new HashMap<String,ImageDescription>();
 
-        addToImageLibrary( names.get( 0 ), "well_known.lst", "Predefined shapes by SLD" );
+        List<String> paths = new ArrayList<String>();
+        addToImageLibrary( names.get( 0 ), "well_known.lst", "Predefined shapes by SLD", paths );
         addToImageLibrary(
                 names.get( 1 ),
                 "simple-icon-places.lst",
-                "<a href=\"http://www.flaticon.com/packs/simpleicon-places/\">SimpleIcons Places</a>, designed by <a href=\"http://freepik.com\">freepik</a>" );
+                "<a href=\"http://www.flaticon.com/packs/simpleicon-places/\">SimpleIcons Places</a>, designed by <a href=\"http://freepik.com\">freepik</a>",
+                paths );
         addToImageLibrary(
                 names.get( 2 ),
                 "pin-of-maps.lst",
-                "<a href=\"http://www.flaticon.com/packs/pins-of-maps/\">Pin of maps</a>, designed by <a href=\"http://freepik.com\">freepik</a>" );
-        addToImageLibrary( names.get( 3 ), "mapzone_maki.lst",
-                "<a href=\"https://github.com/mapbox/maki\">Maki icons</a>, designed by <a href=\"http://mapbox.com/\">Mapbox</a>" );
-
+                "<a href=\"http://www.flaticon.com/packs/pins-of-maps/\">Pin of maps</a>, designed by <a href=\"http://freepik.com\">freepik</a>",
+                paths );
+        addToImageLibrary(
+                names.get( 3 ),
+                "mapzone_maki.lst",
+                "<a href=\"https://github.com/mapbox/maki\">Maki icons</a>, designed by <a href=\"http://mapbox.com/\">Mapbox</a>",
+                paths );
+        getImageHelper().createImageDescriptorsCalculator( paths );
     }
 
 
-    private void addToImageLibrary( String name, String listFile, String markUpLicenceText ) {
+    private void addToImageLibrary( String name, String listFile, String markUpLicenceText, List<String> paths ) {
         List<ImageDescription> imageDescriptors = new ArrayList<ImageDescription>();
         try (BufferedReader br = new BufferedReader( new InputStreamReader( getClass().getResourceAsStream( listFile ) ) )) {
             String line;
             while ((line = br.readLine()) != null) {
                 final String imagePath = line;
+                paths.add( imagePath );
                 ImageDescription imageDescription = getImageHelper().createImageDescription( imagePath );
                 imageDescriptors.add( imageDescription );
+                pathToImageDescription.put( imagePath, imageDescription );
             }
         }
         catch (IOException e) {
@@ -85,5 +98,10 @@ public class IconLibraryInitializer {
 
     public SortedMap<Pair<String,String>,List<ImageDescription>> getImageLibrary() {
         return imageLibrary;
+    }
+
+
+    public Map<String,ImageDescription> getPathToImageDescription() {
+        return pathToImageDescription;
     }
 }

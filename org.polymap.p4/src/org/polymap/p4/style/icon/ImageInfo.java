@@ -16,12 +16,12 @@ package org.polymap.p4.style.icon;
 
 import java.util.EventObject;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedMap;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.p4.style.AbstractFormFieldInfo;
-import org.polymap.p4.style.color.IColorInfo;
 import org.polymap.rhei.field.ImageDescription;
 
 /**
@@ -32,9 +32,11 @@ public class ImageInfo
         extends AbstractFormFieldInfo
         implements IImageInfo {
 
-    private SortedMap<Pair<String,String>,List<ImageDescription>> imageLibrary;
+    private SortedMap<Pair<String,String>,List<ImageDescription>> imageLibrary           = null;
 
-    private ImageDescription                                      imageDescription = null;
+    private Map<String,ImageDescription>                          pathToImageDescription = null;
+
+    private ImageDescription                                      imageDescription       = null;
 
 
     /**
@@ -83,5 +85,27 @@ public class ImageInfo
                 getFormField().setValue( getImageDescription() );
             }
         } );
+    }
+
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.polymap.p4.style.icon.IImageInfo#getImageDescriptionByPath(java.lang.String
+     * )
+     */
+    @Override
+    public ImageDescription getImageDescriptionByPath( String path ) {
+        ImageDescription imgDesc = pathToImageDescription.get( path );
+        if(imgDesc == null) {
+            imgDesc = pathToImageDescription.get( path.replace( "resources/icons/", "" ) );
+        }
+        return imgDesc;
+    }
+
+
+    public void setPathToImageDescription( Map<String,ImageDescription> pathToImageDescription ) {
+        this.pathToImageDescription = pathToImageDescription;
     }
 }

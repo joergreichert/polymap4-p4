@@ -21,13 +21,15 @@ import java.util.EventObject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.ILazyContentProvider;
-import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
@@ -48,13 +50,14 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.ui.ISharedImages;
-import org.eclipse.ui.PlatformUI;
+import org.polymap.core.runtime.Callback;
+import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.runtime.event.EventManager;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.core.ui.UIUtils;
 import org.polymap.p4.P4Plugin;
+import org.polymap.rhei.batik.BatikPlugin;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.DefaultPanel;
 import org.polymap.rhei.batik.PanelIdentifier;
@@ -74,41 +77,34 @@ public class ImagePanel
     /**
      * 
      */
-    private static final String         TABLE_IMAGE_SELECTION_STYLE = "imageSelection";
+    private static final String                   TABLE_IMAGE_SELECTION_STYLE = "imageSelection";
 
-    public static final PanelIdentifier ID                          = PanelIdentifier.parse( "image" );
+    public static final PanelIdentifier           ID                          = PanelIdentifier.parse( "image" );
 
-    private static final int            IMAGE_BOXES_IN_ROW          = 8;
+    private static final int                      IMAGE_BOXES_IN_ROW          = 8;
 
-    private static final int            PALETTE_BOX_SIZE            = 64;
+    private static final int                      PALETTE_BOX_SIZE            = 64;
 
-    private ImageDescription            imageDescription;
+    private ImageDescription                      imageDescription;
 
     @Scope(P4Plugin.Scope)
-    private Context<IImageInfo>         imageInfo;
+    private Context<IImageInfo>                   imageInfo;
 
-    private MdToolkit                   toolkit;
+    private MdToolkit                             toolkit;
 
-    private Image                       loadingImage                = getScaledImage(
+    private Image                                 loadingImage                = null;
 
-                                                                            // RheiFormPlugin.getDefault().getImageRegistry().get(
-                                                                            // "resources/icons/loading.gif"
-                                                                            // )
+    private Button                                applyButton;
 
-                                                                            PlatformUI
-                                                                                    .getWorkbench()
-                                                                                    .getSharedImages()
-                                                                                    .getImage(
-                                                                                            ISharedImages.IMG_OBJ_ELEMENT ),
-                                                                            PALETTE_BOX_SIZE, PALETTE_BOX_SIZE );
+    private Color                                 originalTableCellBackground = null;
 
-    private Button                      applyButton;
+    private ViewerCell                            lastSelectedTableCell       = null;
 
-    private Color                       originalTableCellBackground = null;
+    private String                                tabWithSelection;
 
-    private ViewerCell                  lastSelectedTableCell       = null;
+    private ConcurrentMap<ImageDescription,Image> imageMap                    = new ConcurrentHashMap<ImageDescription,Image>();
 
-    protected String                    tabWithSelection;
+    private Map<ImageDescription,ViewerCell>      cellMapping                 = new HashMap<ImageDescription,ViewerCell>();
 
 
     public ImagePanel() {
@@ -177,6 +173,46 @@ public class ImagePanel
         FormDataFactory.on( tabFolder ).top( 0 ).left( 0 ).right( 100 );
         createApplyButton( comp );
         FormDataFactory.on( applyButton ).top( tabFolder, dp( 30 ).pix() ).right( 100, -5 );
+
+        setImages();
+    }
+
+
+    private void setImages() {
+        EventManager.instance().subscribe( this, ( EventObject eo ) -> eo.getSource() instanceof ImageDescription );
+        Display display = Display.getCurrent();
+        Callback<Map<String,ImageDescriptor>> callback = new Callback<Map<String,ImageDescriptor>>() {
+
+            @Override
+            public void handle( Map<String,ImageDescriptor> result ) {
+                display.asyncExec( new Runnable() {
+
+                    public void run() {
+                        try {
+                            if (result != null) {
+                                for (Map.Entry<String,ImageDescriptor> entry : result.entrySet()) {
+                                    Image image = entry.getValue().createImage();
+                                    if (image != null) {
+                                        ImageDescription imageDesc = imageInfo.get().getImageDescriptionByPath(
+                                                entry.getKey() );
+                                        if (imageDesc != null) {
+                                            Image scaledImage = getScaledImage( image, PALETTE_BOX_SIZE,
+                                                    PALETTE_BOX_SIZE );
+                                            imageMap.put( imageDesc, scaledImage );
+                                            EventManager.instance().publish( new EventObject( imageDesc ) );
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    };
+                } );
+            }
+        };
+        ImageDescription.createImagesForSize( PALETTE_BOX_SIZE, display, callback );
     }
 
 
@@ -195,13 +231,14 @@ public class ImagePanel
                 createTableColumns( nameAndLicenceText.getLeft(), tableViewer );
                 List<List<ImageDescription>> listOfLists = createTableInput( nameAndLicenceText );
                 tableViewer.setContentProvider( createImageContentProvider( tableViewer, listOfLists ) );
+                // tableViewer.setUseHashlookup(true);
+                tableViewer.setItemCount( listOfLists.size() );
                 tableViewer.setInput( listOfLists );
                 tableViewer.getControl().setCursor( new Cursor( parent.getDisplay(), SWT.CURSOR_HAND ) );
 
                 Label licenceLabel = createLicenceLabel( nameAndLicenceText, comp );
 
-                FormDataFactory.on( tableViewer.getControl() ).top( 0 ).left( 0 ).right( 100 )
-                        .height( dp( 500 ).pix() );
+                FormDataFactory.on( tableViewer.getControl() ).top( 0 ).left( 0 ).right( 100 ).height( dp( 500 ).pix() );
                 FormDataFactory.on( licenceLabel ).top( tableViewer.getControl(), dp( 30 ).pix() );
 
                 return comp;
@@ -220,7 +257,7 @@ public class ImagePanel
                 imageInfo.get().setImageDescription( getImageDescription() );
                 PanelPath path = getSite().getPath();
                 getContext().closePanel( path );
-                EventManager.instance().publish( new EventObject(imageInfo.get()));
+                EventManager.instance().publish( new EventObject( imageInfo.get() ) );
             }
         } );
     }
@@ -278,9 +315,24 @@ public class ImagePanel
             int currentIndex = i;
             columnView.setLabelProvider( new ColumnLabelProvider() {
 
+                @SuppressWarnings("unused")
+                private String dummy = init();
+
+
+                private String init() {
+                    return null;
+                }
+
+                private Image scaledLoadingImage = null;
+
+
                 public void update( ViewerCell cell ) {
                     super.update( cell );
                     selectCellIfElementMatch( cell );
+                    ImageDescription imageDesc = getTypedElement( cell.getElement() );
+                    if (imageDesc != null) {
+                        cellMapping.put( imageDesc, cell );
+                    }
                 }
 
 
@@ -308,8 +360,17 @@ public class ImagePanel
                 public Image getImage( Object element ) {
                     ImageDescription imageDesc = getTypedElement( element );
                     if (imageDesc != null) {
-                        return getScaledImage( imageDesc.getImageForSize( PALETTE_BOX_SIZE ).createImage(),
-                                PALETTE_BOX_SIZE, PALETTE_BOX_SIZE );
+                        if (imageMap.containsKey( imageDesc )) {
+                            return imageMap.get( imageDesc );
+                        }
+                        else {
+                            if (scaledLoadingImage == null) {
+                                loadingImage = ImageDescriptor.createFromURL(
+                                        BatikPlugin.instance().getBundle().getResource( "resources/icons/loading.gif" ) ).createImage();
+                                scaledLoadingImage = getScaledImage( loadingImage, PALETTE_BOX_SIZE, PALETTE_BOX_SIZE );
+                            }
+                            return scaledLoadingImage;
+                        }
                     }
                     else {
                         return null;
@@ -317,6 +378,23 @@ public class ImagePanel
                 }
             } );
         }
+    }
+
+
+    @EventHandler(delay = 100, display = true)
+    protected void imageAvailable( List<EventObject> evs ) {
+        evs.forEach( ev -> {
+            if (ev.getSource() instanceof ImageDescription) {
+                ImageDescription imgDesc = (ImageDescription)ev.getSource();
+                ViewerCell cell = cellMapping.get( imgDesc );
+                if (cell != null) {
+                    Image image = imageMap.get( imgDesc );
+                    if (image != null) {
+                        cell.setImage( image );
+                    }
+                }
+            }
+        } );
     }
 
 
@@ -335,29 +413,6 @@ public class ImagePanel
 
     private IContentProvider createImageContentProvider( TableViewer tableViewer,
             List<List<ImageDescription>> listOfLists ) {
-        return new IStructuredContentProvider() {
-
-            @Override
-            public void dispose() {
-            }
-
-
-            @Override
-            public void inputChanged( Viewer viewer, Object oldInput, Object newInput ) {
-            }
-
-
-            @Override
-            public Object[] getElements( Object inputElement ) {
-                return listOfLists.toArray();
-            }
-
-        };
-    }
-
-
-    private IContentProvider createImageContentProvider2( TableViewer tableViewer,
-            List<List<ImageDescription>> listOfLists ) {
         return new ILazyContentProvider() {
 
             @Override
@@ -374,13 +429,9 @@ public class ImagePanel
             public void updateElement( int index ) {
                 if (!tableViewer.isBusy()) {
                     List<ImageDescription> imageDescs = listOfLists.get( index );
-                    for (ImageDescription imageDesc : imageDescs) {
-                        imageDesc.getImageForSize( PALETTE_BOX_SIZE );
-                    }
                     tableViewer.replace( imageDescs, index );
                 }
             }
-
         };
     }
 

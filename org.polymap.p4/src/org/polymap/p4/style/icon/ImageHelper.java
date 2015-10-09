@@ -14,6 +14,14 @@
  */
 package org.polymap.p4.style.icon;
 
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+
+import org.apache.commons.lang3.tuple.Triple;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.widgets.Display;
+import org.polymap.core.runtime.Callback;
 import org.polymap.p4.P4Plugin;
 import org.polymap.rhei.batik.app.SvgImageRegistryHelper;
 import org.polymap.rhei.batik.app.SvgImageRegistryHelper.SvgConfiguration;
@@ -28,10 +36,24 @@ import org.polymap.rhei.field.ImageDescription;
 public class ImageHelper {
 
     public ImageDescription createImageDescription( final String imagePath ) {
-        return new ImageDescription().localURL.put( imagePath ).imageDescriptorSupplier.put( ( Integer size ) -> {
+        Consumer<Triple<Integer,Display,Callback<ImageDescriptor>>> calc = (
+                Triple<Integer,Display,Callback<ImageDescriptor>> triple ) -> {
             SvgImageRegistryHelper registry = P4Plugin.images();
-            return registry.svgImageDescriptor( imagePath, getConfigName( registry, size ) );
-        } );
+            registry.svgImageDescriptor( imagePath, getConfigName( registry, triple.getLeft() ), triple.getMiddle(),
+                    triple.getRight() );
+        };
+        return new ImageDescription().localURL.put( imagePath ).imageDescriptorCalculator.put( calc );
+    }
+
+
+    public void createImageDescriptorsCalculator( final List<String> imagePaths ) {
+        Consumer<Triple<Integer,Display,Callback<Map<String,ImageDescriptor>>>> calc = (
+                Triple<Integer,Display,Callback<Map<String,ImageDescriptor>>> triple ) -> {
+            SvgImageRegistryHelper registry = P4Plugin.images();
+            registry.svgImageDescriptors( imagePaths, getConfigName( registry, triple.getLeft() ), triple.getMiddle(),
+                    triple.getRight() );
+        };
+        ImageDescription.setImageDescriptorsCalculator( calc );
     }
 
 
