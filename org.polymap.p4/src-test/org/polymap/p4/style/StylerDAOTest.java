@@ -16,13 +16,16 @@ package org.polymap.p4.style;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.InputStreamReader;
 
 import javax.xml.transform.TransformerException;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.swt.graphics.RGB;
+import org.geoserver.catalog.SLDHandler;
 import org.geotools.styling.SLDTransformer;
 import org.geotools.styling.StyledLayerDescriptor;
+import org.geotools.util.Version;
 import org.junit.Assert;
 import org.junit.Test;
 import org.polymap.p4.style.StylerDAO.FeatureType;
@@ -47,6 +50,24 @@ public class StylerDAOTest {
         String actual = writeSLDToString( sld );
         String expected = FileUtils.readFileToString( new File( getClass().getResource( "simple_sld.xml" ).toURI() ) );
         Assert.assertEquals( expected, actual );
+    }
+
+
+    @Test
+    public void testFromStyleDAO() throws Exception {
+        InputStreamReader reader = new InputStreamReader( getClass().getResourceAsStream( "simple_sld.xml" ) );
+        String styleFormat = SLDHandler.FORMAT;
+        Version styleVersion = new Version("1.0.0");
+        StyledLayerDescriptor sld = /*Styles.handler( styleFormat )*/new SLDHandler().parse( reader, styleVersion, null, null );
+
+        StylerDAO dao = new StylerDAO( sld );
+        Assert.assertEquals( "MeinStyle", dao.getUserStyleName() );
+        Assert.assertEquals( FeatureType.POINT, dao.getFeatureType() );
+        Assert.assertEquals( "Circle", dao.getMarkerWellKnownName() );
+        Assert.assertSame( 12, dao.getMarkerSize() );
+        Assert.assertEquals( new RGB( 255, 255, 255 ).toString(), dao.getMarkerFill().toString() );
+        Assert.assertEquals( new RGB( 0, 0, 0 ).toString(), dao.getMarkerStrokeColor().toString() );
+        Assert.assertSame( 3, dao.getMarkerStrokeSize() );
     }
 
 

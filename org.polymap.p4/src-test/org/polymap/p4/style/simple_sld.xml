@@ -11,6 +11,12 @@
                             <sld:Mark>
                                 <sld:WellKnownName>Circle</sld:WellKnownName>
                                 <sld:Fill>
+                                    <sld:GraphicFill>
+                                        <sld:Graphic>
+                                            <sld:Mark/>
+                                            <sld:Size>12.0</sld:Size>
+                                        </sld:Graphic>
+                                    </sld:GraphicFill>
                                     <sld:CssParameter name="fill">#FFFFFF</sld:CssParameter>
                                 </sld:Fill>
                                 <sld:Stroke>

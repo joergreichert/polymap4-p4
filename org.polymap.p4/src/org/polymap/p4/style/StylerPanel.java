@@ -14,19 +14,30 @@
  */
 package org.polymap.p4.style;
 
+import static org.polymap.rhei.batik.toolkit.md.dp.dp;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.eclipse.jface.viewers.CellLabelProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Text;
+import org.geotools.styling.StyledLayerDescriptor;
+import org.polymap.core.ui.FormDataFactory;
+import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.p4.P4Plugin;
 import org.polymap.p4.map.ProjectMapPanel;
 import org.polymap.p4.style.StylerDAO.FeatureType;
@@ -40,6 +51,7 @@ import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.DefaultPanel;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.Scope;
+import org.polymap.rhei.batik.toolkit.md.MdListViewer;
 import org.polymap.rhei.batik.toolkit.md.MdTabFolder;
 import org.polymap.rhei.batik.toolkit.md.MdToolkit;
 import org.polymap.rhei.form.batik.BatikFormContainer;
@@ -70,9 +82,21 @@ public class StylerPanel
     @Scope(P4Plugin.Scope)
     private Context<IFontInfo>          fontInfo;
 
+    private StyleIdentPage              identPage;
+
+    private LabelPage                   labelPage;
+
     private StylePage                   stylePage;
 
     private String                      lastOpenTab = null;
+
+    private Button                      loadButton, saveButton, deleteButton;
+
+    private List<StyledLayerDescriptor> styles      = new ArrayList<StyledLayerDescriptor>();
+
+    private MdListViewer                styleList;
+
+    private Text                        styleListFilter;
 
 
     @Override
@@ -93,11 +117,13 @@ public class StylerPanel
     @Override
     public void createContents( Composite parent ) {
         setTitle();
-        parent.setLayout( new GridLayout( 1, false ) );
+        parent.setLayout( FormLayoutFactory.defaults().spacing( dp( 16 ).pix() ).create() );
 
         styleDAO = new StylerDAO();
-        styleIdentPageContainer = new BatikFormContainer( new StyleIdentPage( getSite(), styleDAO ) );
-        labelPageContainer = new BatikFormContainer( new LabelPage( getContext(), getSite(), styleDAO, fontInfo ) );
+        identPage = new StyleIdentPage( getSite(), styleDAO );
+        styleIdentPageContainer = new BatikFormContainer( identPage );
+        labelPage = new LabelPage( getContext(), getSite(), styleDAO, fontInfo );
+        labelPageContainer = new BatikFormContainer( labelPage );
         stylePage = new StylePage( getContext(), getSite(), styleDAO, imageInfo, colorInfo );
         stylePageContainer = new BatikFormContainer( stylePage );
 
@@ -128,10 +154,113 @@ public class StylerPanel
                 setLastOpenTab( ((Button)e.widget).getText() );
             }
         } );
-        GridData gd = new GridData();
-        gd.grabExcessHorizontalSpace = true;
-        gd.horizontalAlignment = SWT.FILL;
-        tabFolder.setLayoutData( gd );
+        FormDataFactory.on( tabFolder ).left( 0 ).right( 100 );
+
+        styleListFilter = tk.createText( parent, "", SWT.NONE );
+        styleListFilter.addModifyListener( new ModifyListener() {
+
+            @Override
+            public void modifyText( ModifyEvent event ) {
+                styleList.setInput( styles.stream().filter(
+                        style -> style.getName().startsWith( styleListFilter.getText() ) ) );
+            }
+        } );
+        FormDataFactory.on( styleListFilter ).top( tabFolder, dp( 30 ).pix() ).left( 0 ).right( 100 );
+
+        styleList = tk.createListViewer( parent, SWT.NONE );
+        styleList.firstLineLabelProvider.set( new CellLabelProvider() {
+
+            @Override
+            public void update( ViewerCell cell ) {
+                StyledLayerDescriptor desc = (StyledLayerDescriptor)cell.getElement();
+                cell.setText( desc.getTitle() == null ? desc.getName() : desc.getTitle() );
+            }
+        } );
+        styleList.setContentProvider( new ITreeContentProvider() {
+
+            List<StyledLayerDescriptor> styles;
+
+
+            @Override
+            public void inputChanged( Viewer viewer, Object oldInput, Object newInput ) {
+                styles = (List<StyledLayerDescriptor>)newInput;
+            }
+
+
+            @Override
+            public void dispose() {
+            }
+
+
+            @Override
+            public boolean hasChildren( Object element ) {
+                return false;
+            }
+
+
+            @Override
+            public Object getParent( Object element ) {
+                return null;
+            }
+
+
+            @Override
+            public Object[] getElements( Object inputElement ) {
+                return styles.toArray();
+            }
+
+
+            @Override
+            public Object[] getChildren( Object parentElement ) {
+                return null;
+            }
+        } );
+        styleList.setInput( styles );
+
+        FormDataFactory.on( styleList.getControl() ).top( styleListFilter, dp( 30 ).pix() ).left( 0 ).right( 100 );
+
+        Composite buttonBar = tk.createComposite( parent, SWT.NONE );
+        FormDataFactory.on( buttonBar ).top( styleList.getControl(), dp( 30 ).pix() ).left( 0 ).right( 100 );
+        buttonBar.setLayout( FormLayoutFactory.defaults().spacing( dp( 16 ).pix() ).create() );
+
+        saveButton = tk.createButton( buttonBar, "Save Style", SWT.NONE );
+        saveButton.addSelectionListener( new SelectionAdapter() {
+
+            public void widgetSelected( SelectionEvent e ) {
+                styles.add( styleDAO.toSLD() );
+                // TODO save
+                styleList.refresh();
+                styleDAO = new StylerDAO();
+            }
+        } );
+
+        loadButton = tk.createButton( buttonBar, "Load Style", SWT.NONE );
+        loadButton.addSelectionListener( new SelectionAdapter() {
+
+            public void widgetSelected( SelectionEvent e ) {
+                IStructuredSelection selection = (IStructuredSelection)styleList.getSelection();
+                StyledLayerDescriptor style = (StyledLayerDescriptor)selection.getFirstElement();
+                styleDAO = new StylerDAO( style );
+            }
+        } );
+
+        deleteButton = tk.createButton( buttonBar, "Delete Style", SWT.NONE );
+        deleteButton.addSelectionListener( new SelectionAdapter() {
+
+            public void widgetSelected( SelectionEvent e ) {
+                IStructuredSelection selection = (IStructuredSelection)styleList.getSelection();
+                StyledLayerDescriptor style = (StyledLayerDescriptor)selection.getFirstElement();
+                // TODO delete
+                styles.remove( style );
+                styleList.refresh();
+                styleDAO = new StylerDAO();
+            }
+        } );
+
+        FormDataFactory.on( saveButton ).right( loadButton, dp( 30 ).pix() );
+        FormDataFactory.on( loadButton ).right( deleteButton, dp( 30 ).pix() );
+        FormDataFactory.on( deleteButton ).right( 100 );
+
         // try {
         // new StylePreview().createPreviewMap( parent, getStylerDao() );
         // }

@@ -14,12 +14,27 @@
  */
 package org.polymap.p4.style;
 
+import java.awt.Color;
 import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.RGB;
+import org.geotools.filter.expression.AbstractExpressionVisitor;
+import org.geotools.renderer.lite.gridcoverage2d.StyleVisitorAdapter;
+import org.geotools.styling.ExternalGraphic;
+import org.geotools.styling.FeatureTypeStyle;
+import org.geotools.styling.Mark;
+import org.geotools.styling.NamedLayer;
+import org.geotools.styling.PointSymbolizer;
+import org.geotools.styling.Rule;
+import org.geotools.styling.Stroke;
+import org.geotools.styling.Style;
+import org.geotools.styling.StyleVisitor;
+import org.geotools.styling.StyledLayer;
 import org.geotools.styling.StyledLayerDescriptor;
+import org.geotools.styling.Symbolizer;
+import org.geotools.styling.UserLayer;
 import org.geotools.styling.builder.MarkBuilder;
 import org.geotools.styling.builder.NamedLayerBuilder;
 import org.geotools.styling.builder.PointSymbolizerBuilder;
@@ -27,6 +42,9 @@ import org.geotools.styling.builder.RuleBuilder;
 import org.geotools.styling.builder.StrokeBuilder;
 import org.geotools.styling.builder.StyleBuilder;
 import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
+import org.opengis.filter.expression.ExpressionVisitor;
+import org.opengis.filter.expression.Literal;
+import org.opengis.style.GraphicalSymbol;
 import org.polymap.rhei.field.ImageDescription;
 
 /**
@@ -128,6 +146,186 @@ public class StylerDAO {
     private RGB                         markerStrokeColor;
 
     private Integer                     markerStrokeTransparency;
+
+
+    /**
+     * @param style
+     */
+    public StylerDAO( StyledLayerDescriptor style ) {
+        ExpressionVisitor expressionVisitor = new AbstractExpressionVisitor() {
+
+            /*
+             * (non-Javadoc)
+             * 
+             * @see
+             * org.geotools.filter.expression.AbstractExpressionVisitor#visit(org
+             * .opengis.filter.expression.Literal, java.lang.Object)
+             */
+            @Override
+            public Object visit( Literal expr, Object extraData ) {
+                if (expr.getValue() != null) {
+                    if (expr.getValue().toString().startsWith( "#" )) {
+                        String hexValue = expr.getValue().toString();
+                        Color color = Color.decode( hexValue );
+                        return new RGB( color.getRed(), color.getGreen(), color.getBlue() );
+                    }
+                    else {
+                        try {
+                            return new Double( Double.parseDouble( expr.getValue().toString() ) ).intValue();
+                        }
+                        catch (NumberFormatException nfe) {
+                            //
+                        }
+                    }
+                }
+                return expr.getValue();
+            }
+        };
+        StyleVisitor styleVisitor = new StyleVisitorAdapter() {
+
+            public void visit( StyledLayerDescriptor sld ) {
+                for (StyledLayer layer : sld.getStyledLayers()) {
+                    if (layer instanceof NamedLayer) {
+                        ((NamedLayer)layer).accept( this );
+                    }
+                    else if (layer instanceof UserLayer) {
+                        ((UserLayer)layer).accept( this );
+                    }
+                }
+            }
+
+
+            /*
+             * (non-Javadoc)
+             * 
+             * @see
+             * org.geotools.renderer.lite.gridcoverage2d.StyleVisitorAdapter#visit
+             * (org.geotools.styling.NamedLayer)
+             */
+            @Override
+            public void visit( NamedLayer layer ) {
+                setLayerName( layer.getName() );
+                for (Style style : layer.getStyles()) {
+                    style.accept( this );
+                }
+            }
+
+
+            /*
+             * (non-Javadoc)
+             * 
+             * @see
+             * org.geotools.renderer.lite.gridcoverage2d.StyleVisitorAdapter#visit
+             * (org.geotools.styling.Style)
+             */
+            @Override
+            public void visit( Style style ) {
+                setUserStyleName( style.getName() );
+                if (style.getDescription() != null && style.getDescription().getTitle() != null) {
+                    setUserStyleTitle( style.getDescription().getTitle().toString() );
+                }
+                for (FeatureTypeStyle featureTypeStyle : style.featureTypeStyles()) {
+                    featureTypeStyle.accept( this );
+                }
+            }
+
+
+            /*
+             * (non-Javadoc)
+             * 
+             * @see
+             * org.geotools.renderer.lite.gridcoverage2d.StyleVisitorAdapter#visit
+             * (org.geotools.styling.FeatureTypeStyle)
+             */
+            @Override
+            public void visit( FeatureTypeStyle fts ) {
+                for (Rule rule : fts.rules()) {
+                    rule.accept( this );
+                }
+            }
+
+
+            /*
+             * (non-Javadoc)
+             * 
+             * @see
+             * org.geotools.renderer.lite.gridcoverage2d.StyleVisitorAdapter#visit
+             * (org.geotools.styling.Rule)
+             */
+            @Override
+            public void visit( Rule rule ) {
+                for (Symbolizer symbolizer : rule.getSymbolizers()) {
+                    symbolizer.accept( this );
+                }
+            }
+
+
+            /*
+             * (non-Javadoc)
+             * 
+             * @see
+             * org.geotools.renderer.lite.gridcoverage2d.StyleVisitorAdapter#visit
+             * (org.geotools.styling.PointSymbolizer)
+             */
+            @Override
+            public void visit( PointSymbolizer ps ) {
+                for (GraphicalSymbol graphicalSymbol : ps.getGraphic().graphicalSymbols()) {
+                    if (graphicalSymbol instanceof Mark) {
+                        ((Mark)graphicalSymbol).accept( this );
+                    }
+                }
+            }
+
+
+            /*
+             * (non-Javadoc)
+             * 
+             * @see
+             * org.geotools.renderer.lite.gridcoverage2d.StyleVisitorAdapter#visit
+             * (org.geotools.styling.Mark)
+             */
+            @Override
+            public void visit( Mark mark ) {
+                setMarkerWellKnownName( (String)mark.getWellKnownName().accept( expressionVisitor, null ) );
+                setMarkerFill( (RGB)mark.getFill().getColor().accept( expressionVisitor, null ) );
+                setMarkerTransparency( (int)mark.getFill().getOpacity().accept( expressionVisitor, null ) );
+                setMarkerSize( (int)mark.getFill().getGraphicFill().getSize().accept( expressionVisitor, null ) );
+                mark.getStroke().accept( this );
+            }
+
+
+            /*
+             * (non-Javadoc)
+             * 
+             * @see
+             * org.geotools.renderer.lite.gridcoverage2d.StyleVisitorAdapter#visit
+             * (org.geotools.styling.ExternalGraphic)
+             */
+            @Override
+            public void visit( ExternalGraphic exgr ) {
+                setMarkerIcon( new ImageDescription().localURL.put( exgr.getURI() ) );
+            }
+
+
+            /*
+             * (non-Javadoc)
+             * 
+             * @see
+             * org.geotools.renderer.lite.gridcoverage2d.StyleVisitorAdapter#visit
+             * (org.geotools.styling.Stroke)
+             */
+            @Override
+            public void visit( Stroke stroke ) {
+                setMarkerStrokeColor( (RGB)stroke.getColor().accept( expressionVisitor, null ) );
+                setMarkerStrokeSize( (int)stroke.getWidth().accept( expressionVisitor, null ) );
+            }
+        };
+        style.accept( styleVisitor );
+    }
+
+
+    public StylerDAO() {
+    }
 
 
     public org.opengis.feature.Feature getSelectedFeature() {
@@ -329,8 +527,14 @@ public class StylerDAO {
                 if (getMarkerWellKnownName() != null) {
                     markBuilder.name( getMarkerWellKnownName() );
                 }
+                if (getMarkerSize() != null) {
+                    markBuilder.fill().graphicFill().size( getMarkerSize() );
+                }
                 if (getMarkerFill() != null) {
                     markBuilder.fill().color( toAwtColor( getMarkerFill() ) );
+                }
+                if (getMarkerIcon() != null) {
+                    markBuilder.fill().graphicFill().externalGraphic( getMarkerIcon().localURL.get(), "svg" );
                 }
                 if (getMarkerTransparency() != null) {
                     markBuilder.fill().opacity( getMarkerTransparency() );

@@ -39,7 +39,6 @@ public class ColorInfo
      */
     @Override
     public RGB getColor() {
-        // TODO Auto-generated method stub
         return rgb;
     }
 
