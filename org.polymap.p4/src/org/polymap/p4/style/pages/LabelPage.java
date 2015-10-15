@@ -22,7 +22,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.runtime.event.EventManager;
 import org.polymap.core.ui.ColumnLayoutFactory;
-import org.polymap.p4.style.StylerDAO;
+import org.polymap.p4.style.daos.StyleLabelDao;
 import org.polymap.p4.style.font.FontInfo;
 import org.polymap.p4.style.font.FontPanel;
 import org.polymap.p4.style.font.IFontInfo;
@@ -32,10 +32,8 @@ import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.field.BeanPropertyAdapter;
 import org.polymap.rhei.field.FontFormField;
 import org.polymap.rhei.field.FormFieldEvent;
-import org.polymap.rhei.field.IFormFieldListener;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.SpinnerFormField;
-import org.polymap.rhei.form.DefaultFormPage;
 import org.polymap.rhei.form.IFormPageSite;
 
 import com.google.common.collect.Sets;
@@ -45,14 +43,7 @@ import com.google.common.collect.Sets;
  *
  */
 public class LabelPage
-        extends DefaultFormPage
-        implements IFormFieldListener {
-
-    private final IAppContext        context;
-
-    private final IPanelSite         panelSite;
-
-    private final StylerDAO          styleDao;
+        extends AbstractStylePage<StyleLabelDao> {
 
     private PicklistFormField        labelTextField;
 
@@ -63,11 +54,9 @@ public class LabelPage
     private final Context<IFontInfo> fontInfoInContext;
 
 
-    public LabelPage( IAppContext context, IPanelSite panelSite, StylerDAO styleDao,
+    public LabelPage( IAppContext context, IPanelSite panelSite,
             Context<IFontInfo> fontInfoInContext ) {
-        this.context = context;
-        this.panelSite = panelSite;
-        this.styleDao = styleDao;
+        super( context, panelSite);
         this.fontInfoInContext = fontInfoInContext;
 
         FontInfo fontInfo = new FontInfo();
@@ -75,15 +64,13 @@ public class LabelPage
 
         EventManager.instance().subscribe( fontInfo, ev -> ev.getSource() instanceof IFontInfo );
     }
-
-
-    private IPanelSite getPanelSite() {
-        return panelSite;
-    }
-
-
-    public StylerDAO getStyleDao() {
-        return styleDao;
+    
+    /* (non-Javadoc)
+     * @see org.polymap.p4.style.pages.AbstractStylePage#createEmptyDao()
+     */
+    @Override
+    public StyleLabelDao createEmptyDao() {
+        return new StyleLabelDao();
     }
 
 
@@ -108,19 +95,19 @@ public class LabelPage
     private void createLabelTabItemContent( IFormPageSite site ) {
         HashSet<String> labels = Sets.newHashSet( "", "<Placeholder>" );
         labelTextField = new PicklistFormField( labels );
-        site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.LABEL_TEXT ) ).label.put( "Label text" ).field
+        site.newFormField( new BeanPropertyAdapter( getDao(), StyleLabelDao.LABEL_TEXT ) ).label.put( "Label text" ).field
                 .put( labelTextField ).tooltip.put(
                 "The actual label value can be assigned later when "
                         + "combining this style with a layer resp. a feature type of that layer. "
                         + "If you don't want to use labels, just leave this field blank." ).create();
         fontFormField = new FontFormField();
         fontFormField.setEnabled( false );
-        site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.LABEL_FONT_DATA ) ).label
+        site.newFormField( new BeanPropertyAdapter( getDao(), StyleLabelDao.LABEL_FONT_DATA ) ).label
                 .put( "Label font" ).field.put( fontFormField ).tooltip.put( "" ).create();
         labelOffsetFormField = new SpinnerFormField( -128, 128, -16 );
         labelOffsetFormField.setEnabled( false );
-        site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.LABEL_OFFSET ) ).label
-                .put( "Label offset" ).field.put( labelOffsetFormField ).tooltip.put( "" ).create();
+        site.newFormField( new BeanPropertyAdapter( getDao(), StyleLabelDao.LABEL_OFFSET ) ).label.put( "Label offset" ).field
+                .put( labelOffsetFormField ).tooltip.put( "" ).create();
     }
 
 
@@ -135,7 +122,7 @@ public class LabelPage
     public void fieldChange( FormFieldEvent ev ) {
         if (ev.getEventCode() == VALUE_CHANGE) {
             if (ev.getSource() == labelTextField) {
-                boolean newValueNotEmpty = !StringUtils.isEmpty( ev.getNewFieldValue());
+                boolean newValueNotEmpty = !StringUtils.isEmpty( ev.getNewFieldValue() );
                 fontFormField.setEnabled( newValueNotEmpty );
                 labelOffsetFormField.setEnabled( newValueNotEmpty );
             }
@@ -146,7 +133,7 @@ public class LabelPage
                     fontInfoInContext.get().setFontData( new FontData[] { (FontData)array[0] } );
                     fontInfoInContext.get().setColor( (RGB)array[1] );
                 }
-                context.openPanel( panelSite.getPath(), FontPanel.ID );
+                getContext().openPanel( getPanelSite().getPath(), FontPanel.ID );
             }
         }
     }

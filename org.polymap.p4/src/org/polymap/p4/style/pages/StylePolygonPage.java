@@ -19,10 +19,10 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.runtime.event.EventManager;
 import org.polymap.core.ui.ColumnLayoutFactory;
-import org.polymap.p4.style.StylerDAO;
 import org.polymap.p4.style.color.ColorInfo;
 import org.polymap.p4.style.color.ColorPanel;
 import org.polymap.p4.style.color.IColorInfo;
+import org.polymap.p4.style.daos.StylePolygonDao;
 import org.polymap.p4.style.icon.IImageInfo;
 import org.polymap.p4.style.icon.IconLibraryInitializer;
 import org.polymap.p4.style.icon.ImageHelper;
@@ -36,31 +36,22 @@ import org.polymap.rhei.field.CheckboxFormField;
 import org.polymap.rhei.field.ColorFormField;
 import org.polymap.rhei.field.EnablableFormField;
 import org.polymap.rhei.field.FormFieldEvent;
-import org.polymap.rhei.field.IFormFieldListener;
 import org.polymap.rhei.field.IconFormField;
 import org.polymap.rhei.field.ImageDescription;
 import org.polymap.rhei.field.SpinnerFormField;
-import org.polymap.rhei.form.DefaultFormPage;
 import org.polymap.rhei.form.IFormPageSite;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public class StylePage
-        extends DefaultFormPage
-        implements IFormFieldListener {
+public class StylePolygonPage
+        extends AbstractStylePage<StylePolygonDao> {
 
     private String                    DEFAULT_ICON_PATH = "sld_wellknown/circle.svg";
 
-    private final IAppContext         context;
-
-    private final IPanelSite          panelSite;
-
-    private final StylerDAO           styleDao;
-
     private SpinnerFormField          markerSizeField;
-    
+
     private IconFormField             iconFormField;
 
     private EnablableFormField        backgroundFormEnabledField;
@@ -80,11 +71,9 @@ public class StylePage
     private final Context<IColorInfo> colorInfoInContext;
 
 
-    public StylePage( IAppContext context, IPanelSite panelSite, StylerDAO styleDao,
-            Context<IImageInfo> imageInfoInContext, Context<IColorInfo> colorInfoInContext ) {
-        this.context = context;
-        this.panelSite = panelSite;
-        this.styleDao = styleDao;
+    public StylePolygonPage( IAppContext context, IPanelSite panelSite, Context<IImageInfo> imageInfoInContext,
+            Context<IColorInfo> colorInfoInContext ) {
+        super( context, panelSite );
         this.imageInfoInContext = imageInfoInContext;
         this.colorInfoInContext = colorInfoInContext;
 
@@ -92,7 +81,7 @@ public class StylePage
 
         ImageInfo imageInfo = new ImageInfo();
         imageInfo.setImageLibrary( iconLibraryInitializer.getImageLibrary() );
-        imageInfo.setPathToImageDescription(iconLibraryInitializer.getPathToImageDescription());
+        imageInfo.setPathToImageDescription( iconLibraryInitializer.getPathToImageDescription() );
         imageInfoInContext.set( imageInfo );
 
         ColorInfo colorInfo = new ColorInfo();
@@ -103,13 +92,14 @@ public class StylePage
     }
 
 
-    private IPanelSite getPanelSite() {
-        return panelSite;
-    }
-
-
-    public StylerDAO getStyleDao() {
-        return styleDao;
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.polymap.p4.style.pages.AbstractStylePage#createEmptyDao()
+     */
+    @Override
+    public StylePolygonDao createEmptyDao() {
+        return new StylePolygonDao();
     }
 
 
@@ -126,22 +116,21 @@ public class StylePage
         Composite parent = site.getPageBody();
         parent.setLayout( ColumnLayoutFactory.defaults().spacing( 5 )
                 .margins( getPanelSite().getLayoutPreference().getSpacing() / 2 ).create() );
-        createStyleTabItemForPoint( site );
+        createStyleTabItemForPolygon( site );
         site.addFieldListener( this );
     }
 
 
-    private void createStyleTabItemForPoint( IFormPageSite site ) {
+    private void createStyleTabItemForPolygon( IFormPageSite site ) {
         markerSizeField = new SpinnerFormField( 1, 128, 12 );
-        site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.MARKER_SIZE ) ).label.put( "Marker size" ).field
+        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolygonDao.MARKER_SIZE ) ).label.put( "Marker size" ).field
                 .put( markerSizeField ).tooltip.put( "" ).create();
         backgroundFormField = new ColorFormField();
         if (colorInfoInContext.get().getColor() != null) {
             backgroundFormField.setValue( colorInfoInContext.get().getColor() );
         }
-        backgroundFormEnabledField = new EnablableFormField( new CheckboxFormField(),
-                backgroundFormField );
-        site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.MARKER_FILL ) ).label.put( "Marker fill" ).field
+        backgroundFormEnabledField = new EnablableFormField( new CheckboxFormField(), backgroundFormField );
+        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolygonDao.MARKER_FILL ) ).label.put( "Marker fill" ).field
                 .put( backgroundFormEnabledField ).tooltip.put( "" ).create();
         iconFormField = new IconFormField();
         if (imageInfoInContext.get().getImageDescription() != null) {
@@ -151,20 +140,19 @@ public class StylePage
             ImageDescription imageDescription = new ImageHelper().createImageDescription( DEFAULT_ICON_PATH );
             iconFormField.setValue( imageDescription );
         }
-        site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.MARKER_ICON ) ).label.put( "Marker icon" ).field
+        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolygonDao.MARKER_ICON ) ).label.put( "Marker icon" ).field
                 .put( iconFormField ).tooltip.put( "" ).create();
         markerTransparencyField = new SpinnerFormField( 0, 1, 0.1, 1, 1 );
-        site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.MARKER_TRANSPARENCY ) ).label
-                .put( "Marker transparency" ).field.put( markerTransparencyField ).tooltip.put( "" )
-                .create();
+        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolygonDao.MARKER_TRANSPARENCY ) ).label
+                .put( "Marker transparency" ).field.put( markerTransparencyField ).tooltip.put( "" ).create();
         markerStrokeSizeField = new SpinnerFormField( 0, 32, 1 );
-        site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.MARKER_STROKE_SIZE ) ).label
+        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolygonDao.MARKER_STROKE_SIZE ) ).label
                 .put( "Marker border size" ).field.put( markerStrokeSizeField ).tooltip.put( "" ).create();
         markerStrokeColorField = new ColorFormField();
-        site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.MARKER_STROKE_COLOR ) ).label
+        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolygonDao.MARKER_STROKE_COLOR ) ).label
                 .put( "Marker border color" ).field.put( markerStrokeColorField ).tooltip.put( "" ).create();
         markerStrokeTransparencyField = new SpinnerFormField( 0, 1, 0.1, 1, 1 );
-        site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.MARKER_STROKE_TRANSPARENCY ) ).label
+        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolygonDao.MARKER_STROKE_TRANSPARENCY ) ).label
                 .put( "Marker border transparency" ).field.put( markerStrokeTransparencyField ).tooltip.put( "" )
                 .create();
     }
@@ -182,16 +170,18 @@ public class StylePage
         if (ev.getEventCode() == VALUE_CHANGE) {
             if (ev.getSource() == backgroundFormEnabledField) {
                 colorInfoInContext.get().setFormField( backgroundFormField );
-                Object [] array = (Object []) ev.getNewFieldValue();
-                if(array != null) {
-                    if(array[0] == Boolean.TRUE) {
-                        colorInfoInContext.get().setColor( (RGB) array[1] );
-                        context.openPanel( panelSite.getPath(), ColorPanel.ID );
-                    } else {
-                        styleDao.setMarkerFill( null );
+                Object[] array = (Object[])ev.getNewFieldValue();
+                if (array != null) {
+                    if (array[0] == Boolean.TRUE) {
+                        colorInfoInContext.get().setColor( (RGB)array[1] );
+                        getContext().openPanel( getPanelSite().getPath(), ColorPanel.ID );
                     }
-                } else {
-                    styleDao.setMarkerFill( null );
+                    else {
+                        getDao().setMarkerFill( null );
+                    }
+                }
+                else {
+                    getDao().setMarkerFill( null );
                 }
             }
             else if (ev.getSource() == iconFormField) {
@@ -199,7 +189,7 @@ public class StylePage
                 imageInfoInContext.get().setImageDescription( ev.getNewFieldValue() );
                 final ServerPushSession pushSession = new ServerPushSession();
                 pushSession.start();
-                context.openPanel( panelSite.getPath(), ImagePanel.ID );
+                getContext().openPanel( getPanelSite().getPath(), ImagePanel.ID );
                 pushSession.stop();
             }
             else if (ev.getSource() == markerTransparencyField) {
@@ -224,7 +214,7 @@ public class StylePage
             else if (ev.getSource() == markerStrokeColorField) {
                 colorInfoInContext.get().setFormField( markerStrokeColorField );
                 colorInfoInContext.get().setColor( ev.getNewFieldValue() );
-                context.openPanel( panelSite.getPath(), ColorPanel.ID );
+                getContext().openPanel( getPanelSite().getPath(), ColorPanel.ID );
             }
         }
     }

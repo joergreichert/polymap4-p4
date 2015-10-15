@@ -22,16 +22,15 @@ import java.util.stream.Collectors;
 
 import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.ui.ColumnLayoutFactory;
-import org.polymap.p4.style.StylerDAO;
-import org.polymap.p4.style.StylerDAO.FeatureType;
+import org.polymap.p4.style.daos.StyleIdentDao;
+import org.polymap.p4.style.daos.StyleIdentDao.FeatureType;
+import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.field.BeanPropertyAdapter;
 import org.polymap.rhei.field.FormFieldEvent;
-import org.polymap.rhei.field.IFormFieldListener;
 import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.StringFormField;
-import org.polymap.rhei.form.DefaultFormPage;
 import org.polymap.rhei.form.IFormPageSite;
 
 /**
@@ -39,29 +38,19 @@ import org.polymap.rhei.form.IFormPageSite;
  *
  */
 public class StyleIdentPage
-        extends DefaultFormPage
-        implements IFormFieldListener {
+        extends AbstractStylePage<StyleIdentDao> {
 
-    private final IPanelSite panelSite;
-
-    private final StylerDAO  styleDao;
-
-
-    public StyleIdentPage( IPanelSite panelSite, StylerDAO styleDao ) {
-        this.panelSite = panelSite;
-        this.styleDao = styleDao;
+    public StyleIdentPage( IAppContext context, IPanelSite panelSite) {
+        super( context, panelSite);
     }
 
-
-    private IPanelSite getPanelSite() {
-        return panelSite;
+    /* (non-Javadoc)
+     * @see org.polymap.p4.style.pages.AbstractStylePage#createEmptyDao()
+     */
+    @Override
+    public StyleIdentDao createEmptyDao() {
+        return new StyleIdentDao();
     }
-
-
-    public StylerDAO getStyleDao() {
-        return styleDao;
-    }
-
 
     /*
      * (non-Javadoc)
@@ -76,10 +65,10 @@ public class StyleIdentPage
         Composite parent = site.getPageBody();
         parent.setLayout( ColumnLayoutFactory.defaults().spacing( 5 )
                 .margins( getPanelSite().getLayoutPreference().getSpacing() / 2 ).create() );
-        site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.USER_STYLE_NAME ) ).label
-                .put( "Style name" ).field.put( new StringFormField() ).tooltip.put( "" ).validator.put(
-                new NotEmptyValidator<String,String>() ).create();
-        site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.USER_STYLE_TITLE ) ).label
+        site.newFormField( new BeanPropertyAdapter( getDao(), StyleIdentDao.NAME ) ).label.put( "Style name" ).field
+                .put( new StringFormField() ).tooltip.put( "" ).validator.put( new NotEmptyValidator<String,String>() )
+                .create();
+        site.newFormField( new BeanPropertyAdapter( getDao(), StyleIdentDao.TITLE ) ).label
                 .put( "Style title" ).field.put( new StringFormField() ).tooltip.put( "" ).create();
 
         List<String> orderedLabel = FeatureType.getOrdered().stream().map( value -> value.getLabel() )
@@ -89,10 +78,10 @@ public class StyleIdentPage
         SortedMap<String,Object> orderFeatureTypes = new TreeMap<String,Object>( comparator );
         FeatureType.getOrdered().stream().forEach( value -> orderFeatureTypes.put( value.getLabel(), value ) );
         PicklistFormField picklistFormField = new PicklistFormField( ( ) -> orderFeatureTypes );
-        if (getStyleDao().getFeatureType() == null) {
-            getStyleDao().setFeatureType( FeatureType.POINT );
+        if (getDao().getFeatureType() == null) {
+            getDao().setFeatureType( FeatureType.POINT );
         }
-        site.newFormField( new BeanPropertyAdapter( getStyleDao(), StylerDAO.FEATURE_TYPE ) ).label
+        site.newFormField( new BeanPropertyAdapter( getDao(), StyleIdentDao.FEATURE_TYPE ) ).label
                 .put( "Feature type" ).field.put( picklistFormField ).tooltip.put( "" ).create();
         site.addFieldListener( this );
     }
@@ -107,11 +96,5 @@ public class StyleIdentPage
      */
     @Override
     public void fieldChange( FormFieldEvent ev ) {
-        // if (ev.getEventCode() == VALUE_CHANGE) {
-        // Button okBtn = getButton( IDialogConstants.OK_ID );
-        // if (okBtn != null) {
-        // okBtn.setEnabled( pageContainer.isValid() && pageContainer.isValid() );
-        // }
-        // }
     }
 }

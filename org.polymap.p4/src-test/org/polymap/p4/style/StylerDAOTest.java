@@ -25,10 +25,13 @@ import org.eclipse.swt.graphics.RGB;
 import org.geoserver.catalog.SLDHandler;
 import org.geotools.styling.SLDTransformer;
 import org.geotools.styling.StyledLayerDescriptor;
+import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
 import org.geotools.util.Version;
 import org.junit.Assert;
 import org.junit.Test;
-import org.polymap.p4.style.StylerDAO.FeatureType;
+import org.polymap.p4.style.daos.StyleIdentDao;
+import org.polymap.p4.style.daos.StyleIdentDao.FeatureType;
+import org.polymap.p4.style.daos.StylePointDao;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -38,15 +41,22 @@ public class StylerDAOTest {
 
     @Test
     public void testStyleDAO() throws Exception {
-        StylerDAO dao = new StylerDAO();
-        dao.setUserStyleName( "MeinStyle" );
-        dao.setFeatureType( FeatureType.POINT );
-        dao.setMarkerWellKnownName( "Circle" );
-        dao.setMarkerSize( 12 );
-        dao.setMarkerFill( new RGB( 255, 255, 255 ) );
-        dao.setMarkerStrokeColor( new RGB( 0, 0, 0 ) );
-        dao.setMarkerStrokeSize( 3 );
-        StyledLayerDescriptor sld = dao.toSLD();
+        StyleIdentDao identDao = new StyleIdentDao();
+        identDao.setName( "MeinStyle" );
+        identDao.setFeatureType( FeatureType.POINT );
+        
+        StylePointDao pointDao = new StylePointDao();
+        pointDao.setMarkerWellKnownName( "Circle" );
+        pointDao.setMarkerSize( 12 );
+        pointDao.setMarkerFill( new RGB( 255, 255, 255 ) );
+        pointDao.setMarkerStrokeColor( new RGB( 0, 0, 0 ) );
+        pointDao.setMarkerStrokeSize( 3 );
+        
+        StyledLayerDescriptorBuilder builder = new StyledLayerDescriptorBuilder();
+        identDao.fillSLD( builder );
+        pointDao.fillSLD( builder );
+        
+        StyledLayerDescriptor sld = builder.build();
         String actual = writeSLDToString( sld );
         String expected = FileUtils.readFileToString( new File( getClass().getResource( "simple_sld.xml" ).toURI() ) );
         Assert.assertEquals( expected, actual );
@@ -60,14 +70,16 @@ public class StylerDAOTest {
         Version styleVersion = new Version("1.0.0");
         StyledLayerDescriptor sld = /*Styles.handler( styleFormat )*/new SLDHandler().parse( reader, styleVersion, null, null );
 
-        StylerDAO dao = new StylerDAO( sld );
-        Assert.assertEquals( "MeinStyle", dao.getUserStyleName() );
-        Assert.assertEquals( FeatureType.POINT, dao.getFeatureType() );
-        Assert.assertEquals( "Circle", dao.getMarkerWellKnownName() );
-        Assert.assertSame( 12, dao.getMarkerSize() );
-        Assert.assertEquals( new RGB( 255, 255, 255 ).toString(), dao.getMarkerFill().toString() );
-        Assert.assertEquals( new RGB( 0, 0, 0 ).toString(), dao.getMarkerStrokeColor().toString() );
-        Assert.assertSame( 3, dao.getMarkerStrokeSize() );
+        StyleIdentDao identDao = new StyleIdentDao(sld);
+        Assert.assertEquals( "MeinStyle", identDao.getName() );
+        Assert.assertEquals( FeatureType.POINT, identDao.getFeatureType() );
+
+        StylePointDao pointDao = new StylePointDao(sld);
+        Assert.assertEquals( "Circle", pointDao.getMarkerWellKnownName() );
+        Assert.assertSame( 12, pointDao.getMarkerSize() );
+        Assert.assertEquals( new RGB( 255, 255, 255 ).toString(), pointDao.getMarkerFill().toString() );
+        Assert.assertEquals( new RGB( 0, 0, 0 ).toString(), pointDao.getMarkerStrokeColor().toString() );
+        Assert.assertSame( 3, pointDao.getMarkerStrokeSize() );
     }
 
 

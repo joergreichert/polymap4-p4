@@ -61,6 +61,7 @@ import org.polymap.core.data.pipeline.PipelineProcessorConfiguration;
 import org.polymap.core.data.pipeline.ProcessorResponse;
 import org.polymap.core.data.pipeline.ResponseHandler;
 import org.polymap.p4.data.P4PipelineIncubator;
+import org.polymap.p4.style.daos.StyleIdentDao;
 import org.polymap.rap.openlayers.style.FillStyle;
 import org.polymap.rap.openlayers.style.StrokeStyle;
 import org.polymap.rap.openlayers.style.Style;
@@ -78,14 +79,14 @@ import com.vividsolutions.jts.geom.Polygon;
  */
 public class StylePreview {
 
-    public void createPreviewMap( Composite parent, StylerDAO stylerDao ) throws Exception {
+    public void createPreviewMap( Composite parent, StyleIdentDao styleIdentDao ) throws Exception {
         Label comp = new Label( parent, SWT.NONE );
         // comp.setBackground( Display.getDefault().getSystemColor( SWT.COLOR_CYAN )
         // );
         comp.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, true ) );
         String typeName = "stylerExample";
         ContentDataStore dataStore = null;
-        switch(stylerDao.getFeatureType()) {
+        switch(styleIdentDao.getFeatureType()) {
             case LINE_STRING: dataStore = createSimpleFeature( typeName, "lineProperty", LineString.class ); break;
             case POINT: dataStore = createSimpleFeature( typeName, "pointProperty", Point.class ); break;
             case POLYGON: dataStore = createSimpleFeature( typeName, "polygonProperty", Polygon.class ); break;
