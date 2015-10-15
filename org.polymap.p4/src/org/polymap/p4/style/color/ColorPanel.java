@@ -22,12 +22,12 @@ import java.awt.image.DataBufferInt;
 import java.util.EventObject;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusAdapter;
-import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -103,7 +103,7 @@ public class ColorPanel
         }
     }
 
-    private boolean spinnerListenerActive = true;
+    private boolean spinnerListenerActive = true, hexListenerActive = true;
 
 
     private class SpinnerListener
@@ -242,11 +242,12 @@ public class ColorPanel
         FormDataFactory.on( colorBox ).width( COLORBOX_WIDTH ).height( COLORBOX_HEIGHT );
         colorBoxMarker = new Canvas( left, SWT.NONE );
         colorBoxMarker.moveAbove( null );
+        colorBoxMarker.setSize( 2, 2 );
         colorBox.addListener( SWT.MouseDown, new Listener() {
 
             @Override
             public void handleEvent( Event event ) {
-                handleColorBoxMarkerPositionChanged( colorBox, event.x, event.y );
+                handleColorBoxMarkerPositionChanged( panelBody, event.x, event.y );
             }
         } );
 
@@ -292,14 +293,11 @@ public class ColorPanel
         int pixel = colorBoxImage.getImageData().getPixel( x, y );
         RGB newRGB = colorBoxImage.getImageData().palette.getRGB( pixel );
         updateColorWidgets( panelBody, newRGB, COLOR_WIDGET_TYPE.BOX );
-        drawColorBoxMarker( panelBody, x, y, newRGB );
+        drawColorBoxMarker( panelBody, x, y );
     }
 
 
-    private void drawColorBoxMarker( Composite panelBody, int x, int y, RGB rgb ) {
-        if (rgb == null) {
-            rgb = getDefaultRGB();
-        }
+    private void drawColorBoxMarker( Composite panelBody, int x, int y ) {
         int adjustedX = x - 10;
         if (adjustedX < 0) {
             adjustedX = 0;
@@ -309,7 +307,20 @@ public class ColorPanel
             adjustedY = 0;
         }
         colorBoxMarker.setBounds( adjustedX, adjustedY, 20, 20 );
-        colorBoxMarker.setBackground( new Color( panelBody.getDisplay(), rgb.red, rgb.green, rgb.blue ) );
+        colorBoxMarker.setForeground( panelBody.getDisplay().getSystemColor( SWT.COLOR_WHITE ) );
+        colorBoxMarker.setBackground( null );
+        colorBoxMarker.addPaintListener( new PaintListener() {
+
+            public void paintControl( PaintEvent e ) {
+                e.gc.setForeground( panelBody.getDisplay().getSystemColor( SWT.COLOR_BLACK ) );
+                e.gc.drawOval( 1, 1, 18, 18 );
+                e.gc.setForeground( panelBody.getDisplay().getSystemColor( SWT.COLOR_WHITE ) );
+                e.gc.drawOval( 2, 2, 16, 16 );
+                e.gc.drawOval( 3, 3, 14, 14 );
+                e.gc.setForeground( panelBody.getDisplay().getSystemColor( SWT.COLOR_BLACK ) );
+                e.gc.drawOval( 4, 4, 12, 12 );
+            }
+        } );
     }
 
 
@@ -330,18 +341,19 @@ public class ColorPanel
         int rgbValue;
         float saturationFilter = hsb[1] == 0.0 ? 0.0f : 1.0f;
         float newS, newB;
-        int actualRgbValue = java.awt.Color.HSBtoRGB( hsb[0], hsb[1], hsb[2] );
         BufferedImage bi = new BufferedImage( COLORBOX_WIDTH, COLORBOX_HEIGHT, BufferedImage.TYPE_INT_RGB );
         boolean markerSet = false;
+        int markerPosX = 0, markerPosY = 0;
         for (int w = 0; w < COLORBOX_WIDTH; w += 1) {
             for (int h = COLORBOX_HEIGHT - 1; h >= 0; h -= 1) {
                 newS = saturationFilter * Double.valueOf( (double)w / COLORBOX_WIDTH ).floatValue();
                 newB = Double.valueOf( (double)h / COLORBOX_HEIGHT ).floatValue();
                 rgbValue = java.awt.Color.HSBtoRGB( hsb[0], newS, newB );
                 colorBoxColors[w][h] = rgbValue;
-                if (!markerSet && rgbValue == actualRgbValue) {
+                if (!markerSet && Math.abs( newS - hsb[1] ) <= 0.01 && Math.abs( newB - hsb[2] ) <= 0.01) {
                     if (colorBox.getBounds().contains( w, h )) {
-                        drawColorBoxMarker( panelBody, w, h, rgb );
+                        markerPosX = w;
+                        markerPosY = h;
                         markerSet = true;
                     }
                 }
@@ -360,6 +372,13 @@ public class ColorPanel
         GC gc = new GC( colorBox );
         gc.drawImage( colorBoxImage, 0, 0 );
         gc.dispose();
+        int finalMarkerPosX = markerPosX, finalMarkerPosY = markerPosY;
+        colorBoxMarker.addPaintListener( new PaintListener() {
+
+            public void paintControl( PaintEvent e ) {
+                drawColorBoxMarker( panelBody, finalMarkerPosX, finalMarkerPosY );
+            }
+        });
     }
 
 
@@ -368,17 +387,22 @@ public class ColorPanel
         comp.setLayout( FormLayoutFactory.defaults().spacing( dp( 16 ).pix() ).create() );
         Label hexLabel = toolkit.createLabel( comp, "#", SWT.NONE );
         colorHex = toolkit.createText( comp, "", SWT.NONE );
-        colorHex.addFocusListener( new FocusAdapter() {
+        colorHex.addModifyListener( new ModifyListener() {
 
-            public void focusLost( FocusEvent event ) {
-                String value = colorHex.getText();
-                try {
-                    java.awt.Color color = java.awt.Color.decode( value );
-                    RGB rgb = new RGB( color.getRed(), color.getGreen(), color.getBlue() );
-                    updateColorWidgets( panelBody, rgb, COLOR_WIDGET_TYPE.HEX );
-                }
-                catch (NumberFormatException nfe) {
-                    // ignore
+            @Override
+            public void modifyText( ModifyEvent event ) {
+                if (hexListenerActive) {
+                    String value = colorHex.getText();
+                    if (value.trim().length() == 6) {
+                        try {
+                            java.awt.Color color = java.awt.Color.decode( "#" + value.trim() );
+                            RGB rgb = new RGB( color.getRed(), color.getGreen(), color.getBlue() );
+                            updateColorWidgets( panelBody, rgb, COLOR_WIDGET_TYPE.HEX );
+                        }
+                        catch (NumberFormatException nfe) {
+                            // ignore
+                        }
+                    }
                 }
             }
         } );
@@ -484,8 +508,10 @@ public class ColorPanel
         if (newRGB != null) {
             java.awt.Color color = new java.awt.Color( newRGB.red, newRGB.green, newRGB.blue );
             // ignore alpha value
+            hexListenerActive = false;
             colorHex.setText( Integer.toHexString( (color.getRGB() & 0xffffff) | 0x1000000 ).substring( 1 )
                     .toUpperCase() );
+            hexListenerActive = true;
         }
     }
 

@@ -514,6 +514,8 @@ public class StylerDAO {
 
     public StyledLayerDescriptor toSLD() {
         StyledLayerDescriptorBuilder builder = new StyledLayerDescriptorBuilder();
+        builder.name( getUserStyleName() );
+        builder.title( getUserStyleTitle() );
         NamedLayerBuilder namedLayer = builder.namedLayer();
         namedLayer.name( getLayerName() );
         StyleBuilder userStyle = namedLayer.style();
@@ -522,7 +524,9 @@ public class StylerDAO {
         switch (getFeatureType()) {
             case POINT: {
                 PointSymbolizerBuilder pointBuilder = ruleBuilder.point();
-                pointBuilder.graphic().size( getMarkerSize() );
+                if(getMarkerSize() != null) {
+                    pointBuilder.graphic().size( getMarkerSize() );
+                }
                 MarkBuilder markBuilder = pointBuilder.graphic().mark();
                 if (getMarkerWellKnownName() != null) {
                     markBuilder.name( getMarkerWellKnownName() );

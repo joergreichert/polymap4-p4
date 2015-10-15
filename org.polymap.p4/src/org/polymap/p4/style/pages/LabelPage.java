@@ -16,6 +16,7 @@ package org.polymap.p4.style.pages;
 
 import java.util.HashSet;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
@@ -134,9 +135,9 @@ public class LabelPage
     public void fieldChange( FormFieldEvent ev ) {
         if (ev.getEventCode() == VALUE_CHANGE) {
             if (ev.getSource() == labelTextField) {
-                boolean newValueNotNull = ev.getNewFieldValue() != null;
-                fontFormField.setEnabled( newValueNotNull );
-                labelOffsetFormField.setEnabled( newValueNotNull );
+                boolean newValueNotEmpty = !StringUtils.isEmpty( ev.getNewFieldValue());
+                fontFormField.setEnabled( newValueNotEmpty );
+                labelOffsetFormField.setEnabled( newValueNotEmpty );
             }
             else if (ev.getSource() == fontFormField) {
                 fontInfoInContext.get().setFormField( fontFormField );

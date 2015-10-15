@@ -137,7 +137,7 @@ public class StylePage
                 .put( markerSizeField ).tooltip.put( "" ).create();
         backgroundFormField = new ColorFormField();
         if (colorInfoInContext.get().getColor() != null) {
-            iconFormField.setValue( colorInfoInContext.get().getColor() );
+            backgroundFormField.setValue( colorInfoInContext.get().getColor() );
         }
         backgroundFormEnabledField = new EnablableFormField( new CheckboxFormField(),
                 backgroundFormField );
@@ -183,9 +183,13 @@ public class StylePage
             if (ev.getSource() == backgroundFormEnabledField) {
                 colorInfoInContext.get().setFormField( backgroundFormField );
                 Object [] array = (Object []) ev.getNewFieldValue();
-                if(array[0] == Boolean.TRUE) {
-                    colorInfoInContext.get().setColor( (RGB) array[1] );
-                    context.openPanel( panelSite.getPath(), ColorPanel.ID );
+                if(array != null) {
+                    if(array[0] == Boolean.TRUE) {
+                        colorInfoInContext.get().setColor( (RGB) array[1] );
+                        context.openPanel( panelSite.getPath(), ColorPanel.ID );
+                    } else {
+                        styleDao.setMarkerFill( null );
+                    }
                 } else {
                     styleDao.setMarkerFill( null );
                 }

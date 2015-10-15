@@ -25,6 +25,7 @@ import java.util.function.Function;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
@@ -34,6 +35,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.geotools.styling.StyledLayerDescriptor;
 import org.polymap.core.ui.FormDataFactory;
@@ -51,8 +53,10 @@ import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.DefaultPanel;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.Scope;
+import org.polymap.rhei.batik.toolkit.md.AbstractFeedbackComponent;
 import org.polymap.rhei.batik.toolkit.md.MdListViewer;
 import org.polymap.rhei.batik.toolkit.md.MdTabFolder;
+import org.polymap.rhei.batik.toolkit.md.MdToast;
 import org.polymap.rhei.batik.toolkit.md.MdToolkit;
 import org.polymap.rhei.form.batik.BatikFormContainer;
 
@@ -90,13 +94,15 @@ public class StylerPanel
 
     private String                      lastOpenTab = null;
 
-    private Button                      loadButton, saveButton, deleteButton;
+    private Button                      newButton, loadButton, saveButton, deleteButton;
 
     private List<StyledLayerDescriptor> styles      = new ArrayList<StyledLayerDescriptor>();
 
     private MdListViewer                styleList;
 
     private Text                        styleListFilter;
+
+    private MdToast mdToast;
 
 
     @Override
@@ -118,6 +124,8 @@ public class StylerPanel
     public void createContents( Composite parent ) {
         setTitle();
         parent.setLayout( FormLayoutFactory.defaults().spacing( dp( 16 ).pix() ).create() );
+        
+        mdToast = ((MdToolkit) getSite().toolkit()).createToast( 60, SWT.NONE );
 
         styleDAO = new StylerDAO();
         identPage = new StyleIdentPage( getSite(), styleDAO );
@@ -156,17 +164,110 @@ public class StylerPanel
         } );
         FormDataFactory.on( tabFolder ).left( 0 ).right( 100 );
 
-        styleListFilter = tk.createText( parent, "", SWT.NONE );
-        styleListFilter.addModifyListener( new ModifyListener() {
+        Composite styleListFilterComp = createStyleListFilter( parent, tk );
+        FormDataFactory.on( styleListFilterComp ).top( tabFolder, dp( 30 ).pix() ).left( 0 ).right( 100 );
 
-            @Override
-            public void modifyText( ModifyEvent event ) {
-                styleList.setInput( styles.stream().filter(
-                        style -> style.getName().startsWith( styleListFilter.getText() ) ) );
+        createStyleList( parent, tk );
+
+        FormDataFactory.on( styleList.getControl() ).top( styleListFilterComp, dp( 30 ).pix() ).left( 0 ).right( 100 );
+
+        createButtons( parent, tk );
+
+        // try {
+        // new StylePreview().createPreviewMap( parent, getStylerDao() );
+        // }
+        // catch (Exception e) {
+        // // TODO Auto-generated catch block
+        // e.printStackTrace();
+        // }
+    }
+
+
+    private void createButtons( Composite parent, MdToolkit tk ) {
+        Composite buttonBar = tk.createComposite( parent, SWT.NONE );
+        FormDataFactory.on( buttonBar ).top( styleList.getControl(), dp( 30 ).pix() ).left( 0 ).right( 100 );
+        buttonBar.setLayout( FormLayoutFactory.defaults().spacing( dp( 16 ).pix() ).create() );
+
+        createNewButton( tk, buttonBar );
+        createSaveButton( tk, buttonBar );
+        createLoadButton( tk, buttonBar );
+        createDeleteButton( tk, buttonBar );
+
+        FormDataFactory.on( newButton );
+        FormDataFactory.on( saveButton ).left( newButton, dp( 30 ).pix() );
+        FormDataFactory.on( loadButton ).left( saveButton, dp( 30 ).pix() );
+        FormDataFactory.on( deleteButton ).left( loadButton, dp( 30 ).pix() );
+    }
+
+
+    private void createDeleteButton( MdToolkit tk, Composite buttonBar ) {
+        deleteButton = tk.createButton( buttonBar, "Delete Style", SWT.NONE );
+        deleteButton.addSelectionListener( new SelectionAdapter() {
+
+            public void widgetSelected( SelectionEvent e ) {
+                IStructuredSelection selection = (IStructuredSelection)styleList.getSelection();
+                StyledLayerDescriptor style = (StyledLayerDescriptor)selection.getFirstElement();
+                // TODO delete
+                styles.remove( style );
+                styleList.refresh();
+                styleDAO = new StylerDAO();
             }
         } );
-        FormDataFactory.on( styleListFilter ).top( tabFolder, dp( 30 ).pix() ).left( 0 ).right( 100 );
+    }
 
+
+    private void createLoadButton( MdToolkit tk, Composite buttonBar ) {
+        loadButton = tk.createButton( buttonBar, "Load Style", SWT.NONE );
+        loadButton.addSelectionListener( new SelectionAdapter() {
+
+            public void widgetSelected( SelectionEvent e ) {
+                IStructuredSelection selection = (IStructuredSelection)styleList.getSelection();
+                StyledLayerDescriptor style = (StyledLayerDescriptor)selection.getFirstElement();
+                styleDAO = new StylerDAO( style );
+            }
+        } );
+    }
+
+    private void createNewButton( MdToolkit tk, Composite buttonBar ) {
+        newButton = tk.createButton( buttonBar, "New Style", SWT.NONE );
+        newButton.addSelectionListener( new SelectionAdapter() {
+
+            public void widgetSelected( SelectionEvent e ) {
+                styleDAO = new StylerDAO();
+                try {
+                    styleIdentPageContainer.reloadEditor();
+                    labelPageContainer.reloadEditor();
+                    stylePageContainer.reloadEditor();
+                } catch(Exception exc) {
+                    mdToast.showIssue( AbstractFeedbackComponent.MessageType.ERROR, exc.getMessage() );
+                }
+            }
+        } );
+    }
+
+
+    private void createSaveButton( MdToolkit tk, Composite buttonBar ) {
+        saveButton = tk.createButton( buttonBar, "Save Style", SWT.NONE );
+        saveButton.addSelectionListener( new SelectionAdapter() {
+
+            public void widgetSelected( SelectionEvent e ) {
+                try {
+                    styleIdentPageContainer.submit();
+                    labelPageContainer.submit();
+                    stylePageContainer.submit();
+                } catch(Exception exc) {
+                    mdToast.showIssue( AbstractFeedbackComponent.MessageType.ERROR, exc.getMessage() );
+                }
+                StyledLayerDescriptor sld = styleDAO.toSLD();
+                styles.add( sld );
+                styleList.setInput( styles );
+                styleList.setSelection( new StructuredSelection(sld));
+            }
+        } );
+    }
+
+
+    private void createStyleList( Composite parent, MdToolkit tk ) {
         styleList = tk.createListViewer( parent, SWT.NONE );
         styleList.firstLineLabelProvider.set( new CellLabelProvider() {
 
@@ -181,6 +282,7 @@ public class StylerPanel
             List<StyledLayerDescriptor> styles;
 
 
+            @SuppressWarnings("unchecked")
             @Override
             public void inputChanged( Viewer viewer, Object oldInput, Object newInput ) {
                 styles = (List<StyledLayerDescriptor>)newInput;
@@ -216,58 +318,28 @@ public class StylerPanel
             }
         } );
         styleList.setInput( styles );
+    }
 
-        FormDataFactory.on( styleList.getControl() ).top( styleListFilter, dp( 30 ).pix() ).left( 0 ).right( 100 );
 
-        Composite buttonBar = tk.createComposite( parent, SWT.NONE );
-        FormDataFactory.on( buttonBar ).top( styleList.getControl(), dp( 30 ).pix() ).left( 0 ).right( 100 );
-        buttonBar.setLayout( FormLayoutFactory.defaults().spacing( dp( 16 ).pix() ).create() );
+    private Composite createStyleListFilter( Composite parent, MdToolkit tk ) {
+        Composite styleListFilterForm = tk.createComposite( parent, SWT.NONE );
+        styleListFilterForm.setLayout( FormLayoutFactory.defaults().spacing( dp( 16 ).pix() ).create() );
 
-        saveButton = tk.createButton( buttonBar, "Save Style", SWT.NONE );
-        saveButton.addSelectionListener( new SelectionAdapter() {
+        Label label = tk.createLabel( styleListFilterForm, "Filter:", SWT.NONE );
+        
+        styleListFilter = tk.createText( styleListFilterForm, "", SWT.NONE );
+        styleListFilter.addModifyListener( new ModifyListener() {
 
-            public void widgetSelected( SelectionEvent e ) {
-                styles.add( styleDAO.toSLD() );
-                // TODO save
-                styleList.refresh();
-                styleDAO = new StylerDAO();
+            @Override
+            public void modifyText( ModifyEvent event ) {
+                styleList.setInput( styles.stream().filter(
+                        style -> style.getName().startsWith( styleListFilter.getText() ) ) );
             }
         } );
-
-        loadButton = tk.createButton( buttonBar, "Load Style", SWT.NONE );
-        loadButton.addSelectionListener( new SelectionAdapter() {
-
-            public void widgetSelected( SelectionEvent e ) {
-                IStructuredSelection selection = (IStructuredSelection)styleList.getSelection();
-                StyledLayerDescriptor style = (StyledLayerDescriptor)selection.getFirstElement();
-                styleDAO = new StylerDAO( style );
-            }
-        } );
-
-        deleteButton = tk.createButton( buttonBar, "Delete Style", SWT.NONE );
-        deleteButton.addSelectionListener( new SelectionAdapter() {
-
-            public void widgetSelected( SelectionEvent e ) {
-                IStructuredSelection selection = (IStructuredSelection)styleList.getSelection();
-                StyledLayerDescriptor style = (StyledLayerDescriptor)selection.getFirstElement();
-                // TODO delete
-                styles.remove( style );
-                styleList.refresh();
-                styleDAO = new StylerDAO();
-            }
-        } );
-
-        FormDataFactory.on( saveButton ).right( loadButton, dp( 30 ).pix() );
-        FormDataFactory.on( loadButton ).right( deleteButton, dp( 30 ).pix() );
-        FormDataFactory.on( deleteButton ).right( 100 );
-
-        // try {
-        // new StylePreview().createPreviewMap( parent, getStylerDao() );
-        // }
-        // catch (Exception e) {
-        // // TODO Auto-generated catch block
-        // e.printStackTrace();
-        // }
+        
+        FormDataFactory.on( styleListFilter ).left( label, dp( 30 ).pix() ).right( 100 );
+        
+        return styleListFilterForm;
     }
 
 
