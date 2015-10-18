@@ -12,18 +12,31 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  */
-package org.polymap.p4.style.daos;
+package org.polymap.p4.style;
 
-import org.geotools.styling.StyledLayerDescriptor;
+import org.junit.Test;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public interface IStyleDao {
+public class ZoomBasedStyleTest
+        extends AbstractSLDTest {
 
-    public void fromSLD( StyledLayerDescriptor style );
+    @Test
+    public void test09_zoom_based_point() throws Exception {
+        assertRoundtrip( "1-point/09-zoom_based_point.sld" );
+    }
 
 
-    public void fillSLD( SLDBuilder builder );
+    @Test
+    public void test11_zoom_based_line() throws Exception {
+        assertRoundtrip( "2-line/11-zoom_based_line.sld" );
+    }
+
+
+    @Test
+    public void test08_zoom_based_polygon() throws Exception {
+        assertRoundtrip( "3-polygon/08-zoom_based_polygon.sld" );
+    }
 }

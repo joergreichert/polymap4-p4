@@ -19,6 +19,7 @@ import java.awt.Color;
 import org.eclipse.swt.graphics.RGB;
 import org.geotools.filter.expression.AbstractExpressionVisitor;
 import org.opengis.filter.expression.Literal;
+import org.opengis.filter.expression.PropertyName;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -37,7 +38,7 @@ public class StylerExpressionVisitor
             }
             else {
                 try {
-                    return new Double( Double.parseDouble( expr.getValue().toString() ) ).intValue();
+                   return new Double( Double.parseDouble( expr.getValue().toString() ) );
                 }
                 catch (NumberFormatException nfe) {
                     //
@@ -45,5 +46,10 @@ public class StylerExpressionVisitor
             }
         }
         return expr.getValue();
+    }
+    
+    @Override
+    public Object visit( PropertyName expr, Object extraData ) {
+        return expr.getPropertyName();
     }
 }

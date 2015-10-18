@@ -14,13 +14,8 @@
  */
 package org.polymap.p4.style.daos;
 
-import org.geotools.styling.builder.MarkBuilder;
-import org.geotools.styling.builder.NamedLayerBuilder;
-import org.geotools.styling.builder.PointSymbolizerBuilder;
+import org.geotools.styling.builder.LineSymbolizerBuilder;
 import org.geotools.styling.builder.RuleBuilder;
-import org.geotools.styling.builder.StrokeBuilder;
-import org.geotools.styling.builder.StyleBuilder;
-import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -45,39 +40,11 @@ public class StylePolylineToSLDVisitor
      * .builder.StyledLayerDescriptorBuilder)
      */
     @Override
-    public void fillSLD( StyledLayerDescriptorBuilder builder ) {
-        NamedLayerBuilder namedLayer = builder.namedLayer();
-        StyleBuilder userStyle = namedLayer.style();
-        RuleBuilder ruleBuilder = userStyle.featureTypeStyle().rule();
-        PointSymbolizerBuilder polylineBuilder = ruleBuilder.point();
-        if (stylePolylineDao.getMarkerSize() != null) {
-            polylineBuilder.graphic().size( stylePolylineDao.getMarkerSize() );
-        }
-        MarkBuilder markBuilder = polylineBuilder.graphic().mark();
-        if (stylePolylineDao.getMarkerWellKnownName() != null) {
-            markBuilder.name( stylePolylineDao.getMarkerWellKnownName() );
-        }
-        if (stylePolylineDao.getMarkerSize() != null) {
-            markBuilder.fill().graphicFill().size( stylePolylineDao.getMarkerSize() );
-        }
-        if (stylePolylineDao.getMarkerFill() != null) {
-            markBuilder.fill().color( toAwtColor( stylePolylineDao.getMarkerFill() ) );
-        }
-        if (stylePolylineDao.getMarkerIcon() != null) {
-            markBuilder.fill().graphicFill().externalGraphic( stylePolylineDao.getMarkerIcon().localURL.get(), "svg" );
-        }
-        if (stylePolylineDao.getMarkerTransparency() != null) {
-            markBuilder.fill().opacity( stylePolylineDao.getMarkerTransparency() );
-        }
-        StrokeBuilder strokeBuilder = markBuilder.stroke();
-        if (stylePolylineDao.getMarkerStrokeSize() != null && stylePolylineDao.getMarkerStrokeSize() > 0) {
-            strokeBuilder.width( stylePolylineDao.getMarkerStrokeSize() );
-            if (stylePolylineDao.getMarkerStrokeColor() != null) {
-                strokeBuilder.color( toAwtColor( stylePolylineDao.getMarkerStrokeColor() ) );
-            }
-            if (stylePolylineDao.getMarkerStrokeTransparency() != null) {
-                strokeBuilder.opacity( stylePolylineDao.getMarkerStrokeTransparency() );
-            }
+    public void fillSLD( SLDBuilder builder ) {
+        RuleBuilder ruleBuilder = getRuleBuilder( builder );
+        if(false) {
+            LineSymbolizerBuilder polylineBuilder = ruleBuilder.line();
+            // TODO
         }
     }
 }

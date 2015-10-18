@@ -11,24 +11,13 @@
       <Title>GeoServer SLD Cook Book: Point with rotated label</Title>
       <FeatureTypeStyle>
         <Rule>
-          <PointSymbolizer>
-            <Graphic>
-              <Mark>
-                <WellKnownName>circle</WellKnownName>
-                <Fill>
-                  <CssParameter name="fill">#FF0000</CssParameter>
-                </Fill>
-              </Mark>
-              <Size>6</Size>
-            </Graphic>
-          </PointSymbolizer>
           <TextSymbolizer>
             <Label>
               <ogc:PropertyName>name</ogc:PropertyName>
             </Label>
             <Font>
               <CssParameter name="font-family">Arial</CssParameter>
-              <CssParameter name="font-size">12</CssParameter>
+              <CssParameter name="font-size">12.0</CssParameter>
               <CssParameter name="font-style">normal</CssParameter>
               <CssParameter name="font-weight">bold</CssParameter>
             </Font>
@@ -39,10 +28,10 @@
                   <AnchorPointY>0.0</AnchorPointY>
                 </AnchorPoint>
                 <Displacement>
-                  <DisplacementX>0</DisplacementX>
-                  <DisplacementY>25</DisplacementY>
+                  <DisplacementX>0.0</DisplacementX>
+                  <DisplacementY>25.0</DisplacementY>
                 </Displacement>
-                <Rotation>-45</Rotation>
+                <Rotation>-45.0</Rotation>
               </PointPlacement>
             </LabelPlacement>
             <Fill>
@@ -50,6 +39,17 @@
             </Fill>
 			<VendorOption name="maxDisplacement">400</VendorOption>
           </TextSymbolizer>
+          <PointSymbolizer>
+            <Graphic>
+              <Mark>
+                <WellKnownName>circle</WellKnownName>
+                <Fill>
+                  <CssParameter name="fill">#FF0000</CssParameter>
+                </Fill>
+              </Mark>
+              <Size>6.0</Size>
+            </Graphic>
+          </PointSymbolizer>
         </Rule>
       </FeatureTypeStyle>
     </UserStyle>

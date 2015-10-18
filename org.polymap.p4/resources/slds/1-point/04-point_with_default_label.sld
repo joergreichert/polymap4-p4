@@ -11,17 +11,6 @@
       <Title>GeoServer SLD Cook Book: Point with default label</Title>
       <FeatureTypeStyle>
         <Rule>
-          <PointSymbolizer>
-            <Graphic>
-              <Mark>
-                <WellKnownName>circle</WellKnownName>
-                <Fill>
-                  <CssParameter name="fill">#FF0000</CssParameter>
-                </Fill>
-              </Mark>
-              <Size>6</Size>
-            </Graphic>
-          </PointSymbolizer>
           <TextSymbolizer>
             <Label>
               <ogc:PropertyName>name</ogc:PropertyName>
@@ -32,6 +21,17 @@
             </Fill>
 			<VendorOption name="maxDisplacement">400</VendorOption>
           </TextSymbolizer>
+          <PointSymbolizer>
+            <Graphic>
+              <Mark>
+                <WellKnownName>circle</WellKnownName>
+                <Fill>
+                  <CssParameter name="fill">#FF0000</CssParameter>
+                </Fill>
+              </Mark>
+              <Size>6.0</Size>
+            </Graphic>
+          </PointSymbolizer>
         </Rule>
       </FeatureTypeStyle>
     </UserStyle>

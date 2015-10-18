@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.geotools.styling.StyledLayerDescriptor;
-import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -58,19 +57,11 @@ public class StyleIdentDao implements IStyleDao {
 
     public static final String TITLE            = "title";
 
-    public static final String NAMED_LAYER_NAME = "namedLayerName";
-
-    public static final String USER_LAYER_NAME  = "userLayerName";
-
     public static final String FEATURE_TYPE     = "featureType";
 
     private String             name;
 
     private String             title;
-
-    private String             namedLayerName;                      // optional
-
-    private String             userLayerName;                       // optional
 
     private FeatureType        featureType      = FeatureType.POINT;
 
@@ -106,27 +97,6 @@ public class StyleIdentDao implements IStyleDao {
         this.title = title;
     }
 
-
-    public String getNamedLayerName() {
-        return namedLayerName;
-    }
-
-
-    public void setNamedLayerName( String namedLayerName ) {
-        this.namedLayerName = namedLayerName;
-    }
-
-
-    public String getUserLayerName() {
-        return userLayerName;
-    }
-
-
-    public void setUserLayerName( String userLayerName ) {
-        this.userLayerName = userLayerName;
-    }
-
-
     public FeatureType getFeatureType() {
         return featureType;
     }
@@ -140,7 +110,7 @@ public class StyleIdentDao implements IStyleDao {
         style.accept( new StyleIdentFromSLDVisitor(this) );
     }
     
-    public void fillSLD(StyledLayerDescriptorBuilder builder) {
+    public void fillSLD(SLDBuilder builder) {
         new StyleIdentToSLDVisitor( this ).fillSLD( builder );
     }   
 }

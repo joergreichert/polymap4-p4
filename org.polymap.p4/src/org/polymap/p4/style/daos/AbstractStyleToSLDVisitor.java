@@ -16,7 +16,10 @@ package org.polymap.p4.style.daos;
 
 import org.eclipse.swt.graphics.RGB;
 import org.geotools.renderer.lite.gridcoverage2d.StyleVisitorAdapter;
-import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
+import org.geotools.styling.builder.FeatureTypeStyleBuilder;
+import org.geotools.styling.builder.NamedLayerBuilder;
+import org.geotools.styling.builder.RuleBuilder;
+import org.geotools.styling.builder.StyleBuilder;
 
 
 /**
@@ -29,5 +32,14 @@ public abstract class AbstractStyleToSLDVisitor extends StyleVisitorAdapter {
         return new java.awt.Color( rgb.red, rgb.green, rgb.blue );
     }
     
-    public abstract void fillSLD(StyledLayerDescriptorBuilder builder);    
+    public abstract void fillSLD(SLDBuilder builder);    
+    
+    protected RuleBuilder getRuleBuilder( SLDBuilder builder ) {
+        NamedLayerBuilder namedLayer = builder.namedLayer();
+        StyleBuilder userStyle = builder.style(namedLayer);
+        FeatureTypeStyleBuilder featureTypeStyle = builder.featureTypeStyle(userStyle);
+        RuleBuilder ruleBuilder = builder.rule(featureTypeStyle);
+        return ruleBuilder;
+    }
+    
 }

@@ -15,7 +15,7 @@
 package org.polymap.p4.style.daos;
 
 import org.geotools.styling.builder.NamedLayerBuilder;
-import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
+import org.geotools.styling.builder.StyleBuilder;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -40,10 +40,18 @@ public class StyleIdentToSLDVisitor
      * .builder.StyledLayerDescriptorBuilder)
      */
     @Override
-    public void fillSLD( StyledLayerDescriptorBuilder builder ) {
-        builder.name( styleIdentDao.getName() );
-        builder.title( styleIdentDao.getTitle() );
-        NamedLayerBuilder namedLayer = builder.namedLayer();
-        namedLayer.name( styleIdentDao.getNamedLayerName() );
+    public void fillSLD( SLDBuilder builder ) {
+        if(styleIdentDao.getName() != null | styleIdentDao.getTitle() != null ) {
+            NamedLayerBuilder namedLayer = builder.namedLayer();
+            if(styleIdentDao.getName() != null) {
+                namedLayer.name( styleIdentDao.getName() );
+            }
+            if(styleIdentDao.getTitle() != null) {
+                StyleBuilder styleBuilder = builder.style(namedLayer);
+                styleBuilder.title( styleIdentDao.getTitle() );
+                // have to call this here as otherwise the title wouldn't be set
+                builder.featureTypeStyle(styleBuilder);
+            }
+        }
     }
 }

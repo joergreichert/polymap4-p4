@@ -14,12 +14,10 @@
           <PointSymbolizer>
             <Graphic>
               <ExternalGraphic>
-                <OnlineResource
-                  xlink:type="simple"
-                  xlink:href="smileyface.png" />
+                <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="smileyface.png"/>
                 <Format>image/png</Format>
               </ExternalGraphic>
-              <Size>32</Size>
+              <Size>32.0</Size>
             </Graphic>
           </PointSymbolizer>
         </Rule>

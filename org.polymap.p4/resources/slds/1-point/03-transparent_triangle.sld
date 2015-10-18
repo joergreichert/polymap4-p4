@@ -20,11 +20,10 @@
                   <CssParameter name="fill-opacity">0.2</CssParameter>
                 </Fill>
                 <Stroke>
-                  <CssParameter name="stroke">#000000</CssParameter>
-                  <CssParameter name="stroke-width">2</CssParameter>
+                  <CssParameter name="stroke-width">2.0</CssParameter>
                 </Stroke>
               </Mark>
-              <Size>12</Size>
+              <Size>12.0</Size>
             </Graphic>
           </PointSymbolizer>
         </Rule>

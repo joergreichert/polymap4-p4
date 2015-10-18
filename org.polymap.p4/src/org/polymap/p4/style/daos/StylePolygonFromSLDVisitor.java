@@ -34,23 +34,39 @@ public class StylePolygonFromSLDVisitor
         this.stylePolygonDao = stylePolygonDao;
     }
 
+
+    @Override
+    public void visit( org.geotools.styling.PolygonSymbolizer poly ) {
+        if (poly.getFill() != null) {
+            poly.getFill().accept( this );
+        }
+        if (poly.getStroke() != null) {
+            poly.getStroke().accept( this );
+        }
+    }
+
+
     @Override
     public void visit( Mark mark ) {
-        if(mark.getWellKnownName() != null) {
-            stylePolygonDao.setMarkerWellKnownName( (String)mark.getWellKnownName().accept( getExpressionVisitor(), null ) );
+        if (mark.getWellKnownName() != null) {
+            stylePolygonDao.setMarkerWellKnownName( (String)mark.getWellKnownName().accept(
+                    getStringExpressionVisitor(), null ) );
         }
-        if(mark.getFill() != null) {
-            if(mark.getFill().getColor() != null) {
-                stylePolygonDao.setMarkerFill( (RGB)mark.getFill().getColor().accept( getExpressionVisitor(), null ) );
+        if (mark.getFill() != null) {
+            if (mark.getFill().getColor() != null) {
+                stylePolygonDao.setMarkerFill( (RGB)mark.getFill().getColor()
+                        .accept( getColorExpressionVisitor(), null ) );
             }
-            if(mark.getFill().getOpacity() != null) {
-                stylePolygonDao.setMarkerTransparency( (int)mark.getFill().getOpacity().accept( getExpressionVisitor(), null ) );
+            if (mark.getFill().getOpacity() != null) {
+                stylePolygonDao.setMarkerTransparency( (double)mark.getFill().getOpacity()
+                        .accept( getNumberExpressionVisitor(), null ) );
             }
-            if(mark.getFill().getGraphicFill() != null && mark.getFill().getGraphicFill().getSize() != null) {
-                stylePolygonDao.setMarkerSize( (int)mark.getFill().getGraphicFill().getSize().accept( getExpressionVisitor(), null ) );
+            if (mark.getFill().getGraphicFill() != null && mark.getFill().getGraphicFill().getSize() != null) {
+                stylePolygonDao.setMarkerSize( (int)mark.getFill().getGraphicFill().getSize()
+                        .accept( getNumberExpressionVisitor(), null ) );
             }
         }
-        if(mark.getStroke() != null) {
+        if (mark.getStroke() != null) {
             mark.getStroke().accept( this );
         }
     }
@@ -64,11 +80,13 @@ public class StylePolygonFromSLDVisitor
 
     @Override
     public void visit( Stroke stroke ) {
-        if(stroke.getColor() != null) {
-            stylePolygonDao.setMarkerStrokeColor( (RGB)stroke.getColor().accept( getExpressionVisitor(), null ) );
+        if (stroke.getColor() != null) {
+            stylePolygonDao.setMarkerStrokeColor( (RGB)stroke.getColor().accept( getColorExpressionVisitor(), null ) );
         }
-        if(stroke.getWidth() != null) {
-            stylePolygonDao.setMarkerStrokeSize( (int)stroke.getWidth().accept( getExpressionVisitor(), null ) );
+        if (stroke.getWidth() != null) {
+            stylePolygonDao
+                    .setMarkerStrokeSize( ((Double)stroke.getWidth().accept( getNumberExpressionVisitor(), null ))
+                            .intValue() );
         }
     }
 }

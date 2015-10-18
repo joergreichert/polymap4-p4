@@ -14,13 +14,12 @@
           <PointSymbolizer>
             <Graphic>
               <Mark>
-                <WellKnownName>square</WellKnownName>
                 <Fill>
                   <CssParameter name="fill">#009900</CssParameter>
                 </Fill>
               </Mark>
-              <Size>12</Size>
-              <Rotation>45</Rotation>
+              <Size>12.0</Size>
+              <Rotation>45.0</Rotation>
             </Graphic>
           </PointSymbolizer>
         </Rule>

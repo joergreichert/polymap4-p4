@@ -34,23 +34,36 @@ public class StylePolylineFromSLDVisitor
         this.stylePolylineDao = stylePolylineDao;
     }
 
+
+    @Override
+    public void visit( org.geotools.styling.LineSymbolizer line ) {
+        if (line.getStroke() != null) {
+            line.getStroke().accept( this );
+        }
+    }
+
+
     @Override
     public void visit( Mark mark ) {
-        if(mark.getWellKnownName() != null) {
-            stylePolylineDao.setMarkerWellKnownName( (String)mark.getWellKnownName().accept( getExpressionVisitor(), null ) );
+        if (mark.getWellKnownName() != null) {
+            stylePolylineDao.setMarkerWellKnownName( (String)mark.getWellKnownName().accept(
+                    getStringExpressionVisitor(), null ) );
         }
-        if(mark.getFill() != null) {
-            if(mark.getFill().getColor() != null) {
-                stylePolylineDao.setMarkerFill( (RGB)mark.getFill().getColor().accept( getExpressionVisitor(), null ) );
+        if (mark.getFill() != null) {
+            if (mark.getFill().getColor() != null) {
+                stylePolylineDao.setMarkerFill( (RGB)mark.getFill().getColor()
+                        .accept( getColorExpressionVisitor(), null ) );
             }
-            if(mark.getFill().getOpacity() != null) {
-                stylePolylineDao.setMarkerTransparency( (int)mark.getFill().getOpacity().accept( getExpressionVisitor(), null ) );
+            if (mark.getFill().getOpacity() != null) {
+                stylePolylineDao.setMarkerTransparency( (double)mark.getFill().getOpacity()
+                        .accept( getNumberExpressionVisitor(), null ) );
             }
-            if(mark.getFill().getGraphicFill() != null && mark.getFill().getGraphicFill().getSize() != null) {
-                stylePolylineDao.setMarkerSize( (int)mark.getFill().getGraphicFill().getSize().accept( getExpressionVisitor(), null ) );
+            if (mark.getFill().getGraphicFill() != null && mark.getFill().getGraphicFill().getSize() != null) {
+                stylePolylineDao.setMarkerSize( (int)mark.getFill().getGraphicFill().getSize()
+                        .accept( getNumberExpressionVisitor(), null ) );
             }
         }
-        if(mark.getStroke() != null) {
+        if (mark.getStroke() != null) {
             mark.getStroke().accept( this );
         }
     }
@@ -64,11 +77,12 @@ public class StylePolylineFromSLDVisitor
 
     @Override
     public void visit( Stroke stroke ) {
-        if(stroke.getColor() != null) {
-            stylePolylineDao.setMarkerStrokeColor( (RGB)stroke.getColor().accept( getExpressionVisitor(), null ) );
+        if (stroke.getColor() != null) {
+            stylePolylineDao.setMarkerStrokeColor( (RGB)stroke.getColor().accept( getColorExpressionVisitor(), null ) );
         }
-        if(stroke.getWidth() != null) {
-            stylePolylineDao.setMarkerStrokeSize( (int)stroke.getWidth().accept( getExpressionVisitor(), null ) );
+        if (stroke.getWidth() != null) {
+            stylePolylineDao.setMarkerStrokeSize( ((Double)stroke.getWidth()
+                    .accept( getNumberExpressionVisitor(), null )).intValue() );
         }
     }
 }

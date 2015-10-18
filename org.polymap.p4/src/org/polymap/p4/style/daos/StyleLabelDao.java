@@ -18,7 +18,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.RGB;
 import org.geotools.styling.StyledLayerDescriptor;
-import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -35,13 +34,35 @@ public class StyleLabelDao
 
     public static final String LABEL_OFFSET     = "labelOffset";
 
+    public static final String LABEL_ANCHOR     = "labelAnchor";
+
+    public static final String LABEL_ROTATION   = "labelRotation";
+
     private String             labelText;
 
     private FontData           labelFontData;
 
     private RGB                labelFontColor;
 
-    private Integer            labelOffset;
+    private Coord              labelOffset;
+
+    private Coord              labelAnchor;
+
+    private Double             labelRotation;
+
+
+    public static class Coord {
+
+        public Coord( double x, double y ) {
+            this.x = x;
+            this.y = y;
+        }
+
+        public Double x;
+
+        public Double y;
+
+    }
 
 
     public StyleLabelDao() {
@@ -84,9 +105,9 @@ public class StyleLabelDao
     }
 
 
-    public Integer getLabelFontSize() {
+    public Double getLabelFontSize() {
         if (getLabelFontData() != null) {
-            return getLabelFontData().getHeight();
+            return new Double( getLabelFontData().getHeight() );
         }
         return null;
     }
@@ -94,7 +115,7 @@ public class StyleLabelDao
 
     public String getLabelFontWeight() {
         if (getLabelFontData() != null) {
-            if ((getLabelFontData().getStyle() & SWT.BOLD) != 1) {
+            if ((getLabelFontData().getStyle() & SWT.BOLD) != 0) {
                 return "bold";
             }
             else {
@@ -107,7 +128,7 @@ public class StyleLabelDao
 
     public String getLabelFontStyle() {
         if (getLabelFontData() != null) {
-            if ((getLabelFontData().getStyle() & SWT.ITALIC) != 1) {
+            if ((getLabelFontData().getStyle() & SWT.ITALIC) != 0) {
                 return "italic";
             }
             else {
@@ -128,13 +149,33 @@ public class StyleLabelDao
     }
 
 
-    public Integer getLabelOffset() {
+    public Coord getLabelOffset() {
         return labelOffset;
     }
 
 
-    public void setLabelOffset( Integer labelOffset ) {
+    public void setLabelOffset( Coord labelOffset ) {
         this.labelOffset = labelOffset;
+    }
+
+
+    public Coord getLabelAnchor() {
+        return labelAnchor;
+    }
+
+
+    public void setLabelAnchor( Coord labelAnchor ) {
+        this.labelAnchor = labelAnchor;
+    }
+
+
+    public Double getLabelRotation() {
+        return this.labelRotation;
+    }
+
+
+    public void setLabelRotation( Double labelRotation ) {
+        this.labelRotation = labelRotation;
     }
 
 
@@ -157,7 +198,7 @@ public class StyleLabelDao
      * StyledLayerDescriptorBuilder)
      */
     @Override
-    public void fillSLD( StyledLayerDescriptorBuilder builder ) {
+    public void fillSLD( SLDBuilder builder ) {
         new StyleLabelToSLDVisitor( this ).fillSLD( builder );
     }
 
@@ -178,26 +219,34 @@ public class StyleLabelDao
         return getLabelFontData();
     }
 
-    public void setLabelFontSize( Integer size ) {
-        nullSafeGetLabelFontData().setHeight( size );
+
+    public void setLabelFontSize( Double size ) {
+        if (size != null) {
+            nullSafeGetLabelFontData().setHeight( size.intValue() );
+        }
     }
 
 
     public void setLabelFontWeight( String weightString ) {
         int existingStyle = nullSafeGetLabelFontData().getStyle();
-        if(!"bold".equals( weightString ) && (existingStyle & SWT.BOLD) != 1) {
+        if ("bold".equals( weightString ) && (existingStyle & SWT.BOLD) == 0) {
             existingStyle = existingStyle | SWT.BOLD;
-        } else if("bold".equals( weightString ) && (existingStyle & SWT.BOLD) == 1) {
-            existingStyle = existingStyle & SWT.BOLD;
         }
+        else if (!"bold".equals( weightString ) && (existingStyle & SWT.BOLD) != 0) {
+            existingStyle = existingStyle - 1;
+        }
+        getLabelFontData().setStyle( existingStyle );
     }
-    
+
+
     public void setLabelFontStyle( String styleString ) {
         int existingStyle = nullSafeGetLabelFontData().getStyle();
-        if(!"italic".equals( styleString ) && (existingStyle & SWT.ITALIC) != 1) {
+        if ("italic".equals( styleString ) && (existingStyle & SWT.ITALIC) == 0) {
             existingStyle = existingStyle | SWT.ITALIC;
-        } else if("italic".equals( styleString ) && (existingStyle & SWT.ITALIC) == 1) {
-            existingStyle = existingStyle & SWT.ITALIC;
         }
-    }    
+        else if (!"italic".equals( styleString ) && (existingStyle & SWT.ITALIC) != 0) {
+            existingStyle = existingStyle - 1;
+        }
+        getLabelFontData().setStyle( existingStyle );
+    }
 }

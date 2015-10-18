@@ -16,57 +16,61 @@ package org.polymap.p4.style.daos;
 
 import org.eclipse.swt.graphics.RGB;
 import org.geotools.styling.StyledLayerDescriptor;
-import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
 import org.polymap.rhei.field.ImageDescription;
-
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public class StylePointDao extends AbstractStyleSymbolizerDao {
+public class StylePointDao
+        extends AbstractStyleSymbolizerDao {
 
-    public static final String          MARKER_SIZE                = "markerSize";
+    public static final String MARKER_SIZE                = "markerSize";
 
-    public static final String          MARKER_FILL                = "markerFill";
+    public static final String MARKER_FILL                = "markerFill";
 
-    public static final String          MARKER_ICON                = "markerIcon";
+    public static final String MARKER_ICON                = "markerIcon";
 
-    public static final String          MARKER_TRANSPARENCY        = "markerTransparency";
+    public static final String MARKER_TRANSPARENCY        = "markerTransparency";
 
-    public static final String          MARKER_STROKE_SIZE         = "markerStrokeSize";
+    public static final String MARKER_STROKE_SIZE         = "markerStrokeSize";
 
-    public static final String          MARKER_STROKE_COLOR        = "markerStrokeColor";
+    public static final String MARKER_STROKE_COLOR        = "markerStrokeColor";
 
-    public static final String          MARKER_STROKE_TRANSPARENCY = "markerStrokeTransparency";
+    public static final String MARKER_STROKE_TRANSPARENCY = "markerStrokeTransparency";
 
-    private String                      markerWellKnownName;                                    // optional
+    public static final String MARKER_ROTATION            = "markerRotation";
 
-    private Integer                     markerSize;
+    private String             markerWellKnownName;                                    // optional
 
-    private RGB                         markerFill;
+    private Double             markerSize;
 
-    private ImageDescription            markerIcon;
+    private RGB                markerFill;
 
-    private Integer                     markerTransparency;
+    private ImageDescription   markerIcon;
 
-    private Integer                     markerStrokeSize;
+    private Double             markerTransparency;
 
-    private RGB                         markerStrokeColor;
+    private Double             markerStrokeSize;
 
-    private Integer                     markerStrokeTransparency;
-    
-    
+    private RGB                markerStrokeColor;
+
+    private Double             markerStrokeTransparency;
+
+    private Double             markerRotation;
+
+
     public StylePointDao() {
     }
-    
+
+
     /**
      * @param style
      */
     public StylePointDao( StyledLayerDescriptor style ) {
         fromSLD( style );
     }
-    
+
 
     public String getMarkerWellKnownName() {
         return markerWellKnownName;
@@ -78,12 +82,12 @@ public class StylePointDao extends AbstractStyleSymbolizerDao {
     }
 
 
-    public Integer getMarkerSize() {
+    public Double getMarkerSize() {
         return markerSize;
     }
 
 
-    public void setMarkerSize( Integer markerSize ) {
+    public void setMarkerSize( Double markerSize ) {
         this.markerSize = markerSize;
     }
 
@@ -108,22 +112,22 @@ public class StylePointDao extends AbstractStyleSymbolizerDao {
     }
 
 
-    public Integer getMarkerTransparency() {
+    public Double getMarkerTransparency() {
         return markerTransparency;
     }
 
 
-    public void setMarkerTransparency( Integer markerTransparency ) {
+    public void setMarkerTransparency( Double markerTransparency ) {
         this.markerTransparency = markerTransparency;
     }
 
 
-    public Integer getMarkerStrokeSize() {
+    public Double getMarkerStrokeSize() {
         return markerStrokeSize;
     }
 
 
-    public void setMarkerStrokeSize( Integer markerStrokeSize ) {
+    public void setMarkerStrokeSize( Double markerStrokeSize ) {
         this.markerStrokeSize = markerStrokeSize;
     }
 
@@ -138,28 +142,45 @@ public class StylePointDao extends AbstractStyleSymbolizerDao {
     }
 
 
-    public Integer getMarkerStrokeTransparency() {
+    public Double getMarkerStrokeTransparency() {
         return markerStrokeTransparency;
     }
 
 
-    public void setMarkerStrokeTransparency( Integer markerStrokeTransparency ) {
+    public void setMarkerStrokeTransparency( Double markerStrokeTransparency ) {
         this.markerStrokeTransparency = markerStrokeTransparency;
     }
+    
+    public Double getMarkerRotation() {
+        return markerRotation;
+    }
 
-    /* (non-Javadoc)
-     * @see org.polymap.p4.style.daos.IStyleDao#fromSLD(org.geotools.styling.StyledLayerDescriptor)
+
+    public void setMarkerRotation( Double markerRotation ) {
+        this.markerRotation = markerRotation;
+    }    
+
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.polymap.p4.style.daos.IStyleDao#fromSLD(org.geotools.styling.
+     * StyledLayerDescriptor)
      */
     @Override
     public void fromSLD( StyledLayerDescriptor style ) {
         style.accept( new StylePointFromSLDVisitor( this ) );
     }
 
-    /* (non-Javadoc)
-     * @see org.polymap.p4.style.daos.IStyleDao#fillSLD(org.geotools.styling.builder.StyledLayerDescriptorBuilder)
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.polymap.p4.style.daos.IStyleDao#fillSLD(org.geotools.styling.builder.
+     * StyledLayerDescriptorBuilder)
      */
     @Override
-    public void fillSLD( StyledLayerDescriptorBuilder builder ) {
+    public void fillSLD( SLDBuilder builder ) {
         new StylePointToSLDVisitor( this ).fillSLD( builder );
     }
 }

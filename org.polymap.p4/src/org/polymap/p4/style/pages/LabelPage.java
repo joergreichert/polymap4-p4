@@ -30,6 +30,7 @@ import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.field.BeanPropertyAdapter;
+import org.polymap.rhei.field.CoordFormField;
 import org.polymap.rhei.field.FontFormField;
 import org.polymap.rhei.field.FormFieldEvent;
 import org.polymap.rhei.field.PicklistFormField;
@@ -49,14 +50,17 @@ public class LabelPage
 
     private FontFormField            fontFormField;
 
-    private SpinnerFormField         labelOffsetFormField;
+    private CoordFormField           labelAnchorFormField;
+
+    private CoordFormField           labelOffsetFormField;
+
+    private SpinnerFormField         labelRotationFormField;
 
     private final Context<IFontInfo> fontInfoInContext;
 
 
-    public LabelPage( IAppContext context, IPanelSite panelSite,
-            Context<IFontInfo> fontInfoInContext ) {
-        super( context, panelSite);
+    public LabelPage( IAppContext context, IPanelSite panelSite, Context<IFontInfo> fontInfoInContext ) {
+        super( context, panelSite );
         this.fontInfoInContext = fontInfoInContext;
 
         FontInfo fontInfo = new FontInfo();
@@ -64,8 +68,11 @@ public class LabelPage
 
         EventManager.instance().subscribe( fontInfo, ev -> ev.getSource() instanceof IFontInfo );
     }
-    
-    /* (non-Javadoc)
+
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.polymap.p4.style.pages.AbstractStylePage#createEmptyDao()
      */
     @Override
@@ -104,10 +111,20 @@ public class LabelPage
         fontFormField.setEnabled( false );
         site.newFormField( new BeanPropertyAdapter( getDao(), StyleLabelDao.LABEL_FONT_DATA ) ).label
                 .put( "Label font" ).field.put( fontFormField ).tooltip.put( "" ).create();
-        labelOffsetFormField = new SpinnerFormField( -128, 128, -16 );
+        labelAnchorFormField = new CoordFormField( new SpinnerFormField( 0, 1, 0.1, 0.0, 1 ), new SpinnerFormField( 0,
+                1, 0.1, 0.5, 1 ) );
+        labelAnchorFormField.setEnabled( false );
+        site.newFormField( new BeanPropertyAdapter( getDao(), StyleLabelDao.LABEL_ANCHOR ) ).label.put( "Label anchor" ).field
+                .put( labelAnchorFormField ).tooltip.put( "" ).create();
+        labelOffsetFormField = new CoordFormField( new SpinnerFormField( -128, 128, 0 ), new SpinnerFormField( -128,
+                128, 0 ) );
         labelOffsetFormField.setEnabled( false );
         site.newFormField( new BeanPropertyAdapter( getDao(), StyleLabelDao.LABEL_OFFSET ) ).label.put( "Label offset" ).field
                 .put( labelOffsetFormField ).tooltip.put( "" ).create();
+        labelRotationFormField = new SpinnerFormField( -360, 360, 0 );
+        labelRotationFormField.setEnabled( false );
+        site.newFormField( new BeanPropertyAdapter( getDao(), StyleLabelDao.LABEL_ROTATION ) ).label.put( "Label rotation" ).field
+                .put( labelRotationFormField ).tooltip.put( "" ).create();
     }
 
 

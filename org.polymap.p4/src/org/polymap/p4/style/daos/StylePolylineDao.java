@@ -16,57 +16,57 @@ package org.polymap.p4.style.daos;
 
 import org.eclipse.swt.graphics.RGB;
 import org.geotools.styling.StyledLayerDescriptor;
-import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
 import org.polymap.rhei.field.ImageDescription;
-
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public class StylePolylineDao extends AbstractStyleSymbolizerDao {
+public class StylePolylineDao
+        extends AbstractStyleSymbolizerDao {
 
-    public static final String          MARKER_SIZE                = "markerSize";
+    public static final String MARKER_SIZE                = "markerSize";
 
-    public static final String          MARKER_FILL                = "markerFill";
+    public static final String MARKER_FILL                = "markerFill";
 
-    public static final String          MARKER_ICON                = "markerIcon";
+    public static final String MARKER_ICON                = "markerIcon";
 
-    public static final String          MARKER_TRANSPARENCY        = "markerTransparency";
+    public static final String MARKER_TRANSPARENCY        = "markerTransparency";
 
-    public static final String          MARKER_STROKE_SIZE         = "markerStrokeSize";
+    public static final String MARKER_STROKE_SIZE         = "markerStrokeSize";
 
-    public static final String          MARKER_STROKE_COLOR        = "markerStrokeColor";
+    public static final String MARKER_STROKE_COLOR        = "markerStrokeColor";
 
-    public static final String          MARKER_STROKE_TRANSPARENCY = "markerStrokeTransparency";
+    public static final String MARKER_STROKE_TRANSPARENCY = "markerStrokeTransparency";
 
-    private String                      markerWellKnownName;                                    // optional
+    private String             markerWellKnownName;                                    // optional
 
-    private Integer                     markerSize;
+    private Integer            markerSize;
 
-    private RGB                         markerFill;
+    private RGB                markerFill;
 
-    private ImageDescription            markerIcon;
+    private ImageDescription   markerIcon;
 
-    private Integer                     markerTransparency;
+    private Double             markerTransparency;
 
-    private Integer                     markerStrokeSize;
+    private Integer            markerStrokeSize;
 
-    private RGB                         markerStrokeColor;
+    private RGB                markerStrokeColor;
 
-    private Integer                     markerStrokeTransparency;
-    
-    
+    private Double             markerStrokeTransparency;
+
+
     public StylePolylineDao() {
     }
-    
+
+
     /**
      * @param style
      */
     public StylePolylineDao( StyledLayerDescriptor style ) {
         fromSLD( style );
     }
-    
+
 
     public String getMarkerWellKnownName() {
         return markerWellKnownName;
@@ -108,12 +108,12 @@ public class StylePolylineDao extends AbstractStyleSymbolizerDao {
     }
 
 
-    public Integer getMarkerTransparency() {
+    public Double getMarkerTransparency() {
         return markerTransparency;
     }
 
 
-    public void setMarkerTransparency( Integer markerTransparency ) {
+    public void setMarkerTransparency( Double markerTransparency ) {
         this.markerTransparency = markerTransparency;
     }
 
@@ -138,28 +138,36 @@ public class StylePolylineDao extends AbstractStyleSymbolizerDao {
     }
 
 
-    public Integer getMarkerStrokeTransparency() {
+    public Double getMarkerStrokeTransparency() {
         return markerStrokeTransparency;
     }
 
 
-    public void setMarkerStrokeTransparency( Integer markerStrokeTransparency ) {
+    public void setMarkerStrokeTransparency( Double markerStrokeTransparency ) {
         this.markerStrokeTransparency = markerStrokeTransparency;
     }
 
-    /* (non-Javadoc)
-     * @see org.polymap.p4.style.daos.IStyleDao#fromSLD(org.geotools.styling.StyledLayerDescriptor)
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.polymap.p4.style.daos.IStyleDao#fromSLD(org.geotools.styling.
+     * StyledLayerDescriptor)
      */
     @Override
     public void fromSLD( StyledLayerDescriptor style ) {
         style.accept( new StylePolylineFromSLDVisitor( this ) );
     }
 
-    /* (non-Javadoc)
-     * @see org.polymap.p4.style.daos.IStyleDao#fillSLD(org.geotools.styling.builder.StyledLayerDescriptorBuilder)
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.polymap.p4.style.daos.IStyleDao#fillSLD(org.geotools.styling.builder.
+     * StyledLayerDescriptorBuilder)
      */
     @Override
-    public void fillSLD( StyledLayerDescriptorBuilder builder ) {
+    public void fillSLD( SLDBuilder builder ) {
         new StylePolylineToSLDVisitor( this ).fillSLD( builder );
     }
 }

@@ -36,6 +36,7 @@ import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.p4.P4Plugin;
 import org.polymap.p4.map.ProjectMapPanel;
 import org.polymap.p4.style.color.IColorInfo;
+import org.polymap.p4.style.daos.SLDBuilder;
 import org.polymap.p4.style.daos.StyleIdentDao;
 import org.polymap.p4.style.daos.StyleLabelDao;
 import org.polymap.p4.style.daos.StylePointDao;
@@ -170,7 +171,8 @@ public class StylerPanel
         Supplier<StyledLayerDescriptor> saveSupplier = ( ) -> {
             try {
                 submit();
-                StyledLayerDescriptorBuilder builder = new StyledLayerDescriptorBuilder();
+                StyledLayerDescriptorBuilder wrappedBuilder = new StyledLayerDescriptorBuilder();
+                SLDBuilder builder = new SLDBuilder(wrappedBuilder);
                 stylePages.stream().forEach( page -> page.getDao().fillSLD( builder ) );
                 return builder.build();
             }

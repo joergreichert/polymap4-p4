@@ -19,7 +19,7 @@
                   <CssParameter name="fill">#FF0000</CssParameter>
                 </Fill>
               </Mark>
-              <Size>6</Size>
+              <Size>6.0</Size>
             </Graphic>
           </PointSymbolizer>
         </Rule>

@@ -66,14 +66,16 @@ public class StylePointPage
 
     private SpinnerFormField          markerStrokeTransparencyField;
 
+    private SpinnerFormField          markerRotationFormField;
+
     private final Context<IImageInfo> imageInfoInContext;
 
     private final Context<IColorInfo> colorInfoInContext;
 
 
-    public StylePointPage( IAppContext context, IPanelSite panelSite,
-            Context<IImageInfo> imageInfoInContext, Context<IColorInfo> colorInfoInContext ) {
-        super( context, panelSite);
+    public StylePointPage( IAppContext context, IPanelSite panelSite, Context<IImageInfo> imageInfoInContext,
+            Context<IColorInfo> colorInfoInContext ) {
+        super( context, panelSite );
         this.imageInfoInContext = imageInfoInContext;
         this.colorInfoInContext = colorInfoInContext;
 
@@ -90,8 +92,11 @@ public class StylePointPage
         EventManager.instance().subscribe( imageInfo, ev -> ev.getSource() instanceof IImageInfo );
         EventManager.instance().subscribe( colorInfo, ev -> ev.getSource() instanceof IColorInfo );
     }
-    
-    /* (non-Javadoc)
+
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.polymap.p4.style.pages.AbstractStylePage#createEmptyDao()
      */
     @Override
@@ -120,15 +125,15 @@ public class StylePointPage
 
     private void createStyleTabItemForPoint( IFormPageSite site ) {
         markerSizeField = new SpinnerFormField( 1, 128, 12 );
-        site.newFormField( new BeanPropertyAdapter( getDao(), StylePointDao.MARKER_SIZE ) ).label
-                .put( "Marker size" ).field.put( markerSizeField ).tooltip.put( "" ).create();
+        site.newFormField( new BeanPropertyAdapter( getDao(), StylePointDao.MARKER_SIZE ) ).label.put( "Marker size" ).field
+                .put( markerSizeField ).tooltip.put( "" ).create();
         backgroundFormField = new ColorFormField();
         if (colorInfoInContext.get().getColor() != null) {
             backgroundFormField.setValue( colorInfoInContext.get().getColor() );
         }
         backgroundFormEnabledField = new EnablableFormField( new CheckboxFormField(), backgroundFormField );
-        site.newFormField( new BeanPropertyAdapter( getDao(), StylePointDao.MARKER_FILL ) ).label
-                .put( "Marker fill" ).field.put( backgroundFormEnabledField ).tooltip.put( "" ).create();
+        site.newFormField( new BeanPropertyAdapter( getDao(), StylePointDao.MARKER_FILL ) ).label.put( "Marker fill" ).field
+                .put( backgroundFormEnabledField ).tooltip.put( "" ).create();
         iconFormField = new IconFormField();
         if (imageInfoInContext.get().getImageDescription() != null) {
             iconFormField.setValue( imageInfoInContext.get().getImageDescription() );
@@ -137,8 +142,8 @@ public class StylePointPage
             ImageDescription imageDescription = new ImageHelper().createImageDescription( DEFAULT_ICON_PATH );
             iconFormField.setValue( imageDescription );
         }
-        site.newFormField( new BeanPropertyAdapter( getDao(), StylePointDao.MARKER_ICON ) ).label
-                .put( "Marker icon" ).field.put( iconFormField ).tooltip.put( "" ).create();
+        site.newFormField( new BeanPropertyAdapter( getDao(), StylePointDao.MARKER_ICON ) ).label.put( "Marker icon" ).field
+                .put( iconFormField ).tooltip.put( "" ).create();
         markerTransparencyField = new SpinnerFormField( 0, 1, 0.1, 1, 1 );
         site.newFormField( new BeanPropertyAdapter( getDao(), StylePointDao.MARKER_TRANSPARENCY ) ).label
                 .put( "Marker transparency" ).field.put( markerTransparencyField ).tooltip.put( "" ).create();
@@ -152,6 +157,10 @@ public class StylePointPage
         site.newFormField( new BeanPropertyAdapter( getDao(), StylePointDao.MARKER_STROKE_TRANSPARENCY ) ).label
                 .put( "Marker border transparency" ).field.put( markerStrokeTransparencyField ).tooltip.put( "" )
                 .create();
+        markerRotationFormField = new SpinnerFormField( -360, 360, 0 );
+        markerRotationFormField.setEnabled( false );
+        site.newFormField( new BeanPropertyAdapter( getDao(), StylePointDao.MARKER_ROTATION ) ).label
+                .put( "Marker rotation" ).field.put( markerRotationFormField ).tooltip.put( "" ).create();
     }
 
 

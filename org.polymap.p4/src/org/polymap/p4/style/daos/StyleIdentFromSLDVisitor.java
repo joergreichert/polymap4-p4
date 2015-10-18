@@ -15,6 +15,7 @@
 package org.polymap.p4.style.daos;
 
 import org.geotools.styling.NamedLayer;
+import org.geotools.styling.Style;
 import org.geotools.styling.StyledLayerDescriptor;
 
 
@@ -38,6 +39,11 @@ public class StyleIdentFromSLDVisitor extends AbstractStyleFromSLDVisitor {
 
     @Override
     public void visit( NamedLayer layer ) {
-        styleIdentDao.setNamedLayerName( layer.getName() );
-    }
+        styleIdentDao.setName( layer.getName() );
+        for(Style style : layer.getStyles()) {
+            if(style.getDescription() != null) {
+                styleIdentDao.setTitle(style.getDescription().getTitle().toString());
+            }
+        }
+    }    
 }

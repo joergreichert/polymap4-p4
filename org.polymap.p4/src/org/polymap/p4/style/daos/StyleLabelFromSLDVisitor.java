@@ -15,7 +15,13 @@
 package org.polymap.p4.style.daos;
 
 import org.eclipse.swt.graphics.RGB;
-import org.geotools.styling.TextSymbolizer;
+import org.geotools.styling.AnchorPoint;
+import org.geotools.styling.Displacement;
+import org.geotools.styling.Fill;
+import org.geotools.styling.LinePlacement;
+import org.geotools.styling.PointPlacement;
+import org.opengis.style.Font;
+import org.polymap.p4.style.daos.StyleLabelDao.Coord;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -33,18 +39,70 @@ public class StyleLabelFromSLDVisitor
 
 
     @Override
-    public void visit( TextSymbolizer ts ) {
-        if(ts.getLabel() != null) {
-            styleLabelDao.setLabelText((String) ts.getLabel().accept( getExpressionVisitor(), null ));
-            if(ts.getFill() != null && ts.getFill().getColor() != null) {
-                styleLabelDao.setLabelFontColor((RGB) ts.getFill().getColor().accept( getExpressionVisitor(), null ));
-            }
-            if(ts.getFont() != null) {
-                styleLabelDao.setLabelFont((String) ts.getFont().getFamily().get( 0 ).accept( getExpressionVisitor(), null ));
-                styleLabelDao.setLabelFontSize((Integer) ts.getFont().getSize().accept( getExpressionVisitor(), null ));
-                styleLabelDao.setLabelFontWeight((String) ts.getFont().getWeight().accept( getExpressionVisitor(), null ));
-                styleLabelDao.setLabelFontStyle((String) ts.getFont().getStyle().accept( getExpressionVisitor(), null ));
-            }
+    public void visit( org.geotools.styling.TextSymbolizer ts ) {
+        if (ts.getLabel() != null) {
+            styleLabelDao.setLabelText( (String)ts.getLabel().accept( getLabelExpressionVisitor(), null ) );
         }
+        super.visit( ts );
+    }
+
+
+    @Override
+    public void visit( Fill fill ) {
+        if (fill.getColor() != null) {
+            styleLabelDao.setLabelFontColor( (RGB)fill.getColor().accept( getColorExpressionVisitor(), null ) );
+        }
+        super.visit( fill );
+    }
+
+
+    public void visit( Font font ) {
+        if (font.getFamily().size() > 0) {
+            styleLabelDao.setLabelFont( (String)font.getFamily().get( 0 ).accept( getStringExpressionVisitor(), null ) );
+        }
+        if (font.getSize() != null) {
+            styleLabelDao.setLabelFontSize( ((Double)font.getSize().accept( getNumberExpressionVisitor(), null )) );
+        }
+        if (font.getWeight() != null) {
+            styleLabelDao
+                    .setLabelFontWeight( (String)font.getWeight().accept( getFontWeightExpressionVisitor(), null ) );
+        }
+        if (font.getStyle() != null) {
+            styleLabelDao.setLabelFontStyle( (String)font.getStyle().accept( getFontStyleExpressionVisitor(), null ) );
+        }
+        super.visit( font );
+    }
+
+
+    @Override
+    public void visit( PointPlacement pp ) {
+        if (pp.getRotation() != null) {
+            styleLabelDao.setLabelRotation( (double)pp.getRotation().accept( getNumberExpressionVisitor(), null ) );
+        }
+        super.visit( pp );
+    }
+
+
+    @Override
+    public void visit( AnchorPoint ap ) {
+        if (ap.getAnchorPointX() != null && ap.getAnchorPointY() != null) {
+            styleLabelDao.setLabelAnchor( new Coord( (double)ap.getAnchorPointX().accept( getNumberExpressionVisitor(),
+                    null ), (double)ap.getAnchorPointY().accept( getNumberExpressionVisitor(), null ) ) );
+        }
+    }
+
+
+    @Override
+    public void visit( Displacement dis ) {
+        if (dis.getDisplacementX() != null && dis.getDisplacementY() != null) {
+            styleLabelDao.setLabelOffset( new Coord( (double)dis.getDisplacementX().accept(
+                    getNumberExpressionVisitor(), null ), (double)dis.getDisplacementY().accept(
+                    getNumberExpressionVisitor(), null ) ) );
+        }
+    }
+
+
+    @Override
+    public void visit( LinePlacement lp ) {
     }
 }

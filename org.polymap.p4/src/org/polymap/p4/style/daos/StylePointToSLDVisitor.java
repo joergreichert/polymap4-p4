@@ -14,13 +14,11 @@
  */
 package org.polymap.p4.style.daos;
 
+import org.geotools.styling.builder.FillBuilder;
 import org.geotools.styling.builder.MarkBuilder;
-import org.geotools.styling.builder.NamedLayerBuilder;
 import org.geotools.styling.builder.PointSymbolizerBuilder;
 import org.geotools.styling.builder.RuleBuilder;
 import org.geotools.styling.builder.StrokeBuilder;
-import org.geotools.styling.builder.StyleBuilder;
-import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -45,39 +43,54 @@ public class StylePointToSLDVisitor
      * .builder.StyledLayerDescriptorBuilder)
      */
     @Override
-    public void fillSLD( StyledLayerDescriptorBuilder builder ) {
-        NamedLayerBuilder namedLayer = builder.namedLayer();
-        StyleBuilder userStyle = namedLayer.style();
-        RuleBuilder ruleBuilder = userStyle.featureTypeStyle().rule();
-        PointSymbolizerBuilder pointBuilder = ruleBuilder.point();
-        if (stylePointDao.getMarkerSize() != null) {
-            pointBuilder.graphic().size( stylePointDao.getMarkerSize() );
-        }
-        MarkBuilder markBuilder = pointBuilder.graphic().mark();
-        if (stylePointDao.getMarkerWellKnownName() != null) {
-            markBuilder.name( stylePointDao.getMarkerWellKnownName() );
-        }
-        if (stylePointDao.getMarkerSize() != null) {
-            markBuilder.fill().graphicFill().size( stylePointDao.getMarkerSize() );
-        }
-        if (stylePointDao.getMarkerFill() != null) {
-            markBuilder.fill().color( toAwtColor( stylePointDao.getMarkerFill() ) );
-        }
-        if (stylePointDao.getMarkerIcon() != null) {
-            markBuilder.fill().graphicFill().externalGraphic( stylePointDao.getMarkerIcon().localURL.get(), "svg" );
-        }
-        if (stylePointDao.getMarkerTransparency() != null) {
-            markBuilder.fill().opacity( stylePointDao.getMarkerTransparency() );
-        }
-        StrokeBuilder strokeBuilder = markBuilder.stroke();
-        if (stylePointDao.getMarkerStrokeSize() != null && stylePointDao.getMarkerStrokeSize() > 0) {
-            strokeBuilder.width( stylePointDao.getMarkerStrokeSize() );
-            if (stylePointDao.getMarkerStrokeColor() != null) {
-                strokeBuilder.color( toAwtColor( stylePointDao.getMarkerStrokeColor() ) );
+    public void fillSLD( SLDBuilder builder ) {
+        if (stylePointDao.getMarkerWellKnownName() != null || stylePointDao.getMarkerIcon() != null) {
+            RuleBuilder ruleBuilder = getRuleBuilder( builder );
+            PointSymbolizerBuilder pointBuilder = ruleBuilder.point();
+            if (stylePointDao.getMarkerSize() != null || stylePointDao.getMarkerRotation() != null || stylePointDao.getMarkerWellKnownName() != null
+                    || stylePointDao.getMarkerTransparency() != null) {
+                org.geotools.styling.builder.GraphicBuilder pointGraphicBuilder = pointBuilder.graphic();
+                if (stylePointDao.getMarkerSize() != null) {
+                    pointGraphicBuilder.size( stylePointDao.getMarkerSize() );
+                }
+                if (stylePointDao.getMarkerRotation() != null) {
+                    pointGraphicBuilder.rotation( stylePointDao.getMarkerRotation() );
+                }
+                if (stylePointDao.getMarkerWellKnownName() != null) {
+                    MarkBuilder markBuilder = pointGraphicBuilder.mark();
+                    markBuilder.name( stylePointDao.getMarkerWellKnownName() );
+                    if (stylePointDao.getMarkerSize() != null || stylePointDao.getMarkerTransparency() != null) {
+                        FillBuilder fillBuilder = markBuilder.fill();
+                        if (stylePointDao.getMarkerFill() != null) {
+                            fillBuilder.color( toAwtColor( stylePointDao.getMarkerFill() ) );
+                        }
+                        if (stylePointDao.getMarkerTransparency() != null) {
+                            fillBuilder.opacity( stylePointDao.getMarkerTransparency() );
+                        }
+                    }
+                    StrokeBuilder strokeBuilder = markBuilder.stroke();
+                    if (stylePointDao.getMarkerStrokeSize() != null && stylePointDao.getMarkerStrokeSize() > 0) {
+                        strokeBuilder.width( stylePointDao.getMarkerStrokeSize() );
+                        if (stylePointDao.getMarkerStrokeColor() != null) {
+                            strokeBuilder.color( toAwtColor( stylePointDao.getMarkerStrokeColor() ) );
+                        }
+                        if (stylePointDao.getMarkerStrokeTransparency() != null) {
+                            strokeBuilder.opacity( stylePointDao.getMarkerStrokeTransparency() );
+                        }
+                    }
+                }
+                if (stylePointDao.getMarkerIcon() != null) {
+                    pointGraphicBuilder.externalGraphic( stylePointDao.getMarkerIcon().localURL.get(), getFormat(stylePointDao.getMarkerIcon().localURL.get()) );
+                }
             }
-            if (stylePointDao.getMarkerStrokeTransparency() != null) {
-                strokeBuilder.opacity( stylePointDao.getMarkerStrokeTransparency() );
-            }
         }
+    }
+
+
+    private String getFormat( String url ) {
+        if(url.endsWith( ".png" )) {
+            return "image/png";
+        }
+        return null;
     }
 }
