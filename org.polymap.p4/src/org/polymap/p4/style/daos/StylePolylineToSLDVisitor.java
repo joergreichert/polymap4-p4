@@ -16,6 +16,8 @@ package org.polymap.p4.style.daos;
 
 import org.geotools.styling.builder.LineSymbolizerBuilder;
 import org.geotools.styling.builder.RuleBuilder;
+import org.geotools.styling.builder.StrokeBuilder;
+import org.geotools.styling.builder.StyleBuilder;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -41,10 +43,24 @@ public class StylePolylineToSLDVisitor
      */
     @Override
     public void fillSLD( SLDBuilder builder ) {
-        RuleBuilder ruleBuilder = getRuleBuilder( builder );
-        if(false) {
+        if(stylePolylineDao.getLineWidth() != null && stylePolylineDao.getLineWidth() > 0) {
+            RuleBuilder ruleBuilder = getRuleBuilder( builder );
             LineSymbolizerBuilder polylineBuilder = ruleBuilder.line();
-            // TODO
+            StrokeBuilder strokeBuilder = polylineBuilder.stroke();
+            strokeBuilder.width( stylePolylineDao.getLineWidth() );
+            if(stylePolylineDao.getLineColor() != null) {
+                strokeBuilder.color( toAwtColor(stylePolylineDao.getLineColor()) );
+            }            
+            if(stylePolylineDao.getLineStrokeWidth() != null && stylePolylineDao.getLineStrokeWidth() > 0) {
+                StyleBuilder styleBuilder = getStyleBuilder( builder );
+                RuleBuilder ruleBorderBuilder = styleBuilder.featureTypeStyle().rule();
+                LineSymbolizerBuilder polylineBorderBuilder = ruleBorderBuilder.line();
+                StrokeBuilder strokeBorderBuilder = polylineBorderBuilder.stroke();
+                strokeBorderBuilder.width( stylePolylineDao.getLineStrokeWidth() );
+                if(stylePolylineDao.getLineStrokeColor() != null) {
+                    strokeBorderBuilder.color( toAwtColor(stylePolylineDao.getLineStrokeColor()) );
+                }            
+            }
         }
     }
 }

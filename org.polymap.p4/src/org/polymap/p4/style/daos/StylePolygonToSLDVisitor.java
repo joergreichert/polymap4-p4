@@ -41,8 +41,8 @@ public class StylePolygonToSLDVisitor
      */
     @Override
     public void fillSLD( SLDBuilder builder ) {
-        RuleBuilder ruleBuilder = getRuleBuilder( builder );
         if(false) {
+            RuleBuilder ruleBuilder = getRuleBuilder( builder );
             PolygonSymbolizerBuilder polygonBuilder = ruleBuilder.polygon();
             // TODO
         }

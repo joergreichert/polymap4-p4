@@ -45,10 +45,10 @@ public class StylePointToSLDVisitor
     @Override
     public void fillSLD( SLDBuilder builder ) {
         if (stylePointDao.getMarkerWellKnownName() != null || stylePointDao.getMarkerIcon() != null) {
-            RuleBuilder ruleBuilder = getRuleBuilder( builder );
-            PointSymbolizerBuilder pointBuilder = ruleBuilder.point();
-            if (stylePointDao.getMarkerSize() != null || stylePointDao.getMarkerRotation() != null || stylePointDao.getMarkerWellKnownName() != null
-                    || stylePointDao.getMarkerTransparency() != null) {
+            if (stylePointDao.getMarkerSize() != null || stylePointDao.getMarkerRotation() != null
+                    || stylePointDao.getMarkerWellKnownName() != null || stylePointDao.getMarkerTransparency() != null) {
+                RuleBuilder ruleBuilder = getRuleBuilder( builder );
+                PointSymbolizerBuilder pointBuilder = ruleBuilder.point();
                 org.geotools.styling.builder.GraphicBuilder pointGraphicBuilder = pointBuilder.graphic();
                 if (stylePointDao.getMarkerSize() != null) {
                     pointGraphicBuilder.size( stylePointDao.getMarkerSize() );
@@ -80,7 +80,8 @@ public class StylePointToSLDVisitor
                     }
                 }
                 if (stylePointDao.getMarkerIcon() != null) {
-                    pointGraphicBuilder.externalGraphic( stylePointDao.getMarkerIcon().localURL.get(), getFormat(stylePointDao.getMarkerIcon().localURL.get()) );
+                    pointGraphicBuilder.externalGraphic( stylePointDao.getMarkerIcon().localURL.get(),
+                            getFormat( stylePointDao.getMarkerIcon().localURL.get() ) );
                 }
             }
         }
@@ -88,7 +89,7 @@ public class StylePointToSLDVisitor
 
 
     private String getFormat( String url ) {
-        if(url.endsWith( ".png" )) {
+        if (url.endsWith( ".png" )) {
             return "image/png";
         }
         return null;

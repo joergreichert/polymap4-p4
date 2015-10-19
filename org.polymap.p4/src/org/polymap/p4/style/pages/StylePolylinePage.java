@@ -14,7 +14,6 @@
  */
 package org.polymap.p4.style.pages;
 
-import org.eclipse.rap.rwt.service.ServerPushSession;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.runtime.event.EventManager;
@@ -24,20 +23,12 @@ import org.polymap.p4.style.color.ColorPanel;
 import org.polymap.p4.style.color.IColorInfo;
 import org.polymap.p4.style.daos.StylePolylineDao;
 import org.polymap.p4.style.icon.IImageInfo;
-import org.polymap.p4.style.icon.IconLibraryInitializer;
-import org.polymap.p4.style.icon.ImageHelper;
-import org.polymap.p4.style.icon.ImageInfo;
-import org.polymap.p4.style.icon.ImagePanel;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.field.BeanPropertyAdapter;
-import org.polymap.rhei.field.CheckboxFormField;
 import org.polymap.rhei.field.ColorFormField;
-import org.polymap.rhei.field.EnablableFormField;
 import org.polymap.rhei.field.FormFieldEvent;
-import org.polymap.rhei.field.IconFormField;
-import org.polymap.rhei.field.ImageDescription;
 import org.polymap.rhei.field.SpinnerFormField;
 import org.polymap.rhei.form.IFormPageSite;
 
@@ -48,25 +39,17 @@ import org.polymap.rhei.form.IFormPageSite;
 public class StylePolylinePage
         extends AbstractStylePage<StylePolylineDao> {
 
-    private String                    DEFAULT_ICON_PATH = "sld_wellknown/circle.svg";
+    private SpinnerFormField          lineWidthField;
 
-    private SpinnerFormField          markerSizeField;
+    private ColorFormField            colorFormField;
 
-    private IconFormField             iconFormField;
+    private SpinnerFormField          lineTransparencyField;
 
-    private EnablableFormField        backgroundFormEnabledField;
+    private SpinnerFormField          lineStrokeWidthField;
 
-    private ColorFormField            backgroundFormField;
+    private ColorFormField            lineStrokeColorField;
 
-    private SpinnerFormField          markerTransparencyField;
-
-    private SpinnerFormField          markerStrokeSizeField;
-
-    private ColorFormField            markerStrokeColorField;
-
-    private SpinnerFormField          markerStrokeTransparencyField;
-
-    private final Context<IImageInfo> imageInfoInContext;
+    private SpinnerFormField          lineStrokeTransparencyField;
 
     private final Context<IColorInfo> colorInfoInContext;
 
@@ -74,20 +57,11 @@ public class StylePolylinePage
     public StylePolylinePage( IAppContext context, IPanelSite panelSite, Context<IImageInfo> imageInfoInContext,
             Context<IColorInfo> colorInfoInContext ) {
         super( context, panelSite );
-        this.imageInfoInContext = imageInfoInContext;
         this.colorInfoInContext = colorInfoInContext;
-
-        IconLibraryInitializer iconLibraryInitializer = new IconLibraryInitializer();
-
-        ImageInfo imageInfo = new ImageInfo();
-        imageInfo.setImageLibrary( iconLibraryInitializer.getImageLibrary() );
-        imageInfo.setPathToImageDescription( iconLibraryInitializer.getPathToImageDescription() );
-        imageInfoInContext.set( imageInfo );
 
         ColorInfo colorInfo = new ColorInfo();
         colorInfoInContext.set( colorInfo );
 
-        EventManager.instance().subscribe( imageInfo, ev -> ev.getSource() instanceof IImageInfo );
         EventManager.instance().subscribe( colorInfo, ev -> ev.getSource() instanceof IColorInfo );
     }
 
@@ -122,39 +96,25 @@ public class StylePolylinePage
 
 
     private void createStyleTabItemForPolyline( IFormPageSite site ) {
-        markerSizeField = new SpinnerFormField( 1, 128, 12 );
-        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolylineDao.MARKER_SIZE ) ).label
-                .put( "Marker size" ).field.put( markerSizeField ).tooltip.put( "" ).create();
-        backgroundFormField = new ColorFormField();
+        lineWidthField = new SpinnerFormField( 1, 128, 12 );
+        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolylineDao.LINE_WIDTH ) ).label.put( "Line width" ).field
+                .put( lineWidthField ).tooltip.put( "" ).create();
+        colorFormField = new ColorFormField();
         if (colorInfoInContext.get().getColor() != null) {
-            backgroundFormField.setValue( colorInfoInContext.get().getColor() );
+            colorFormField.setValue( colorInfoInContext.get().getColor() );
         }
-        backgroundFormEnabledField = new EnablableFormField( new CheckboxFormField(), backgroundFormField );
-        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolylineDao.MARKER_FILL ) ).label
-                .put( "Marker fill" ).field.put( backgroundFormEnabledField ).tooltip.put( "" ).create();
-        iconFormField = new IconFormField();
-        if (imageInfoInContext.get().getImageDescription() != null) {
-            iconFormField.setValue( imageInfoInContext.get().getImageDescription() );
-        }
-        else {
-            ImageDescription imageDescription = new ImageHelper().createImageDescription( DEFAULT_ICON_PATH );
-            iconFormField.setValue( imageDescription );
-        }
-        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolylineDao.MARKER_ICON ) ).label
-                .put( "Marker icon" ).field.put( iconFormField ).tooltip.put( "" ).create();
-        markerTransparencyField = new SpinnerFormField( 0, 1, 0.1, 1, 1 );
-        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolylineDao.MARKER_TRANSPARENCY ) ).label
-                .put( "Marker transparency" ).field.put( markerTransparencyField ).tooltip.put( "" ).create();
-        markerStrokeSizeField = new SpinnerFormField( 0, 32, 1 );
-        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolylineDao.MARKER_STROKE_SIZE ) ).label
-                .put( "Marker border size" ).field.put( markerStrokeSizeField ).tooltip.put( "" ).create();
-        markerStrokeColorField = new ColorFormField();
-        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolylineDao.MARKER_STROKE_COLOR ) ).label
-                .put( "Marker border color" ).field.put( markerStrokeColorField ).tooltip.put( "" ).create();
-        markerStrokeTransparencyField = new SpinnerFormField( 0, 1, 0.1, 1, 1 );
-        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolylineDao.MARKER_STROKE_TRANSPARENCY ) ).label
-                .put( "Marker border transparency" ).field.put( markerStrokeTransparencyField ).tooltip.put( "" )
-                .create();
+        lineTransparencyField = new SpinnerFormField( 0, 1, 0.1, 1, 1 );
+        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolylineDao.LINE_TRANSPARENCY ) ).label
+                .put( "Line transparency" ).field.put( lineTransparencyField ).tooltip.put( "" ).create();
+        lineStrokeWidthField = new SpinnerFormField( 0, 32, 1 );
+        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolylineDao.LINE_STROKE_WIDTH ) ).label
+                .put( "Line border width" ).field.put( lineStrokeWidthField ).tooltip.put( "" ).create();
+        lineStrokeColorField = new ColorFormField();
+        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolylineDao.LINE_STROKE_COLOR ) ).label
+                .put( "Line border color" ).field.put( lineStrokeColorField ).tooltip.put( "" ).create();
+        lineStrokeTransparencyField = new SpinnerFormField( 0, 1, 0.1, 1, 1 );
+        site.newFormField( new BeanPropertyAdapter( getDao(), StylePolylineDao.LINE_STROKE_TRANSPARENCY ) ).label
+                .put( "Line border transparency" ).field.put( lineStrokeTransparencyField ).tooltip.put( "" ).create();
     }
 
 
@@ -168,8 +128,8 @@ public class StylePolylinePage
     @Override
     public void fieldChange( FormFieldEvent ev ) {
         if (ev.getEventCode() == VALUE_CHANGE) {
-            if (ev.getSource() == backgroundFormEnabledField) {
-                colorInfoInContext.get().setFormField( backgroundFormField );
+            if (ev.getSource() == colorFormField) {
+                colorInfoInContext.get().setFormField( colorFormField );
                 Object[] array = (Object[])ev.getNewFieldValue();
                 if (array != null) {
                     if (array[0] == Boolean.TRUE) {
@@ -177,42 +137,33 @@ public class StylePolylinePage
                         getContext().openPanel( getPanelSite().getPath(), ColorPanel.ID );
                     }
                     else {
-                        getDao().setMarkerFill( null );
+                        getDao().setLineColor( null );
                     }
                 }
                 else {
-                    getDao().setMarkerFill( null );
+                    getDao().setLineColor( null );
                 }
             }
-            else if (ev.getSource() == iconFormField) {
-                imageInfoInContext.get().setFormField( iconFormField );
-                imageInfoInContext.get().setImageDescription( ev.getNewFieldValue() );
-                final ServerPushSession pushSession = new ServerPushSession();
-                pushSession.start();
-                getContext().openPanel( getPanelSite().getPath(), ImagePanel.ID );
-                pushSession.stop();
-            }
-            else if (ev.getSource() == markerTransparencyField) {
-                boolean markerIsVisible = ev.getNewFieldValue() instanceof Integer
+            else if (ev.getSource() == lineTransparencyField) {
+                boolean lineIsVisible = ev.getNewFieldValue() instanceof Integer
                         && ((Integer)ev.getNewFieldValue()).intValue() > 0;
-                markerSizeField.setEnabled( markerIsVisible );
-                iconFormField.setEnabled( markerIsVisible );
-                backgroundFormEnabledField.setEnabled( markerIsVisible );
+                lineWidthField.setEnabled( lineIsVisible );
+                colorFormField.setEnabled( lineIsVisible );
             }
-            else if (ev.getSource() == markerStrokeSizeField) {
+            else if (ev.getSource() == lineStrokeWidthField) {
                 boolean strokeIsVisible = ev.getNewFieldValue() instanceof Integer
                         && ((Integer)ev.getNewFieldValue()).intValue() > 0;
-                markerStrokeColorField.setEnabled( strokeIsVisible );
-                markerStrokeTransparencyField.setEnabled( strokeIsVisible );
+                lineStrokeColorField.setEnabled( strokeIsVisible );
+                lineStrokeTransparencyField.setEnabled( strokeIsVisible );
             }
-            else if (ev.getSource() == markerStrokeTransparencyField) {
+            else if (ev.getSource() == lineStrokeTransparencyField) {
                 boolean strokeIsVisible = ev.getNewFieldValue() instanceof Integer
                         && ((Integer)ev.getNewFieldValue()).intValue() > 0;
-                markerStrokeSizeField.setEnabled( strokeIsVisible );
-                markerStrokeColorField.setEnabled( strokeIsVisible );
+                lineStrokeWidthField.setEnabled( strokeIsVisible );
+                lineStrokeColorField.setEnabled( strokeIsVisible );
             }
-            else if (ev.getSource() == markerStrokeColorField) {
-                colorInfoInContext.get().setFormField( markerStrokeColorField );
+            else if (ev.getSource() == lineStrokeColorField) {
+                colorInfoInContext.get().setFormField( lineStrokeColorField );
                 colorInfoInContext.get().setColor( ev.getNewFieldValue() );
                 getContext().openPanel( getPanelSite().getPath(), ColorPanel.ID );
             }

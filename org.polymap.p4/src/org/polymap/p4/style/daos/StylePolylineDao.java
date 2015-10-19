@@ -25,35 +25,35 @@ import org.polymap.rhei.field.ImageDescription;
 public class StylePolylineDao
         extends AbstractStyleSymbolizerDao {
 
-    public static final String MARKER_SIZE                = "markerSize";
+    public static final String LINE_WIDTH               = "lineWidth";
 
-    public static final String MARKER_FILL                = "markerFill";
+    public static final String LINE_COLOR               = "lineColor";
 
-    public static final String MARKER_ICON                = "markerIcon";
+    public static final String LINE_ICON                = "lineIcon";
 
-    public static final String MARKER_TRANSPARENCY        = "markerTransparency";
+    public static final String LINE_TRANSPARENCY        = "lineTransparency";
 
-    public static final String MARKER_STROKE_SIZE         = "markerStrokeSize";
+    public static final String LINE_STROKE_WIDTH        = "lineStrokeWidth";
 
-    public static final String MARKER_STROKE_COLOR        = "markerStrokeColor";
+    public static final String LINE_STROKE_COLOR        = "lineStrokeColor";
 
-    public static final String MARKER_STROKE_TRANSPARENCY = "markerStrokeTransparency";
+    public static final String LINE_STROKE_TRANSPARENCY = "lineStrokeTransparency";
 
-    private String             markerWellKnownName;                                    // optional
+    private String             lineWellKnownName;                                  // optional
 
-    private Integer            markerSize;
+    private Integer            lineWidth;
 
-    private RGB                markerFill;
+    private RGB                lineColor;
 
-    private ImageDescription   markerIcon;
+    private ImageDescription   lineIcon;
 
-    private Double             markerTransparency;
+    private Double             lineTransparency;
 
-    private Integer            markerStrokeSize;
+    private Integer            lineStrokeWidth;
 
-    private RGB                markerStrokeColor;
+    private RGB                lineStrokeColor;
 
-    private Double             markerStrokeTransparency;
+    private Double             lineStrokeTransparency;
 
 
     public StylePolylineDao() {
@@ -68,83 +68,83 @@ public class StylePolylineDao
     }
 
 
-    public String getMarkerWellKnownName() {
-        return markerWellKnownName;
+    public String getLineWellKnownName() {
+        return lineWellKnownName;
     }
 
 
-    public void setMarkerWellKnownName( String markerWellKnownName ) {
-        this.markerWellKnownName = markerWellKnownName;
+    public void setLineWellKnownName( String lineWellKnownName ) {
+        this.lineWellKnownName = lineWellKnownName;
     }
 
 
-    public Integer getMarkerSize() {
-        return markerSize;
+    public Integer getLineWidth() {
+        return lineWidth;
     }
 
 
-    public void setMarkerSize( Integer markerSize ) {
-        this.markerSize = markerSize;
+    public void setLineWidth( Integer lineWidth ) {
+        this.lineWidth = lineWidth;
     }
 
 
-    public RGB getMarkerFill() {
-        return markerFill;
+    public RGB getLineColor() {
+        return lineColor;
     }
 
 
-    public void setMarkerFill( RGB markerFill ) {
-        this.markerFill = markerFill;
+    public void setLineColor( RGB lineColor ) {
+        this.lineColor = lineColor;
     }
 
 
-    public ImageDescription getMarkerIcon() {
-        return markerIcon;
+    public ImageDescription getLineIcon() {
+        return lineIcon;
     }
 
 
-    public void setMarkerIcon( ImageDescription markerIcon ) {
-        this.markerIcon = markerIcon;
+    public void setLineIcon( ImageDescription lineIcon ) {
+        this.lineIcon = lineIcon;
     }
 
 
-    public Double getMarkerTransparency() {
-        return markerTransparency;
+    public Double getLineTransparency() {
+        return lineTransparency;
     }
 
 
-    public void setMarkerTransparency( Double markerTransparency ) {
-        this.markerTransparency = markerTransparency;
+    public void setLineTransparency( Double lineTransparency ) {
+        this.lineTransparency = lineTransparency;
     }
 
 
-    public Integer getMarkerStrokeSize() {
-        return markerStrokeSize;
+    public Integer getLineStrokeWidth() {
+        return lineStrokeWidth;
     }
 
 
-    public void setMarkerStrokeSize( Integer markerStrokeSize ) {
-        this.markerStrokeSize = markerStrokeSize;
+    public void setLineStrokeWidth( Integer lineStrokeWidth ) {
+        this.lineStrokeWidth = lineStrokeWidth;
     }
 
 
-    public RGB getMarkerStrokeColor() {
-        return markerStrokeColor;
+    public RGB getLineStrokeColor() {
+        return lineStrokeColor;
     }
 
 
-    public void setMarkerStrokeColor( RGB markerStrokeColor ) {
-        this.markerStrokeColor = markerStrokeColor;
+    public void setLineStrokeColor( RGB lineStrokeColor ) {
+        this.lineStrokeColor = lineStrokeColor;
     }
 
 
-    public Double getMarkerStrokeTransparency() {
-        return markerStrokeTransparency;
+    public Double getLineStrokeTransparency() {
+        return lineStrokeTransparency;
     }
 
 
-    public void setMarkerStrokeTransparency( Double markerStrokeTransparency ) {
-        this.markerStrokeTransparency = markerStrokeTransparency;
+    public void setLineStrokeTransparency( Double lineStrokeTransparency ) {
+        this.lineStrokeTransparency = lineStrokeTransparency;
     }
 
 
@@ -163,7 +163,8 @@ public class StylePolylineDao
     /*
      * (non-Javadoc)
      * 
-     * @see org.polymap.p4.style.daos.IStyleDao#fillSLD(org.geotools.styling.builder.
+     * @see
+     * org.polymap.p4.style.daos.IStyleDao#colorSLD(org.geotools.styling.builder.
      * StyledLayerDescriptorBuilder)
      */
     @Override

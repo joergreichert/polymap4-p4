@@ -14,9 +14,13 @@
  */
 package org.polymap.p4.style.daos;
 
+import java.util.Arrays;
+
 import org.eclipse.swt.graphics.RGB;
 import org.geotools.styling.ExternalGraphic;
 import org.geotools.styling.Mark;
+import org.geotools.styling.PolygonSymbolizer;
+import org.geotools.styling.Rule;
 import org.geotools.styling.Stroke;
 import org.polymap.rhei.field.ImageDescription;
 
@@ -36,7 +40,14 @@ public class StylePolygonFromSLDVisitor
 
 
     @Override
-    public void visit( org.geotools.styling.PolygonSymbolizer poly ) {
+    public void visit( Rule rule ) {
+        Arrays.asList( rule.getSymbolizers() ).stream().filter( symb -> symb instanceof PolygonSymbolizer )
+                .forEach( symb -> symb.accept( this ) );
+    }
+
+
+    @Override
+    public void visit( PolygonSymbolizer poly ) {
         if (poly.getFill() != null) {
             poly.getFill().accept( this );
         }

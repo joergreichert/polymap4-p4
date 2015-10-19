@@ -14,9 +14,13 @@
  */
 package org.polymap.p4.style.daos;
 
+import java.util.Arrays;
+
 import org.eclipse.swt.graphics.RGB;
 import org.geotools.styling.ExternalGraphic;
 import org.geotools.styling.Mark;
+import org.geotools.styling.PointSymbolizer;
+import org.geotools.styling.Rule;
 import org.geotools.styling.Stroke;
 import org.opengis.metadata.citation.OnLineResource;
 import org.polymap.rhei.field.ImageDescription;
@@ -37,7 +41,14 @@ public class StylePointFromSLDVisitor
 
 
     @Override
-    public void visit( org.geotools.styling.PointSymbolizer ps ) {
+    public void visit( Rule rule ) {
+        Arrays.asList( rule.getSymbolizers() ).stream().filter( symb -> symb instanceof PointSymbolizer )
+                .forEach( symb -> symb.accept( this ) );
+    }
+
+
+    @Override
+    public void visit( PointSymbolizer ps ) {
         if (ps.getGraphic() != null) {
             ps.getGraphic().accept( this );
             if (ps.getGraphic().getSize() != null) {
@@ -76,13 +87,14 @@ public class StylePointFromSLDVisitor
 
     @Override
     public void visit( ExternalGraphic exgr ) {
-        if(exgr.getURI() != null) {
+        if (exgr.getURI() != null) {
             stylePointDao.setMarkerIcon( new ImageDescription().localURL.put( exgr.getURI() ) );
         }
-        if(exgr.getOnlineResource() != null) {
+        if (exgr.getOnlineResource() != null) {
             OnLineResource onlineResource = exgr.getOnlineResource();
-            if(onlineResource.getLinkage() != null) {
-                stylePointDao.setMarkerIcon( new ImageDescription().localURL.put( onlineResource.getLinkage().toString() ) );
+            if (onlineResource.getLinkage() != null) {
+                stylePointDao.setMarkerIcon( new ImageDescription().localURL.put( onlineResource.getLinkage()
+                        .toString() ) );
             }
         }
     }

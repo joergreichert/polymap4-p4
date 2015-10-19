@@ -21,25 +21,34 @@ import org.geotools.styling.builder.NamedLayerBuilder;
 import org.geotools.styling.builder.RuleBuilder;
 import org.geotools.styling.builder.StyleBuilder;
 
-
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public abstract class AbstractStyleToSLDVisitor extends StyleVisitorAdapter {
-    
+public abstract class AbstractStyleToSLDVisitor
+        extends StyleVisitorAdapter {
+
     protected java.awt.Color toAwtColor( RGB rgb ) {
         return new java.awt.Color( rgb.red, rgb.green, rgb.blue );
     }
-    
-    public abstract void fillSLD(SLDBuilder builder);    
-    
-    protected RuleBuilder getRuleBuilder( SLDBuilder builder ) {
+
+
+    public abstract void fillSLD( SLDBuilder builder );
+
+    protected StyleBuilder getStyleBuilder( SLDBuilder builder ) {
         NamedLayerBuilder namedLayer = builder.namedLayer();
-        StyleBuilder userStyle = builder.style(namedLayer);
-        FeatureTypeStyleBuilder featureTypeStyle = builder.featureTypeStyle(userStyle);
-        RuleBuilder ruleBuilder = builder.rule(featureTypeStyle);
+        return builder.style( namedLayer );
+    }
+
+    protected FeatureTypeStyleBuilder getFeatureTypeStyleBuilder( SLDBuilder builder ) {
+        StyleBuilder userStyle = getStyleBuilder( builder );
+        return builder.featureTypeStyle( userStyle );
+    }
+
+
+    protected RuleBuilder getRuleBuilder( SLDBuilder builder ) {
+        FeatureTypeStyleBuilder featureTypeStyle = getFeatureTypeStyleBuilder( builder );
+        RuleBuilder ruleBuilder = builder.rule( featureTypeStyle );
         return ruleBuilder;
     }
-    
 }

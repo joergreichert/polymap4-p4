@@ -14,11 +14,14 @@
  */
 package org.polymap.p4.style.daos;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.eclipse.swt.graphics.RGB;
-import org.geotools.styling.ExternalGraphic;
-import org.geotools.styling.Mark;
+import org.geotools.styling.LineSymbolizer;
+import org.geotools.styling.Rule;
 import org.geotools.styling.Stroke;
-import org.polymap.rhei.field.ImageDescription;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -29,9 +32,31 @@ public class StylePolylineFromSLDVisitor
 
     private final StylePolylineDao stylePolylineDao;
 
+    private boolean                borderMode = false;
+
 
     public StylePolylineFromSLDVisitor( StylePolylineDao stylePolylineDao ) {
         this.stylePolylineDao = stylePolylineDao;
+    }
+
+
+    @Override
+    public void visit( Rule rule ) {
+        List<LineSymbolizer> lines = Arrays
+                .asList( rule.getSymbolizers() )
+                .stream()
+                .filter( symb -> symb instanceof LineSymbolizer )
+                .map( symb -> (LineSymbolizer)symb )
+                .sorted(
+                        ( LineSymbolizer line1, LineSymbolizer line2 ) -> (Double.valueOf( (double)line1.getStroke()
+                                .getWidth().accept( getNumberExpressionVisitor(), null ) )).compareTo( (double)line2
+                                .getStroke().getWidth().accept( getNumberExpressionVisitor(), null ) ) )
+                .collect( Collectors.<LineSymbolizer>toList() );
+
+        for (LineSymbolizer line : lines) {
+            line.accept( this );
+            borderMode = true;
+        }
     }
 
 
@@ -44,45 +69,25 @@ public class StylePolylineFromSLDVisitor
 
 
     @Override
-    public void visit( Mark mark ) {
-        if (mark.getWellKnownName() != null) {
-            stylePolylineDao.setMarkerWellKnownName( (String)mark.getWellKnownName().accept(
-                    getStringExpressionVisitor(), null ) );
-        }
-        if (mark.getFill() != null) {
-            if (mark.getFill().getColor() != null) {
-                stylePolylineDao.setMarkerFill( (RGB)mark.getFill().getColor()
-                        .accept( getColorExpressionVisitor(), null ) );
-            }
-            if (mark.getFill().getOpacity() != null) {
-                stylePolylineDao.setMarkerTransparency( (double)mark.getFill().getOpacity()
-                        .accept( getNumberExpressionVisitor(), null ) );
-            }
-            if (mark.getFill().getGraphicFill() != null && mark.getFill().getGraphicFill().getSize() != null) {
-                stylePolylineDao.setMarkerSize( (int)mark.getFill().getGraphicFill().getSize()
-                        .accept( getNumberExpressionVisitor(), null ) );
-            }
-        }
-        if (mark.getStroke() != null) {
-            mark.getStroke().accept( this );
-        }
-    }
-
-
-    @Override
-    public void visit( ExternalGraphic exgr ) {
-        stylePolylineDao.setMarkerIcon( new ImageDescription().localURL.put( exgr.getURI() ) );
-    }
-
-
-    @Override
     public void visit( Stroke stroke ) {
         if (stroke.getColor() != null) {
-            stylePolylineDao.setMarkerStrokeColor( (RGB)stroke.getColor().accept( getColorExpressionVisitor(), null ) );
+            if (borderMode) {
+                stylePolylineDao
+                        .setLineStrokeColor( (RGB)stroke.getColor().accept( getColorExpressionVisitor(), null ) );
+            }
+            else {
+                stylePolylineDao.setLineColor( (RGB)stroke.getColor().accept( getColorExpressionVisitor(), null ) );
+            }
         }
         if (stroke.getWidth() != null) {
-            stylePolylineDao.setMarkerStrokeSize( ((Double)stroke.getWidth()
-                    .accept( getNumberExpressionVisitor(), null )).intValue() );
+            if (borderMode) {
+                stylePolylineDao.setLineStrokeWidth( ((Double)stroke.getWidth().accept( getNumberExpressionVisitor(),
+                        null )).intValue() );
+            }
+            else {
+                stylePolylineDao.setLineWidth( ((Double)stroke.getWidth().accept( getNumberExpressionVisitor(), null ))
+                        .intValue() );
+            }
         }
     }
 }
