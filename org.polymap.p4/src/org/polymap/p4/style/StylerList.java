@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -46,7 +45,6 @@ import org.geotools.util.Version;
 import org.polymap.core.runtime.Callback;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
-import org.polymap.p4.style.entities.StyleIdent;
 import org.polymap.rhei.batik.toolkit.md.MdListViewer;
 import org.polymap.rhei.batik.toolkit.md.MdToolkit;
 
@@ -111,9 +109,8 @@ public class StylerList
             public void modifyText( ModifyEvent event ) {
                 List<SimpleStyler> newInput = styles.stream().filter( style -> {
                     String filterText = styleListFilter.getText();
-                    Optional<StyleIdent> styleIdent = getStyleIdentifyingName( style );
-                    if (styleIdent.isPresent()) {
-                        String name = styleIdent.get().name.get();
+                    if (style.styleIdent.get() != null) {
+                        String name = style.styleIdent.get().name.get();
                         if (filterText.startsWith( "*" )) {
                             return name != null && name.contains( filterText.substring( 1 ) );
                         }
@@ -135,15 +132,6 @@ public class StylerList
         return styleListFilterForm;
     }
 
-
-    private Optional<StyleIdent> getStyleIdentifyingName( SimpleStyler style ) {
-        Optional<StyleIdent> styleIdent = style.sldFragments.stream()
-                .filter( fragment -> fragment instanceof StyleIdent ).map( fragment -> (StyleIdent)fragment )
-                .findFirst();
-        return styleIdent;
-    }
-
-
     private Composite createStyleList( Composite parent, MdToolkit tk ) {
         Composite styleListComp = tk.createComposite( parent, SWT.NONE );
         styleListComp.setLayout( FormLayoutFactory.defaults().spacing( dp( 16 ).pix() ).create() );
@@ -153,10 +141,9 @@ public class StylerList
 
             @Override
             public void update( ViewerCell cell ) {
-                SimpleStyler desc = (SimpleStyler)cell.getElement();
-                Optional<StyleIdent> name = getStyleIdentifyingName( desc );
-                if(name.isPresent()) {
-                    cell.setText( name.get().name.get() );
+                SimpleStyler style = (SimpleStyler)cell.getElement();
+                if(style.styleIdent.get() != null) {
+                    cell.setText( style.styleIdent.get().name.get() );
                 }
             }
 

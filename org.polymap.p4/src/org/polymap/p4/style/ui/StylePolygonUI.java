@@ -14,6 +14,7 @@
  */
 package org.polymap.p4.style.ui;
 
+import org.eclipse.swt.widgets.Composite;
 import org.polymap.p4.style.color.IColorInfo;
 import org.polymap.p4.style.entities.StylePolygon;
 import org.polymap.p4.style.icon.IImageInfo;
@@ -26,7 +27,8 @@ import org.polymap.rhei.form.IFormPageSite;
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public class StylePolygonUI {
+public class StylePolygonUI
+        extends AbstractStylerFragmentUI {
 
     private final IAppContext         context;
 
@@ -36,18 +38,40 @@ public class StylePolygonUI {
 
     private final Context<IColorInfo> colorInfoInContext;
 
+    private StylePolygon              stylePolygon = null;
 
-    public StylePolygonUI( StylePolygon stylePolygon, IFormPageSite site, IAppContext context, IPanelSite panelSite,
-            Context<IImageInfo> imageInfoInContext, Context<IColorInfo> colorInfoInContext ) {
+
+    public StylePolygonUI( IAppContext context, IPanelSite panelSite, Context<IImageInfo> imageInfoInContext,
+            Context<IColorInfo> colorInfoInContext ) {
         this.context = context;
         this.panelSite = panelSite;
         this.imageInfoInContext = imageInfoInContext;
         this.colorInfoInContext = colorInfoInContext;
-
-        createStylePolygonContent( stylePolygon, site );
     }
 
 
-    private void createStylePolygonContent( StylePolygon stylePolygon, IFormPageSite site ) {
+    public void setModel( StylePolygon stylePolygon ) {
+        this.stylePolygon = stylePolygon;
+    }
+
+
+    @Override
+    public Composite createContents( IFormPageSite site ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    @Override
+    public void submitUI() {
+        // TODO Auto-generated method stub
+
+    }
+
+
+    @Override
+    public void resetUI() {
+        // TODO Auto-generated method stub
+
     }
 }

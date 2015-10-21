@@ -20,6 +20,8 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import org.eclipse.swt.widgets.Composite;
+import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.p4.style.color.IColorInfo;
 import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.LineCapType;
@@ -38,7 +40,8 @@ import org.polymap.rhei.form.IFormPageSite;
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public class StyleLineUI {
+public class StyleLineUI
+        extends AbstractStylerFragmentUI {
 
     private final IAppContext         context;
 
@@ -56,24 +59,35 @@ public class StyleLineUI {
 
     private PicklistFormField         lineCapFormField;
 
-    public StyleLineUI( StyleLine styleLine, IFormPageSite site, IAppContext context,
-            IPanelSite panelSite, Context<IImageInfo> imageInfoInContext, Context<IColorInfo> colorInfoInContext ) {
-        this(styleLine, "", site, context, panelSite, imageInfoInContext, colorInfoInContext);
-    }
-    
-    public StyleLineUI( StyleLine styleLine, String extraLabel, IFormPageSite site, IAppContext context,
-            IPanelSite panelSite, Context<IImageInfo> imageInfoInContext, Context<IColorInfo> colorInfoInContext ) {
+    private StyleLine                 styleLine = null;
+
+    private boolean                   border    = false;
+
+
+    public StyleLineUI( IAppContext context, IPanelSite panelSite, Context<IImageInfo> imageInfoInContext,
+            Context<IColorInfo> colorInfoInContext ) {
         this.context = context;
         this.panelSite = panelSite;
         this.imageInfoInContext = imageInfoInContext;
         this.colorInfoInContext = colorInfoInContext;
-
-        createStyleLineContent( styleLine, extraLabel, site );
     }
 
 
-    private void createStyleLineContent( StyleLine styleLine, String extraLabel, IFormPageSite site ) {
+    public void setModel( StyleLine styleLine ) {
+        this.styleLine = styleLine;
+    }
+
+
+    @Override
+    public Composite createContents( IFormPageSite site ) {
+        Composite parent = site.getPageBody();
+        parent.setLayout( ColumnLayoutFactory.defaults().spacing( 5 )
+                .margins( panelSite.getLayoutPreference().getSpacing() / 2 ).create() );
         lineWidthField = new SpinnerFormField( 1, 128, 12 );
+        String extraLabel = "";
+        if (border) {
+            extraLabel = "border ";
+        }
         site.newFormField( new PropertyAdapter( styleLine.lineWidth ) ).label.put( "Line " + extraLabel + "width" ).field
                 .put( lineWidthField ).tooltip.put( "" ).create();
         colorFormField = new ColorFormField();
@@ -96,6 +110,31 @@ public class StyleLineUI {
         }
         site.newFormField( new PropertyAdapter( styleLine.lineCap ) ).label.put( "Line " + extraLabel + "cap" ).field
                 .put( lineCapFormField ).tooltip.put( "" ).create();
-        new StyleLineUI( styleLine, "border ", site, context, panelSite, imageInfoInContext, colorInfoInContext );
+        if (extraLabel.isEmpty()) {
+            StyleLineUI borderUI = new StyleLineUI( context, panelSite, imageInfoInContext, colorInfoInContext );
+            borderUI.setBorder( true );
+            borderUI.setModel( styleLine.border.get() );
+            borderUI.createContents( site );
+        }
+        return site.getPageBody();
+    }
+
+
+    private void setBorder( boolean b ) {
+        this.border = b;
+    }
+
+
+    @Override
+    public void submitUI() {
+        // TODO Auto-generated method stub
+
+    }
+
+
+    @Override
+    public void resetUI() {
+        // TODO Auto-generated method stub
+
     }
 }

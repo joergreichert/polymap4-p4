@@ -66,8 +66,8 @@ public class SimpleStylerTest
 
         StylePoint point = createStylePoint( simpleStyler );
         point.fromSLD( sld );
-        Assert.assertTrue( point.markerGraphic.get() instanceof StyleFigure );
-        StyleFigure styleFigure = (StyleFigure)point.markerGraphic.get();
+        Assert.assertNotNull( point.markerFigure.get() );
+        StyleFigure styleFigure = point.markerFigure.get();
         Assert.assertEquals( "Circle", styleFigure.markerWellKnownName.get() );
         Assert.assertEquals( 12, point.markerSize.get().intValue() );
         Assert.assertEquals( 255, styleFigure.markerFill.get().red.get().intValue() );

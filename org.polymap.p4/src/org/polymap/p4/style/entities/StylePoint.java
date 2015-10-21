@@ -29,13 +29,16 @@ public class StylePoint
         extends AbstractStyleSymbolizer {
 
     @Nullable
-    public Property<StyleGraphics> markerGraphic;
+    public Property<StyleFigure> markerFigure;
 
     @Nullable
-    public Property<Double>        markerSize;
+    public Property<StyleImage>  markerImage;
 
     @Nullable
-    public Property<Double>        markerRotation;
+    public Property<Double>      markerSize;
+
+    @Nullable
+    public Property<Double>      markerRotation;
 
 
     @Override

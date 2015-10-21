@@ -14,9 +14,9 @@
  */
 package org.polymap.p4.style.ui;
 
+import org.eclipse.swt.widgets.Composite;
+import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.p4.style.color.IColorInfo;
-import org.polymap.p4.style.entities.StyleFigure;
-import org.polymap.p4.style.entities.StyleImage;
 import org.polymap.p4.style.entities.StylePoint;
 import org.polymap.p4.style.icon.IImageInfo;
 import org.polymap.p4.util.PropertyAdapter;
@@ -30,7 +30,8 @@ import org.polymap.rhei.form.IFormPageSite;
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public class StylePointUI {
+public class StylePointUI
+        extends AbstractStylerFragmentUI {
 
     private final IAppContext         context;
 
@@ -44,32 +45,57 @@ public class StylePointUI {
 
     private final Context<IColorInfo> colorInfoInContext;
 
+    private StylePoint                stylePoint = null;
 
-    public StylePointUI( StylePoint stylePoint, IFormPageSite site, IAppContext context, IPanelSite panelSite,
-            Context<IImageInfo> imageInfoInContext, Context<IColorInfo> colorInfoInContext ) {
+
+    public StylePointUI( IAppContext context, IPanelSite panelSite, Context<IImageInfo> imageInfoInContext,
+            Context<IColorInfo> colorInfoInContext ) {
         this.context = context;
         this.panelSite = panelSite;
         this.imageInfoInContext = imageInfoInContext;
         this.colorInfoInContext = colorInfoInContext;
-
-        createStylePointContent( stylePoint, site );
     }
 
 
-    private void createStylePointContent( StylePoint stylePoint, IFormPageSite site ) {
+    public void setModel( StylePoint stylePoint ) {
+        this.stylePoint = stylePoint;
+    }
+
+
+    @Override
+    public Composite createContents( IFormPageSite site ) {
+        Composite parent = site.getPageBody();
+        parent.setLayout( ColumnLayoutFactory.defaults().spacing( 5 )
+                .margins( panelSite.getLayoutPreference().getSpacing() / 2 ).create() );
         markerSizeField = new SpinnerFormField( 1, 128, 12 );
         site.newFormField( new PropertyAdapter( stylePoint.markerSize ) ).label.put( "Marker size" ).field
                 .put( markerSizeField ).tooltip.put( "" ).create();
-        if (stylePoint.markerGraphic.get() instanceof StyleFigure) {
-            new StyleFigureUI( (StyleFigure)stylePoint.markerGraphic.get(), site, context, panelSite,
-                    imageInfoInContext, colorInfoInContext );
+        if (stylePoint.markerFigure.get() != null) {
+            StyleFigureUI ui = new StyleFigureUI( context, panelSite, imageInfoInContext, colorInfoInContext );
+            ui.setModel( stylePoint.markerFigure.get() );
+            ui.createContents( site );
         }
-        else if (stylePoint.markerGraphic.get() instanceof StyleImage) {
-            new StyleImageUI( (StyleImage)stylePoint.markerGraphic.get(), site, context, panelSite, imageInfoInContext );
+        else if (stylePoint.markerImage.get() != null) {
+            StyleImageUI imageUI = new StyleImageUI( context, panelSite, imageInfoInContext );
+            imageUI.setModel( stylePoint.markerImage.get() );
+            imageUI.createContents( site );
         }
         markerRotationFormField = new SpinnerFormField( -360, 360, 0 );
         markerRotationFormField.setEnabled( false );
         site.newFormField( new PropertyAdapter( stylePoint.markerRotation ) ).label.put( "Marker rotation" ).field
                 .put( markerRotationFormField ).tooltip.put( "" ).create();
+        return site.getPageBody();
+    }
+
+
+    @Override
+    public void submitUI() {
+        // TODO Auto-generated method stub
+    }
+
+
+    @Override
+    public void resetUI() {
+        // TODO Auto-generated method stub
     }
 }

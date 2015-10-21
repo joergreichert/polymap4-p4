@@ -61,7 +61,6 @@ import org.polymap.core.data.pipeline.PipelineProcessorConfiguration;
 import org.polymap.core.data.pipeline.ProcessorResponse;
 import org.polymap.core.data.pipeline.ResponseHandler;
 import org.polymap.p4.data.P4PipelineIncubator;
-import org.polymap.p4.style.entities.StyleIdent;
 import org.polymap.rap.openlayers.style.FillStyle;
 import org.polymap.rap.openlayers.style.StrokeStyle;
 import org.polymap.rap.openlayers.style.Style;
@@ -85,8 +84,10 @@ public class StylePreview {
         comp.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, true ) );
         String typeName = "stylerExample";
         ContentDataStore dataStore = null;
-        switch (simpleStyler.sldFragments.stream().filter( fragment -> fragment instanceof StyleIdent )
-                .map( fragment -> (StyleIdent)fragment ).findFirst().get().featureType.get()) {
+        switch (simpleStyler.styleIdent.get().featureType.get()) {
+            case TEXT:
+                dataStore = createSimpleFeature( typeName, "pointProperty", Point.class );
+                break;
             case LINE_STRING:
                 dataStore = createSimpleFeature( typeName, "lineProperty", LineString.class );
                 break;

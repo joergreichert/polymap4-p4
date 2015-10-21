@@ -16,7 +16,9 @@ package org.polymap.p4.style.ui;
 
 import org.eclipse.rap.rwt.service.ServerPushSession;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.runtime.event.EventManager;
+import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.p4.style.color.ColorInfo;
 import org.polymap.p4.style.color.ColorPanel;
 import org.polymap.p4.style.color.IColorInfo;
@@ -45,6 +47,7 @@ import org.polymap.rhei.form.IFormPageSite;
  *
  */
 public class StyleFigureUI
+        extends AbstractStylerFragmentUI
         implements IFormFieldListener {
 
     private final IAppContext         context;
@@ -72,17 +75,16 @@ public class StyleFigureUI
     private final Context<IColorInfo> colorInfoInContext;
 
     private final Context<IImageInfo> imageInfoInContext;
-    
-    private final StyleFigure styleFigure;
+
+    private StyleFigure               styleFigure;
 
 
-    public StyleFigureUI( StyleFigure styleFigure, IFormPageSite site, IAppContext context, IPanelSite panelSite,
-            Context<IImageInfo> imageInfoInContext, Context<IColorInfo> colorInfoInContext ) {
+    public StyleFigureUI( IAppContext context, IPanelSite panelSite, Context<IImageInfo> imageInfoInContext,
+            Context<IColorInfo> colorInfoInContext ) {
         this.context = context;
         this.panelSite = panelSite;
         this.colorInfoInContext = colorInfoInContext;
         this.imageInfoInContext = imageInfoInContext;
-        this.styleFigure = styleFigure;
 
         ColorInfo colorInfo = new ColorInfo();
         colorInfoInContext.set( colorInfo );
@@ -96,13 +98,19 @@ public class StyleFigureUI
 
         EventManager.instance().subscribe( colorInfo, ev -> ev.getSource() instanceof IColorInfo );
         EventManager.instance().subscribe( imageInfo, ev -> ev.getSource() instanceof IImageInfo );
-
-        createStyleFigureContent( styleFigure, site );
-        site.addFieldListener( this );
     }
 
 
-    private void createStyleFigureContent( StyleFigure styleFigure, IFormPageSite site ) {
+    public void setModel( StyleFigure styleFigure ) {
+        this.styleFigure = styleFigure;
+    }
+
+
+    @Override
+    public Composite createContents( IFormPageSite site ) {
+        Composite parent = site.getPageBody();
+        parent.setLayout( ColumnLayoutFactory.defaults().spacing( 5 )
+                .margins( panelSite.getLayoutPreference().getSpacing() / 2 ).create() );
         figureFormField = new IconFormField();
         if (imageInfoInContext.get().getImageDescription() != null) {
             figureFormField.setValue( imageInfoInContext.get().getImageDescription() );
@@ -111,8 +119,8 @@ public class StyleFigureUI
             ImageDescription imageDescription = new ImageHelper().createImageDescription( DEFAULT_ICON_PATH );
             figureFormField.setValue( imageDescription );
         }
-        site.newFormField( new PropertyAdapter( styleFigure.markerWellKnownName ) ).label.put( "Marker figure" ).field.put( figureFormField ).tooltip
-                .put( "" ).create();
+        site.newFormField( new PropertyAdapter( styleFigure.markerWellKnownName ) ).label.put( "Marker figure" ).field
+                .put( figureFormField ).tooltip.put( "" ).create();
         backgroundFormField = new ColorFormField();
         if (colorInfoInContext.get().getColor() != null) {
             backgroundFormField.setValue( colorInfoInContext.get().getColor() );
@@ -121,18 +129,34 @@ public class StyleFigureUI
         site.newFormField( new PropertyAdapter( styleFigure.markerFill ) ).label.put( "Marker fill" ).field
                 .put( backgroundFormEnabledField ).tooltip.put( "" ).create();
         markerTransparencyField = new SpinnerFormField( 0, 1, 0.1, 1, 1 );
-        site.newFormField( new PropertyAdapter( styleFigure.markerTransparency ) ).label
-                .put( "Marker transparency" ).field.put( markerTransparencyField ).tooltip.put( "" ).create();
+        site.newFormField( new PropertyAdapter( styleFigure.markerTransparency ) ).label.put( "Marker transparency" ).field
+                .put( markerTransparencyField ).tooltip.put( "" ).create();
         markerStrokeSizeField = new SpinnerFormField( 0, 32, 1 );
-        site.newFormField( new PropertyAdapter( styleFigure.markerStrokeSize ) ).label
-                .put( "Marker border size" ).field.put( markerStrokeSizeField ).tooltip.put( "" ).create();
+        site.newFormField( new PropertyAdapter( styleFigure.markerStrokeSize ) ).label.put( "Marker border size" ).field
+                .put( markerStrokeSizeField ).tooltip.put( "" ).create();
         markerStrokeColorField = new ColorFormField();
-        site.newFormField( new PropertyAdapter( styleFigure.markerStrokeColor) ).label
-                .put( "Marker border color" ).field.put( markerStrokeColorField ).tooltip.put( "" ).create();
+        site.newFormField( new PropertyAdapter( styleFigure.markerStrokeColor ) ).label.put( "Marker border color" ).field
+                .put( markerStrokeColorField ).tooltip.put( "" ).create();
         markerStrokeTransparencyField = new SpinnerFormField( 0, 1, 0.1, 1, 1 );
         site.newFormField( new PropertyAdapter( styleFigure.markerStrokeTransparency ) ).label
                 .put( "Marker border transparency" ).field.put( markerStrokeTransparencyField ).tooltip.put( "" )
                 .create();
+        site.addFieldListener( this );
+        return site.getPageBody();
+    }
+
+
+    @Override
+    public void submitUI() {
+        // TODO Auto-generated method stub
+
+    }
+
+
+    @Override
+    public void resetUI() {
+        // TODO Auto-generated method stub
+
     }
 
 
@@ -174,7 +198,7 @@ public class StyleFigureUI
                 boolean markerIsVisible = ev.getNewFieldValue() instanceof Integer
                         && ((Integer)ev.getNewFieldValue()).intValue() > 0;
                 markerSizeField.setEnabled( markerIsVisible );
-//                iconFormField.setEnabled( markerIsVisible );
+                // iconFormField.setEnabled( markerIsVisible );
                 backgroundFormEnabledField.setEnabled( markerIsVisible );
             }
             else if (ev.getSource() == markerStrokeSizeField) {
@@ -196,4 +220,5 @@ public class StyleFigureUI
             }
         }
     }
+
 }

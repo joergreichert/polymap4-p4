@@ -37,7 +37,6 @@ import org.polymap.model2.runtime.EntityRepository;
 import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.model2.runtime.ValueInitializer;
 import org.polymap.model2.store.recordstore.RecordStoreAdapter;
-import org.polymap.p4.style.entities.AbstractSLDModel;
 import org.polymap.p4.style.entities.StyleColor;
 import org.polymap.p4.style.entities.StyleFigure;
 import org.polymap.p4.style.entities.StyleIdent;
@@ -107,35 +106,29 @@ public abstract class AbstractSLDTest {
 
 
     protected StyleIdent createStyleIdent( SimpleStyler simpleStyler ) {
-        return createStyleFragment( simpleStyler, StyleIdent.class );
+        return simpleStyler.styleIdent.createValue( null );
     }
 
     protected StyleLabel createStyleLabel( SimpleStyler simpleStyler ) {
-        return createStyleFragment( simpleStyler, StyleLabel.class );
+        return simpleStyler.styleLabel.createValue( null );
     }
 
     protected StylePoint createStylePoint( SimpleStyler simpleStyler ) {
-        return createStyleFragment( simpleStyler, StylePoint.class );
+        return simpleStyler.stylePoint.createValue( null );
     }
 
 
     protected StyleLine createStyleLine( SimpleStyler simpleStyler ) {
-        return createStyleFragment( simpleStyler, StyleLine.class );
+        return simpleStyler.styleLine.createValue( null );
     }
 
 
     protected StylePolygon createStylePolygon( SimpleStyler simpleStyler ) {
-        return createStyleFragment( simpleStyler, StylePolygon.class );
+        return simpleStyler.stylePolygon.createValue( null );
     }
-
-
-    private <T extends AbstractSLDModel> T createStyleFragment( SimpleStyler simpleStyler, Class<T> clazz ) {
-        return simpleStyler.sldFragments.createElement( clazz, null );
-    }
-
 
     protected StyleFigure createStyleFigure( StylePoint point ) {
-        return point.markerGraphic.createValue( StyleFigure.class, null );
+        return point.markerFigure.createValue( null );
     }
 
 

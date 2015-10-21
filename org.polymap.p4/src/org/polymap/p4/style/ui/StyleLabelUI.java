@@ -44,7 +44,9 @@ import com.google.common.collect.Sets;
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public class StyleLabelUI implements IFormFieldListener {
+public class StyleLabelUI
+        extends AbstractStylerFragmentUI
+        implements IFormFieldListener {
 
     private final IAppContext        context;
 
@@ -62,9 +64,10 @@ public class StyleLabelUI implements IFormFieldListener {
 
     private final Context<IFontInfo> fontInfoInContext;
 
+    private StyleLabel               styleLabel = null;
 
-    public StyleLabelUI( StyleLabel styleLabel, IFormPageSite site, IAppContext context, IPanelSite panelSite,
-            Context<IFontInfo> fontInfoInContext ) {
+
+    public StyleLabelUI( IAppContext context, IPanelSite panelSite, Context<IFontInfo> fontInfoInContext ) {
         this.context = context;
         this.panelSite = panelSite;
         this.fontInfoInContext = fontInfoInContext;
@@ -73,15 +76,19 @@ public class StyleLabelUI implements IFormFieldListener {
         fontInfoInContext.set( fontInfo );
 
         EventManager.instance().subscribe( fontInfo, ev -> ev.getSource() instanceof IFontInfo );
-
-        Composite parent = site.getPageBody();
-        parent.setLayout( ColumnLayoutFactory.defaults().spacing( 5 )
-                .margins( panelSite.getLayoutPreference().getSpacing() / 2 ).create() );
-        createLabelContent( styleLabel, site );
     }
 
 
-    private void createLabelContent( StyleLabel styleLabel, IFormPageSite site ) {
+    public void setModel( StyleLabel styleLabel ) {
+        this.styleLabel = styleLabel;
+    }
+
+
+    @Override
+    public Composite createContents( IFormPageSite site ) {
+        Composite parent = site.getPageBody();
+        parent.setLayout( ColumnLayoutFactory.defaults().spacing( 5 )
+                .margins( panelSite.getLayoutPreference().getSpacing() / 2 ).create() );
         HashSet<String> labels = Sets.newHashSet( "", "<Placeholder>" );
         labelTextField = new PicklistFormField( labels );
         site.newFormField( new PropertyAdapter( styleLabel.labelText ) ).label.put( "Label text" ).field
@@ -91,32 +98,40 @@ public class StyleLabelUI implements IFormFieldListener {
                         + "If you don't want to use labels, just leave this field blank." ).create();
         fontFormField = new FontFormField();
         fontFormField.setEnabled( false );
-        site.newFormField( new PropertyAdapter( styleLabel.labelFont ) ).label
-                .put( "Label font" ).field.put( fontFormField ).tooltip.put( "" ).create();
+        site.newFormField( new PropertyAdapter( styleLabel.labelFont ) ).label.put( "Label font" ).field
+                .put( fontFormField ).tooltip.put( "" ).create();
         labelAnchorFormField = new CoordFormField( new SpinnerFormField( 0, 1, 0.1, 0.0, 1 ), new SpinnerFormField( 0,
                 1, 0.1, 0.5, 1 ) );
         labelAnchorFormField.setEnabled( false );
-        site.newFormField( new PropertyAdapter( styleLabel.labelAnchor) ).label.put( "Label anchor" ).field
+        site.newFormField( new PropertyAdapter( styleLabel.labelAnchor ) ).label.put( "Label anchor" ).field
                 .put( labelAnchorFormField ).tooltip.put( "" ).create();
         labelOffsetFormField = new CoordFormField( new SpinnerFormField( -128, 128, 0 ), new SpinnerFormField( -128,
                 128, 0 ) );
         labelOffsetFormField.setEnabled( false );
-        site.newFormField( new PropertyAdapter( styleLabel.labelOffset) ).label.put( "Label offset" ).field
+        site.newFormField( new PropertyAdapter( styleLabel.labelOffset ) ).label.put( "Label offset" ).field
                 .put( labelOffsetFormField ).tooltip.put( "" ).create();
         labelRotationFormField = new SpinnerFormField( -360, 360, 0 );
         labelRotationFormField.setEnabled( false );
-        site.newFormField( new PropertyAdapter( styleLabel.labelRotation ) ).label
-                .put( "Label rotation" ).field.put( labelRotationFormField ).tooltip.put( "" ).create();
+        site.newFormField( new PropertyAdapter( styleLabel.labelRotation ) ).label.put( "Label rotation" ).field
+                .put( labelRotationFormField ).tooltip.put( "" ).create();
+        return site.getPageBody();
     }
 
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.polymap.rhei.field.IFormFieldListener#fieldChange(org.polymap.rhei.field
-     * .FormFieldEvent)
-     */
+    @Override
+    public void submitUI() {
+        // TODO Auto-generated method stub
+
+    }
+
+
+    @Override
+    public void resetUI() {
+        // TODO Auto-generated method stub
+
+    }
+
+
     @Override
     public void fieldChange( FormFieldEvent ev ) {
         if (ev.getEventCode() == VALUE_CHANGE) {
@@ -136,4 +151,5 @@ public class StyleLabelUI implements IFormFieldListener {
             }
         }
     }
+
 }

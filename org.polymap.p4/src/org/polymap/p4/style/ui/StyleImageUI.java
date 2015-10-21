@@ -15,7 +15,9 @@
 package org.polymap.p4.style.ui;
 
 import org.eclipse.rap.rwt.service.ServerPushSession;
+import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.runtime.event.EventManager;
+import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.p4.style.entities.StyleImage;
 import org.polymap.p4.style.icon.IImageInfo;
 import org.polymap.p4.style.icon.IconLibraryInitializer;
@@ -37,6 +39,7 @@ import org.polymap.rhei.form.IFormPageSite;
  *
  */
 public class StyleImageUI
+        extends AbstractStylerFragmentUI
         implements IFormFieldListener {
 
     private final IAppContext         context;
@@ -49,9 +52,10 @@ public class StyleImageUI
 
     private final Context<IImageInfo> imageInfoInContext;
 
+    private StyleImage                styleImage        = null;
 
-    public StyleImageUI( StyleImage styleImage, IFormPageSite site, IAppContext context, IPanelSite panelSite,
-            Context<IImageInfo> imageInfoInContext ) {
+
+    public StyleImageUI( IAppContext context, IPanelSite panelSite, Context<IImageInfo> imageInfoInContext ) {
         this.context = context;
         this.panelSite = panelSite;
         this.imageInfoInContext = imageInfoInContext;
@@ -64,13 +68,19 @@ public class StyleImageUI
         imageInfoInContext.set( imageInfo );
 
         EventManager.instance().subscribe( imageInfo, ev -> ev.getSource() instanceof IImageInfo );
-
-        createStyleImageContent( styleImage, site );
-        site.addFieldListener( this );
     }
 
 
-    private void createStyleImageContent( StyleImage styleImage, IFormPageSite site ) {
+    public void setModel( StyleImage styleImage ) {
+        this.styleImage = styleImage;
+    }
+
+
+    @Override
+    public Composite createContents( IFormPageSite site ) {
+        Composite parent = site.getPageBody();
+        parent.setLayout( ColumnLayoutFactory.defaults().spacing( 5 )
+                .margins( panelSite.getLayoutPreference().getSpacing() / 2 ).create() );
         iconFormField = new IconFormField();
         if (imageInfoInContext.get().getImageDescription() != null) {
             iconFormField.setValue( imageInfoInContext.get().getImageDescription() );
@@ -81,16 +91,25 @@ public class StyleImageUI
         }
         site.newFormField( new PropertyAdapter( styleImage.url ) ).label.put( "Marker icon" ).field.put( iconFormField ).tooltip
                 .put( "" ).create();
+        site.addFieldListener( this );
+        return site.getPageBody();
     }
 
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.polymap.rhei.field.IFormFieldListener#fieldChange(org.polymap.rhei.field
-     * .FormFieldEvent)
-     */
+    @Override
+    public void submitUI() {
+        // TODO Auto-generated method stub
+
+    }
+
+
+    @Override
+    public void resetUI() {
+        // TODO Auto-generated method stub
+
+    }
+
+
     @Override
     public void fieldChange( FormFieldEvent ev ) {
         if (ev.getEventCode() == VALUE_CHANGE) {
@@ -104,4 +123,5 @@ public class StyleImageUI
             }
         }
     }
+
 }

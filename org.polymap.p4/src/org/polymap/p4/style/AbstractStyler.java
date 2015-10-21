@@ -16,7 +16,6 @@ package org.polymap.p4.style;
 
 import java.util.List;
 
-import org.eclipse.swt.widgets.Composite;
 import org.geotools.styling.StyledLayerDescriptor;
 import org.opengis.feature.type.FeatureType;
 import org.polymap.model2.Entity;
@@ -37,31 +36,24 @@ import org.polymap.model2.Entity;
  */
 public abstract class AbstractStyler
         extends Entity {
-    
-    
+
     /**
      * A styler always works on a concrete scheme.
      *
      * @param schema
      */
     public abstract void init( FeatureType schema );
-    
-    
-    public abstract Composite createContents( Composite parent );
-    
-    public abstract void submitUI();
-    
-    public abstract void resetUI();
 
-    
+
     /**
-     * Complex stylers expand / mix all combinations of their referenced / contained 
+     * Complex stylers expand / mix all combinations of their referenced / contained
      * stylers to single SLD rules.
      * 
-     * @param children 
+     * @param children
      * @return
      */
     public abstract void fillSLD( SLDBuilder builder, List<AbstractStyler> children );
-    
-    public abstract void fromSLD(StyledLayerDescriptor sld);
+
+
+    public abstract void fromSLD( StyledLayerDescriptor sld );
 }

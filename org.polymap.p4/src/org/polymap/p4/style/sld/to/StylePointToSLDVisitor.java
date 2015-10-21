@@ -18,8 +18,6 @@ import org.geotools.styling.builder.GraphicBuilder;
 import org.geotools.styling.builder.PointSymbolizerBuilder;
 import org.geotools.styling.builder.RuleBuilder;
 import org.polymap.p4.style.SLDBuilder;
-import org.polymap.p4.style.entities.StyleFigure;
-import org.polymap.p4.style.entities.StyleImage;
 import org.polymap.p4.style.entities.StylePoint;
 import org.polymap.p4.style.sld.to.helper.StyleFigureToSLDHelper;
 import org.polymap.p4.style.sld.to.helper.StyleImageToSLDHelper;
@@ -41,7 +39,7 @@ public class StylePointToSLDVisitor
 
     @Override
     public void fillSLD( SLDBuilder builder ) {
-        if (stylePoint.markerGraphic.get() != null) {
+        if (stylePoint.markerFigure.get() != null || stylePoint.markerImage.get() != null) {
             if (stylePoint.markerSize.get() != null || stylePoint.markerRotation.get() != null) {
                 RuleBuilder ruleBuilder = singletonRule( builder );
                 PointSymbolizerBuilder pointBuilder = builder.point( ruleBuilder );
@@ -52,11 +50,11 @@ public class StylePointToSLDVisitor
                 if (stylePoint.markerRotation.get() != null) {
                     pointGraphicBuilder.rotation( stylePoint.markerRotation.get() );
                 }
-                if (stylePoint.markerGraphic.get() instanceof StyleFigure) {
-                    new StyleFigureToSLDHelper().fillSLD( (StyleFigure)stylePoint.markerGraphic.get(), pointGraphicBuilder.mark() );
+                if (stylePoint.markerFigure.get() != null) {
+                    new StyleFigureToSLDHelper().fillSLD( stylePoint.markerFigure.get(), pointGraphicBuilder.mark() );
                 }
-                else if (stylePoint.markerGraphic.get() instanceof StyleImage) {
-                    new StyleImageToSLDHelper().fillSLD( (StyleImage)stylePoint.markerGraphic.get(), pointGraphicBuilder );
+                else if (stylePoint.markerImage.get() != null) {
+                    new StyleImageToSLDHelper().fillSLD( stylePoint.markerImage.get(), pointGraphicBuilder );
                 }
             }
         }

@@ -20,8 +20,6 @@ import org.geotools.styling.ExternalGraphic;
 import org.geotools.styling.Mark;
 import org.geotools.styling.PointSymbolizer;
 import org.geotools.styling.Rule;
-import org.polymap.p4.style.entities.StyleFigure;
-import org.polymap.p4.style.entities.StyleImage;
 import org.polymap.p4.style.entities.StylePoint;
 import org.polymap.p4.style.sld.from.helper.StyleFigureFromSLDHelper;
 import org.polymap.p4.style.sld.from.helper.StyleImageFromSLDHelper;
@@ -67,7 +65,7 @@ public class StylePointFromSLDVisitor
     @Override
     public void visit( Mark mark ) {
         if (mark.getWellKnownName() != null) {
-            stylePoint.markerGraphic.createValue( StyleFigure.class, ( figure ) -> {
+            stylePoint.markerFigure.createValue( figure -> {
                 new StyleFigureFromSLDHelper( figure ).fillSLD( mark );
                 return figure;
             } );
@@ -81,7 +79,7 @@ public class StylePointFromSLDVisitor
     @Override
     public void visit( ExternalGraphic exgr ) {
         if (exgr.getURI() != null) {
-            stylePoint.markerGraphic.createValue( StyleImage.class, ( image ) -> {
+            stylePoint.markerImage.createValue( image -> {
                 new StyleImageFromSLDHelper().fillSLD( image, exgr );
                 return image;
             } );

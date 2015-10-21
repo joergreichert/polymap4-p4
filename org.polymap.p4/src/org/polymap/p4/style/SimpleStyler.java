@@ -15,43 +15,17 @@
 package org.polymap.p4.style;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
 import org.geotools.styling.StyledLayerDescriptor;
 import org.opengis.feature.type.FeatureType;
-import org.polymap.core.ui.FormDataFactory;
-import org.polymap.model2.CollectionProperty;
-import org.polymap.p4.style.color.IColorInfo;
+import org.polymap.model2.Property;
 import org.polymap.p4.style.entities.AbstractSLDModel;
-import org.polymap.p4.style.entities.AbstractStyleSymbolizer;
 import org.polymap.p4.style.entities.StyleIdent;
 import org.polymap.p4.style.entities.StyleLabel;
 import org.polymap.p4.style.entities.StyleLine;
 import org.polymap.p4.style.entities.StylePoint;
 import org.polymap.p4.style.entities.StylePolygon;
-import org.polymap.p4.style.font.IFontInfo;
-import org.polymap.p4.style.icon.IImageInfo;
-import org.polymap.p4.style.ui.StyleIdentUI;
-import org.polymap.p4.style.ui.StyleLabelUI;
-import org.polymap.p4.style.ui.StyleLineUI;
-import org.polymap.p4.style.ui.StylePointUI;
-import org.polymap.p4.style.ui.StylePolygonUI;
-import org.polymap.rhei.batik.Context;
-import org.polymap.rhei.batik.IAppContext;
-import org.polymap.rhei.batik.IPanelSite;
-import org.polymap.rhei.batik.toolkit.md.MdTabFolder;
-import org.polymap.rhei.batik.toolkit.md.MdToolkit;
-import org.polymap.rhei.form.DefaultFormPage;
-import org.polymap.rhei.form.IFormPageSite;
-import org.polymap.rhei.form.batik.BatikFormContainer;
 
 /**
  * Configuration of simple stylers.
@@ -61,176 +35,17 @@ import org.polymap.rhei.form.batik.BatikFormContainer;
 public class SimpleStyler
         extends AbstractStyler {
 
-    private final String                              styleIdentStr   = "Identification", labelStr = "Label",
-            styleStr = "Geometry Style";
+    protected Property<StyleIdent>   styleIdent;
 
-    private IAppContext                               context;
+    protected Property<StyleLabel>   styleLabel;
 
-    private IPanelSite                                site;
+    protected Property<StylePoint>   stylePoint;
 
-    private Context<IImageInfo>                       imageInfoInContext;
+    protected Property<StyleLine>    styleLine;
 
-    private Context<IColorInfo>                       colorInfoInContext;
+    protected Property<StylePolygon> stylePolygon;
 
-    private Context<IFontInfo>                        fontInfoInContext;
-
-    private String                                    lastOpenTab     = null;
-
-    private Map<String,Function<Composite,Composite>> styleContainers = new HashMap<String,Function<Composite,Composite>>();
-
-    protected CollectionProperty<AbstractSLDModel>    sldFragments;
-
-    public SimpleStyler( ) {
-        
-    }
-
-    /**
-     * 
-     */
-    public SimpleStyler( IAppContext context, IPanelSite panelSite, Context<IImageInfo> imageInfoInContext,
-            Context<IColorInfo> colorInfoInContext, Context<IFontInfo> fontInfoInContext ) {
-        this.context = context;
-        this.site = panelSite;
-        this.imageInfoInContext = imageInfoInContext;
-        this.colorInfoInContext = colorInfoInContext;
-        this.fontInfoInContext = fontInfoInContext;
-    }
-
-
-    @Override
-    public Composite createContents( Composite parent ) {
-        sldFragments.forEach( sldFragment -> createContent( sldFragment ) );
-
-        return internalCreateContents( parent );
-    }
-
-
-    private void createContent( AbstractSLDModel fragment ) {
-        DefaultFormPage page = null;
-        String label = null;
-        if (fragment instanceof StyleIdent) {
-            label = styleIdentStr;
-            page = new DefaultFormPage() {
-
-                @Override
-                public void createFormContents( IFormPageSite site ) {
-                    new StyleIdentUI( (StyleIdent)fragment, site );
-                }
-            };
-        }
-        else if (fragment instanceof StyleLabel) {
-            label = labelStr;
-            page = new DefaultFormPage() {
-
-                @Override
-                public void createFormContents( IFormPageSite formSite ) {
-                    new StyleLabelUI( (StyleLabel)fragment, formSite, context, site, fontInfoInContext );
-                }
-            };
-        }
-        else if (fragment instanceof AbstractStyleSymbolizer) {
-            label = styleStr;
-            if (fragment instanceof StylePoint) {
-                page = new DefaultFormPage() {
-
-                    @Override
-                    public void createFormContents( IFormPageSite formSite ) {
-                        new StylePointUI( (StylePoint)fragment, formSite, context, site, imageInfoInContext,
-                                colorInfoInContext );
-                    }
-                };
-            }
-            else if (fragment instanceof StyleLine) {
-                page = new DefaultFormPage() {
-
-                    @Override
-                    public void createFormContents( IFormPageSite formSite ) {
-                        new StyleLineUI( (StyleLine)fragment, formSite, context, site, imageInfoInContext,
-                                colorInfoInContext );
-                    }
-                };
-            }
-            else if (fragment instanceof StylePolygon) {
-                page = new DefaultFormPage() {
-
-                    @Override
-                    public void createFormContents( IFormPageSite formSite ) {
-                        new StylePolygonUI( (StylePolygon)fragment, formSite, context, site, imageInfoInContext,
-                                colorInfoInContext );
-                    }
-                };
-            }
-        }
-        if (label != null && page != null) {
-            BatikFormContainer pageContainer = new BatikFormContainer( page );
-            styleContainers.put( label, createContentFunction( (MdToolkit)site.toolkit(), label, pageContainer ) );
-        }
-    }
-
-
-    private Function<Composite,Composite> createContentFunction( MdToolkit tk, String label,
-            BatikFormContainer pageContainer ) {
-        return new Function<Composite,Composite>() {
-
-            @Override
-            public Composite apply( Composite parent ) {
-                Composite composite = tk.createComposite( parent, SWT.NONE );
-                pageContainer.createContents( composite );
-                return composite;
-            }
-        };
-    }
-
-
-    private Composite internalCreateContents( Composite parent ) {
-        MdToolkit tk = (MdToolkit)site.toolkit();
-        List<String> tabItems = new ArrayList<String>();
-        tabItems.add( styleIdentStr );
-        tabItems.add( labelStr );
-        tabItems.add( styleStr );
-        Map<String,Function<Composite,Composite>> tabContents = new HashMap<String,Function<Composite,Composite>>();
-        for (String tabItem : tabItems) {
-            tabContents.put( tabItem, styleContainers.get( tabItem ) );
-        }
-        MdTabFolder tabFolder = tk.createTabFolder( parent, tabItems, tabContents );
-        tabFolder.openTab( getLastOpenTab() );
-        tabFolder.addSelectionListener( new SelectionAdapter() {
-
-            @Override
-            public void widgetSelected( SelectionEvent e ) {
-                setLastOpenTab( ((Button)e.widget).getText() );
-            }
-        } );
-        FormDataFactory.on( tabFolder ).left( 0 ).right( 100 );
-        return tabFolder;
-    }
-
-
-    public String getLastOpenTab() {
-        return this.lastOpenTab;
-    }
-
-
-    public void setLastOpenTab( String tabname ) {
-        this.lastOpenTab = tabname;
-    }
-
-
-    @Override
-    public void fillSLD( SLDBuilder builder, List<AbstractStyler> children ) {
-        for (AbstractSLDModel sldFragment : sldFragments) {
-            sldFragment.fillSLD( builder );
-
-            // XXX mit result vereinen
-
-        }
-    }
-
-
-    @Override
-    public void fromSLD( StyledLayerDescriptor sld ) {
-        sldFragments.stream().forEach( fragment -> fragment.fromSLD( sld ) );
-    }
+    private List<AbstractSLDModel>   fragments = null;
 
 
     @Override
@@ -241,15 +56,31 @@ public class SimpleStyler
 
 
     @Override
-    public void submitUI() {
-        // TODO Auto-generated method stub
+    public void fillSLD( SLDBuilder builder, List<AbstractStyler> children ) {
+        for (AbstractSLDModel sldFragment : getSldFragments()) {
+            sldFragment.fillSLD( builder );
 
+            // XXX mit result vereinen
+
+        }
+    }
+
+
+    public List<? extends AbstractSLDModel> getSldFragments() {
+        if (fragments == null) {
+            fragments = new ArrayList<AbstractSLDModel>();
+            fragments.add( styleIdent.get() );
+            fragments.add( styleLabel.get() );
+            fragments.add( stylePoint.get() );
+            fragments.add( styleLine.get() );
+            fragments.add( stylePolygon.get() );
+        }
+        return fragments;
     }
 
 
     @Override
-    public void resetUI() {
-        // TODO Auto-generated method stub
-
+    public void fromSLD( StyledLayerDescriptor sld ) {
+        getSldFragments().stream().forEach( prop -> prop.fromSLD( sld ) );
     }
 }
