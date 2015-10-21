@@ -67,9 +67,10 @@ public class StylePointFromSLDVisitor
     @Override
     public void visit( Mark mark ) {
         if (mark.getWellKnownName() != null) {
-            StyleFigure styleFigure = new StyleFigure();
-            new StyleFigureFromSLDHelper(styleFigure).fillSLD(mark );
-            stylePoint.markerGraphic.set( styleFigure );
+            stylePoint.markerGraphic.createValue( StyleFigure.class, ( figure ) -> {
+                new StyleFigureFromSLDHelper( figure ).fillSLD( mark );
+                return figure;
+            } );
         }
         if (mark.getStroke() != null) {
             mark.getStroke().accept( this );
@@ -80,9 +81,10 @@ public class StylePointFromSLDVisitor
     @Override
     public void visit( ExternalGraphic exgr ) {
         if (exgr.getURI() != null) {
-            StyleImage styleImage = new StyleImage();
-            new StyleImageFromSLDHelper().fillSLD( styleImage, exgr );
-            stylePoint.markerGraphic.set( styleImage );
+            stylePoint.markerGraphic.createValue( StyleImage.class, ( image ) -> {
+                new StyleImageFromSLDHelper().fillSLD( image, exgr );
+                return image;
+            } );
         }
     }
 }

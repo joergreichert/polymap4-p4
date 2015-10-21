@@ -33,11 +33,19 @@ import org.geotools.styling.StyledLayerDescriptor;
 import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
 import org.geotools.util.Version;
 import org.junit.Assert;
+import org.polymap.model2.runtime.EntityRepository;
+import org.polymap.model2.runtime.UnitOfWork;
+import org.polymap.model2.runtime.ValueInitializer;
+import org.polymap.model2.store.recordstore.RecordStoreAdapter;
+import org.polymap.p4.style.entities.AbstractSLDModel;
+import org.polymap.p4.style.entities.StyleColor;
+import org.polymap.p4.style.entities.StyleFigure;
 import org.polymap.p4.style.entities.StyleIdent;
 import org.polymap.p4.style.entities.StyleLabel;
 import org.polymap.p4.style.entities.StyleLine;
 import org.polymap.p4.style.entities.StylePoint;
 import org.polymap.p4.style.entities.StylePolygon;
+import org.polymap.recordstore.lucene.LuceneRecordStore;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -47,11 +55,14 @@ public abstract class AbstractSLDTest {
 
     protected void assertRoundtrip( String fileName ) throws IOException, TransformerException, URISyntaxException {
         StyledLayerDescriptor sld = getSLD( fileName );
-        StyleIdent ident = new StyleIdent();
-        StyleLabel label = new StyleLabel();
-        StylePoint point = new StylePoint();
-        StyleLine line = new StyleLine();
-        StylePolygon polygon = new StylePolygon();
+
+        SimpleStyler simpleStyler = createEmptySimpleStyler();
+
+        StyleIdent ident = createStyleIdent( simpleStyler );
+        StyleLabel label = createStyleLabel( simpleStyler );
+        StylePoint point = createStylePoint( simpleStyler );
+        StyleLine line = createStyleLine( simpleStyler );
+        StylePolygon polygon = createStylePolygon( simpleStyler );
         ident.fromSLD( sld );
         label.fromSLD( sld );
         point.fromSLD( sld );
@@ -79,6 +90,60 @@ public abstract class AbstractSLDTest {
         InputStreamReader reader = new InputStreamReader( is );
         Version styleVersion = new Version( "1.0.0" );
         return new SLDHandler().parse( reader, styleVersion, null, null );
+    }
+
+
+    protected SimpleStyler createEmptySimpleStyler() throws IOException {
+        LuceneRecordStore store = new LuceneRecordStore();
+        @SuppressWarnings("unchecked")
+        EntityRepository entityRepository = EntityRepository.newConfiguration().store.set( new RecordStoreAdapter(
+                store ) ).entities.set( new Class[] { SimpleStyler.class } ).create();
+        UnitOfWork unitOfWork = entityRepository.newUnitOfWork();
+        ValueInitializer<SimpleStyler> init = ( styler ) -> styler;
+        @SuppressWarnings("unchecked")
+        SimpleStyler simpleStyler = unitOfWork.createEntity( SimpleStyler.class, init );
+        return simpleStyler;
+    }
+
+
+    protected StyleIdent createStyleIdent( SimpleStyler simpleStyler ) {
+        return createStyleFragment( simpleStyler, StyleIdent.class );
+    }
+
+    protected StyleLabel createStyleLabel( SimpleStyler simpleStyler ) {
+        return createStyleFragment( simpleStyler, StyleLabel.class );
+    }
+
+    protected StylePoint createStylePoint( SimpleStyler simpleStyler ) {
+        return createStyleFragment( simpleStyler, StylePoint.class );
+    }
+
+
+    protected StyleLine createStyleLine( SimpleStyler simpleStyler ) {
+        return createStyleFragment( simpleStyler, StyleLine.class );
+    }
+
+
+    protected StylePolygon createStylePolygon( SimpleStyler simpleStyler ) {
+        return createStyleFragment( simpleStyler, StylePolygon.class );
+    }
+
+
+    private <T extends AbstractSLDModel> T createStyleFragment( SimpleStyler simpleStyler, Class<T> clazz ) {
+        return simpleStyler.sldFragments.createElement( clazz, null );
+    }
+
+
+    protected StyleFigure createStyleFigure( StylePoint point ) {
+        return point.markerGraphic.createValue( StyleFigure.class, null );
+    }
+
+
+    protected StyleColor initStyleColor( StyleColor color, int red, int green, int blue ) {
+        color.red.set( red );
+        color.green.set( green );
+        color.blue.set( blue );
+        return color;
     }
 
 

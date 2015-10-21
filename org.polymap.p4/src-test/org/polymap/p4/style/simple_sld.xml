@@ -1,34 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<sld:StyledLayerDescriptor xmlns="http://www.opengis.net/sld" xmlns:sld="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc" xmlns:gml="http://www.opengis.net/gml" version="1.0.0">
-    <sld:NamedLayer>
-        <sld:Name/>
-        <sld:UserStyle>
-            <sld:Name>MeinStyle</sld:Name>
-            <sld:FeatureTypeStyle>
-                <sld:Rule>
-                    <sld:PointSymbolizer>
-                        <sld:Graphic>
-                            <sld:Mark>
-                                <sld:WellKnownName>Circle</sld:WellKnownName>
-                                <sld:Fill>
-                                    <sld:GraphicFill>
-                                        <sld:Graphic>
-                                            <sld:Mark/>
-                                            <sld:Size>12.0</sld:Size>
-                                        </sld:Graphic>
-                                    </sld:GraphicFill>
-                                    <sld:CssParameter name="fill">#FFFFFF</sld:CssParameter>
-                                </sld:Fill>
-                                <sld:Stroke>
-                                    <sld:CssParameter name="stroke-width">3.0</sld:CssParameter>
-                                </sld:Stroke>
-                            </sld:Mark>
-                            <sld:Size>12.0</sld:Size>
-                        </sld:Graphic>
-                    </sld:PointSymbolizer>
-                </sld:Rule>
-            </sld:FeatureTypeStyle>
-        </sld:UserStyle>
-    </sld:NamedLayer>
-</sld:StyledLayerDescriptor>
+<StyledLayerDescriptor xmlns="http://www.opengis.net/sld" xmlns:sld="http://www.opengis.net/sld" xmlns:ogc="http://www.opengis.net/ogc" xmlns:gml="http://www.opengis.net/gml" version="1.0.0">
+  <NamedLayer>
+    <Name>MeinStyle</Name>
+    <UserStyle>
+      <FeatureTypeStyle>
+        <Rule>
+          <PointSymbolizer>
+            <Graphic>
+              <Mark>
+                <WellKnownName>Circle</WellKnownName>
+                <Fill>
+                  <CssParameter name="fill">#FFFFFF</CssParameter>
+                </Fill>
+                <Stroke>
+                  <CssParameter name="stroke-width">3.0</CssParameter>
+                </Stroke>
+              </Mark>
+              <Size>12.0</Size>
+            </Graphic>
+          </PointSymbolizer>
+        </Rule>
+      </FeatureTypeStyle>
+    </UserStyle>
+  </NamedLayer>
+</StyledLayerDescriptor>
 

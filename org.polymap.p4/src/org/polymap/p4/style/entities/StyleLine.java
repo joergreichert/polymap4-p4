@@ -19,7 +19,7 @@ import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
 import org.polymap.p4.style.SLDBuilder;
 import org.polymap.p4.style.sld.from.StyleLineFromSLDVisitor;
-import org.polymap.p4.style.sld.to.StylePolylineToSLDVisitor;
+import org.polymap.p4.style.sld.to.StyleLineToSLDVisitor;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -41,6 +41,9 @@ public class StyleLine
     public Property<String>      lineDashPattern;
 
     @Nullable
+    public Property<Double>      lineDashOffset;
+
+    @Nullable
     public Property<Double>      lineTransparency;
 
     @Nullable
@@ -55,6 +58,6 @@ public class StyleLine
 
     @Override
     public void fillSLD( SLDBuilder builder ) {
-        new StylePolylineToSLDVisitor( this ).fillSLD( builder );
+        new StyleLineToSLDVisitor( this ).fillSLD( builder );
     }
 }

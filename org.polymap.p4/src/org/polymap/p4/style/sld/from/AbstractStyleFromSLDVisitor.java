@@ -41,7 +41,6 @@ import org.opengis.filter.expression.Literal;
 import org.opengis.filter.expression.PropertyName;
 import org.opengis.style.Font;
 import org.opengis.style.GraphicalSymbol;
-import org.polymap.p4.style.entities.StyleColor;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -72,12 +71,7 @@ public abstract class AbstractStyleFromSLDVisitor
                     if (expr.getValue() != null) {
                         if (expr.getValue().toString().startsWith( "#" )) {
                             String hexValue = expr.getValue().toString();
-                            Color color = Color.decode( hexValue );
-                            StyleColor styleColor = new StyleColor();
-                            styleColor.red.set( color.getRed() );
-                            styleColor.green.set( color.getGreen() );
-                            styleColor.blue.set( color.getBlue() );
-                            return styleColor;
+                            return Color.decode( hexValue );
                         }
                     }
                     return expr.getValue();

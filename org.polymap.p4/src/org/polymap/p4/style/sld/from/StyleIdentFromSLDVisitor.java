@@ -14,22 +14,29 @@
  */
 package org.polymap.p4.style.sld.from;
 
+import java.util.Arrays;
+
 import org.geotools.styling.NamedLayer;
+import org.geotools.styling.RasterSymbolizer;
 import org.geotools.styling.Style;
 import org.geotools.styling.StyledLayerDescriptor;
+import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.StyleIdent;
-
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public class StyleIdentFromSLDVisitor extends AbstractStyleFromSLDVisitor {
+public class StyleIdentFromSLDVisitor
+        extends AbstractStyleFromSLDVisitor {
+
     private final StyleIdent styleIdent;
-    
-    public StyleIdentFromSLDVisitor(StyleIdent styleIdent) {
+
+
+    public StyleIdentFromSLDVisitor( StyleIdent styleIdent ) {
         this.styleIdent = styleIdent;
     }
+
 
     public void visit( StyledLayerDescriptor sld ) {
         styleIdent.name.set( sld.getName() );
@@ -41,10 +48,49 @@ public class StyleIdentFromSLDVisitor extends AbstractStyleFromSLDVisitor {
     @Override
     public void visit( NamedLayer layer ) {
         styleIdent.name.set( layer.getName() );
-        for(Style style : layer.getStyles()) {
-            if(style.getDescription() != null) {
-                styleIdent.title.set(style.getDescription().getTitle().toString());
-            }
+        Arrays.asList( layer.getStyles() ).stream().forEach( style -> style.accept( this ) );
+        super.visit( layer );
+    }
+
+
+    @Override
+    public void visit( Style style ) {
+        if (styleIdent.name.get() == null) {
+            styleIdent.name.set( style.getName() );
         }
-    }    
+        if (style.getDescription() != null && style.getDescription().getTitle() != null) {
+            styleIdent.title.set( style.getDescription().getTitle().toString() );
+        }
+        super.visit( style );
+    }
+
+
+    @Override
+    public void visit( org.geotools.styling.TextSymbolizer line ) {
+        styleIdent.featureType.set( FeatureType.TEXT );
+    }
+
+
+    @Override
+    public void visit( org.geotools.styling.PointSymbolizer line ) {
+        styleIdent.featureType.set( FeatureType.POINT );
+    }
+
+
+    @Override
+    public void visit( org.geotools.styling.LineSymbolizer line ) {
+        styleIdent.featureType.set( FeatureType.LINE_STRING );
+    }
+
+
+    @Override
+    public void visit( org.geotools.styling.PolygonSymbolizer poly ) {
+        styleIdent.featureType.set( FeatureType.POLYGON );
+    }
+
+
+    @Override
+    public void visit( RasterSymbolizer raster ) {
+        styleIdent.featureType.set( FeatureType.RASTER );
+    }
 }

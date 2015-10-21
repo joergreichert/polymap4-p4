@@ -14,6 +14,7 @@
  */
 package org.polymap.p4.style.sld.from;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,8 +23,10 @@ import org.geotools.styling.LineSymbolizer;
 import org.geotools.styling.Rule;
 import org.geotools.styling.Stroke;
 import org.polymap.p4.style.entities.LineCapType;
-import org.polymap.p4.style.entities.StyleColor;
 import org.polymap.p4.style.entities.StyleLine;
+import org.polymap.p4.style.sld.from.helper.StyleColorFromSLDHelper;
+
+import com.google.common.base.Joiner;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -73,8 +76,7 @@ public class StyleLineFromSLDVisitor
     @Override
     public void visit( Stroke stroke ) {
         if (stroke.getColor() != null) {
-            getStyleLineToUse().lineColor
-                    .set( (StyleColor)stroke.getColor().accept( getColorExpressionVisitor(), null ) );
+            new StyleColorFromSLDHelper().fromSLD( getStyleLineToUse().lineColor, stroke.getColor() );
         }
         if (stroke.getWidth() != null) {
             getStyleLineToUse().lineWidth.set( ((Double)stroke.getWidth().accept( getNumberExpressionVisitor(), null ))
@@ -84,6 +86,17 @@ public class StyleLineFromSLDVisitor
             getStyleLineToUse().lineCap.set( LineCapType.getTypeForLabel( (String)stroke.getLineCap().accept(
                     getStringExpressionVisitor(), null ) ) );
         }
+        if (stroke.getDashArray() != null && stroke.getDashArray().length > 0) {
+            List<String> parts = new ArrayList<String>();
+            for (float value : stroke.getDashArray()) {
+                parts.add( String.valueOf( value ) );
+            }
+            getStyleLineToUse().lineDashPattern.set( (String)Joiner.on( " " ).join( parts ) );
+            if (stroke.getDashOffset() != null) {
+                getStyleLineToUse().lineDashOffset.set( ((Double)stroke.getDashOffset().accept(
+                        getNumberExpressionVisitor(), null )));
+            }
+        }
     }
 
 
@@ -92,8 +105,7 @@ public class StyleLineFromSLDVisitor
         if (borderMode) {
             styleLineToUse = styleLine.border.get();
             if (styleLineToUse == null) {
-                styleLineToUse = new StyleLine();
-                styleLine.border.set( styleLineToUse );
+                styleLineToUse = styleLine.border.createValue( null );
             }
         }
         else {

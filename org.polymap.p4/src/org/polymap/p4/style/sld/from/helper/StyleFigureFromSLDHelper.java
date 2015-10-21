@@ -16,7 +16,6 @@ package org.polymap.p4.style.sld.from.helper;
 
 import org.geotools.styling.Mark;
 import org.geotools.styling.Stroke;
-import org.polymap.p4.style.entities.StyleColor;
 import org.polymap.p4.style.entities.StyleFigure;
 import org.polymap.p4.style.sld.from.AbstractStyleFromSLDVisitor;
 
@@ -42,8 +41,7 @@ public class StyleFigureFromSLDHelper
         }
         if (mark.getFill() != null) {
             if (mark.getFill().getColor() != null) {
-                styleFigure.markerFill.set( (StyleColor)mark.getFill().getColor()
-                        .accept( getColorExpressionVisitor(), null ) );
+                new StyleColorFromSLDHelper().fromSLD( styleFigure.markerFill, mark.getFill().getColor() );
             }
             if (mark.getFill().getOpacity() != null) {
                 styleFigure.markerTransparency.set( (double)mark.getFill().getOpacity()
@@ -60,8 +58,7 @@ public class StyleFigureFromSLDHelper
     @Override
     public void visit( Stroke stroke ) {
         if (stroke.getColor() != null) {
-            styleFigure.markerStrokeColor
-                    .set( (StyleColor)stroke.getColor().accept( getColorExpressionVisitor(), null ) );
+            new StyleColorFromSLDHelper().fromSLD( styleFigure.markerStrokeColor, stroke.getColor() );
         }
         if (stroke.getWidth() != null) {
             styleFigure.markerStrokeSize.set( ((Double)stroke.getWidth().accept( getNumberExpressionVisitor(), null )) );

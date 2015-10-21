@@ -60,7 +60,7 @@ public class StyleLabelToSLDVisitor
     @Override
     public void fillSLD( SLDBuilder builder ) {
         if (styleLabel.labelText.get() != null) {
-            RuleBuilder ruleBuilder = newRule( builder );
+            RuleBuilder ruleBuilder = singletonRule( builder );
             TextSymbolizerBuilder textBuilder = builder.text( ruleBuilder );
             textBuilder.label( new AttributeExpressionImpl( new org.geotools.feature.NameImpl( styleLabel.labelText
                     .get() ) ) );
@@ -68,7 +68,7 @@ public class StyleLabelToSLDVisitor
                 textBuilder.fill().color( new StyleColorToSLDHelper().getSLDColor( styleLabel.labelFontColor.get() ) );
             }
             if (styleLabel.labelFont.get() != null) {
-                new StyleFontToSLDHelper().fillSLD( styleLabel.labelFont.get(), textBuilder.newFont() );
+                new StyleFontToSLDHelper().fillSLD( styleLabel.labelFont.get(), () -> textBuilder.newFont() );
             }
             if ((styleLabel.labelAnchor.get() != null && !(styleLabel.labelAnchor.get().x.get().compareTo(
                     ANCHOR_X_DEFAULT ) == 0 && styleLabel.labelAnchor.get().y.get().compareTo( ANCHOR_Y_DEFAULT ) == 0))

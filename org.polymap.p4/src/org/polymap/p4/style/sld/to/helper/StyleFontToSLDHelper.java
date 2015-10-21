@@ -14,6 +14,8 @@
  */
 package org.polymap.p4.style.sld.to.helper;
 
+import java.util.function.Supplier;
+
 import org.geotools.styling.builder.FontBuilder;
 import org.polymap.p4.style.entities.StyleFont;
 
@@ -32,12 +34,13 @@ public class StyleFontToSLDHelper {
     private static String  FONT_WEIGHT_DEFAULT = "normal";
 
 
-    public void fillSLD( StyleFont styleFont, FontBuilder fontBuilder ) {
+    public void fillSLD( StyleFont styleFont, Supplier<FontBuilder> fontBuilderSupplier ) {
         if (styleFont.family.get() != null
                 && (!FONT_FAMILY_DEFAULT.equals( styleFont.family.get() )
                         || styleFont.size.get().intValue() != FONT_SIZE_DEFAULT
                         || !FONT_STYLE_DEFAULT.equals( styleFont.italic.get() ? "italic" : "normal" ) || !FONT_WEIGHT_DEFAULT
                             .equals( styleFont.bold.get() ? "bold" : "normal" ))) {
+            FontBuilder fontBuilder = fontBuilderSupplier.get();
             fontBuilder.familyName( styleFont.family.get() );
             if (styleFont.size.get() != null) {
                 fontBuilder.size( styleFont.size.get() );

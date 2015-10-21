@@ -43,7 +43,7 @@ public class StylePointToSLDVisitor
     public void fillSLD( SLDBuilder builder ) {
         if (stylePoint.markerGraphic.get() != null) {
             if (stylePoint.markerSize.get() != null || stylePoint.markerRotation.get() != null) {
-                RuleBuilder ruleBuilder = newRule( builder );
+                RuleBuilder ruleBuilder = singletonRule( builder );
                 PointSymbolizerBuilder pointBuilder = builder.point( ruleBuilder );
                 GraphicBuilder pointGraphicBuilder = builder.pointGraphicBuilder( pointBuilder );
                 if (stylePoint.markerSize.get() != null) {

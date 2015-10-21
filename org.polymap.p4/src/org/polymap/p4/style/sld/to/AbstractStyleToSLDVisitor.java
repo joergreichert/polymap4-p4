@@ -31,19 +31,19 @@ public abstract class AbstractStyleToSLDVisitor
 
     public abstract void fillSLD( SLDBuilder builder );
 
-    protected StyleBuilder newStyle( SLDBuilder builder ) {
+    protected StyleBuilder singletonStyle( SLDBuilder builder ) {
         NamedLayerBuilder namedLayer = builder.namedLayer();
         return builder.style( namedLayer );
     }
 
-    protected FeatureTypeStyleBuilder newFeatureTypeStyle( SLDBuilder builder ) {
-        StyleBuilder userStyle = newStyle( builder );
+    protected FeatureTypeStyleBuilder singletonFeatureTypeStyle( SLDBuilder builder ) {
+        StyleBuilder userStyle = singletonStyle( builder );
         return builder.featureTypeStyle( userStyle );
     }
 
 
-    protected RuleBuilder newRule( SLDBuilder builder ) {
-        FeatureTypeStyleBuilder featureTypeStyle = newFeatureTypeStyle( builder );
+    protected RuleBuilder singletonRule( SLDBuilder builder ) {
+        FeatureTypeStyleBuilder featureTypeStyle = singletonFeatureTypeStyle( builder );
         return builder.rule( featureTypeStyle );
     }
 }

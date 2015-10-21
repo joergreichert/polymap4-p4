@@ -14,8 +14,8 @@
           <LineSymbolizer>
             <Stroke>
               <CssParameter name="stroke">#0000FF</CssParameter>
-              <CssParameter name="stroke-width">3</CssParameter>
-              <CssParameter name="stroke-dasharray">5 2</CssParameter>
+              <CssParameter name="stroke-width">3.0</CssParameter>
+              <CssParameter name="stroke-dasharray">5.0 2.0</CssParameter>
             </Stroke>
           </LineSymbolizer>
         </Rule>

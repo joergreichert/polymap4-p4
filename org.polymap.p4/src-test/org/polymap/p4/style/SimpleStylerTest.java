@@ -18,23 +18,10 @@ import org.geotools.styling.StyledLayerDescriptor;
 import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
 import org.junit.Assert;
 import org.junit.Test;
-import org.polymap.model2.Entity;
-import org.polymap.model2.runtime.EntityRepository;
-import org.polymap.model2.runtime.EntityRepository.Configuration;
-import org.polymap.model2.runtime.UnitOfWork;
-import org.polymap.model2.runtime.ValueInitializer;
-import org.polymap.model2.store.recordstore.RecordStoreAdapter;
-import org.polymap.model2.test.Company;
-import org.polymap.model2.test.Employee;
-import org.polymap.model2.test.Female;
-import org.polymap.model2.test.Male;
 import org.polymap.p4.style.entities.FeatureType;
-import org.polymap.p4.style.entities.StyleColor;
 import org.polymap.p4.style.entities.StyleFigure;
 import org.polymap.p4.style.entities.StyleIdent;
-import org.polymap.p4.style.entities.StyleLabel;
 import org.polymap.p4.style.entities.StylePoint;
-import org.polymap.recordstore.lucene.LuceneRecordStore;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -45,34 +32,17 @@ public class SimpleStylerTest
 
     @Test
     public void testStyleDAO() throws Exception {
-        LuceneRecordStore store = new LuceneRecordStore();
-        EntityRepository entityRepository = EntityRepository.newConfiguration()
-                .store.set( new RecordStoreAdapter( store ) )
-                .entities.set( new Class[] {SimpleStyler.class} )
-                .create();
-        UnitOfWork unitOfWork = entityRepository.newUnitOfWork();
-        ValueInitializer<SimpleStyler> init = ( styler ) -> styler;
-        SimpleStyler simpleStyler = unitOfWork.createEntity( SimpleStyler.class, init );
-        ValueInitializer<StyleIdent> identInit = (ident) -> ident;
-        StyleIdent ident = simpleStyler.sldFragments.createElement( StyleIdent.class, identInit );
+        SimpleStyler simpleStyler = createEmptySimpleStyler();
+        StyleIdent ident = createStyleIdent( simpleStyler );
+        ident.name.set( "MeinStyle" );
         ident.featureType.set( FeatureType.POINT );
 
-        ValueInitializer<StylePoint> pointInit = (point) -> point;
-        StylePoint point = simpleStyler.sldFragments.createElement( StylePoint.class, pointInit );
-
-        ValueInitializer<StyleFigure> styleFigureInit = (figure) -> figure;
-        StyleFigure styleFigure = (StyleFigure) point.markerGraphic.createValue( StyleFigure.class, styleFigureInit );
+        StylePoint point = createStylePoint( simpleStyler );
+        StyleFigure styleFigure = createStyleFigure( point );
         styleFigure.markerWellKnownName.set( "Circle" );
         point.markerSize.set( 12d );
-        ValueInitializer<StyleColor> styleColorInit = (color) -> color;
-        StyleColor fillColor = (StyleColor) styleFigure.markerFill.createValue( styleColorInit );
-        fillColor.red.set( 255 );
-        fillColor.green.set( 255 );
-        fillColor.blue.set( 255 );
-        StyleColor strokeColor = (StyleColor) styleFigure.markerStrokeColor.createValue( styleColorInit );
-        strokeColor.red.set( 0 );
-        strokeColor.green.set( 0 );
-        strokeColor.blue.set( 0 );
+        styleFigure.markerFill.createValue( col -> initStyleColor( col, 255, 255, 255 ) );
+        styleFigure.markerStrokeColor.createValue( col -> initStyleColor( col, 0, 0, 0 ) );
         styleFigure.markerStrokeSize.set( 3d );
 
         StyledLayerDescriptorBuilder wrappedBuilder = new StyledLayerDescriptorBuilder();
@@ -88,27 +58,24 @@ public class SimpleStylerTest
     public void testFromStyleDAO() throws Exception {
         StyledLayerDescriptor sld = getSLD( getClass().getResourceAsStream( "simple_sld.xml" ) );
 
-        StyleIdent ident = new StyleIdent();
+        SimpleStyler simpleStyler = createEmptySimpleStyler();
+        StyleIdent ident = createStyleIdent( simpleStyler );
         ident.fromSLD( sld );
         Assert.assertEquals( "MeinStyle", ident.name.get() );
         Assert.assertEquals( FeatureType.POINT, ident.featureType.get() );
 
-        StylePoint point = new StylePoint();
+        StylePoint point = createStylePoint( simpleStyler );
         point.fromSLD( sld );
         Assert.assertTrue( point.markerGraphic.get() instanceof StyleFigure );
         StyleFigure styleFigure = (StyleFigure)point.markerGraphic.get();
         Assert.assertEquals( "Circle", styleFigure.markerWellKnownName.get() );
-        Assert.assertSame( 12, point.markerSize.get() );
-        StyleColor fillColor = new StyleColor();
-        fillColor.red.set( 255 );
-        fillColor.green.set( 255 );
-        fillColor.blue.set( 255 );
-        Assert.assertEquals( fillColor.toString(), styleFigure.markerFill.get().toString() );
-        StyleColor strokeColor = new StyleColor();
-        strokeColor.red.set( 0 );
-        strokeColor.green.set( 0 );
-        strokeColor.blue.set( 0 );
-        Assert.assertEquals( strokeColor.toString(), styleFigure.markerStrokeColor.get().toString() );
-        Assert.assertSame( 3, styleFigure.markerStrokeSize.get() );
+        Assert.assertEquals( 12, point.markerSize.get().intValue() );
+        Assert.assertEquals( 255, styleFigure.markerFill.get().red.get().intValue() );
+        Assert.assertEquals( 255, styleFigure.markerFill.get().green.get().intValue() );
+        Assert.assertEquals( 255, styleFigure.markerFill.get().blue.get().intValue() );
+        Assert.assertEquals( 0, styleFigure.markerStrokeColor.get().red.get().intValue() );
+        Assert.assertEquals( 0, styleFigure.markerStrokeColor.get().green.get().intValue() );
+        Assert.assertEquals( 0, styleFigure.markerStrokeColor.get().blue.get().intValue() );
+        Assert.assertEquals( 3, styleFigure.markerStrokeSize.get().intValue() );
     }
 }

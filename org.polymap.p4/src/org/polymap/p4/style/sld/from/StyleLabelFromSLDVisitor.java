@@ -20,9 +20,8 @@ import org.geotools.styling.Fill;
 import org.geotools.styling.LinePlacement;
 import org.geotools.styling.PointPlacement;
 import org.opengis.style.Font;
-import org.polymap.p4.style.entities.StyleColor;
-import org.polymap.p4.style.entities.StyleCoord;
 import org.polymap.p4.style.entities.StyleLabel;
+import org.polymap.p4.style.sld.from.helper.StyleColorFromSLDHelper;
 import org.polymap.p4.style.sld.from.helper.StyleFontFromSLDHelper;
 
 /**
@@ -52,7 +51,7 @@ public class StyleLabelFromSLDVisitor
     @Override
     public void visit( Fill fill ) {
         if (fill.getColor() != null) {
-            styleLabel.labelFontColor.set( (StyleColor)fill.getColor().accept( getColorExpressionVisitor(), null ) );
+            new StyleColorFromSLDHelper().fromSLD( styleLabel.labelFontColor, fill.getColor() );
         }
         super.visit( fill );
     }
@@ -78,10 +77,11 @@ public class StyleLabelFromSLDVisitor
     @Override
     public void visit( AnchorPoint ap ) {
         if (ap.getAnchorPointX() != null && ap.getAnchorPointY() != null) {
-            StyleCoord styleCoord = new StyleCoord();
-            styleCoord.x.set( (double)ap.getAnchorPointX().accept( getNumberExpressionVisitor(), null ) );
-            styleCoord.y.set( (double)ap.getAnchorPointY().accept( getNumberExpressionVisitor(), null ) );
-            styleLabel.labelAnchor.set( styleCoord );
+            styleLabel.labelAnchor.createValue( anchor -> {
+                anchor.x.set( (double)ap.getAnchorPointX().accept( getNumberExpressionVisitor(), null ) );
+                anchor.y.set( (double)ap.getAnchorPointY().accept( getNumberExpressionVisitor(), null ) );
+                return anchor;
+            });
         }
     }
 
@@ -89,10 +89,11 @@ public class StyleLabelFromSLDVisitor
     @Override
     public void visit( Displacement dis ) {
         if (dis.getDisplacementX() != null && dis.getDisplacementY() != null) {
-            StyleCoord styleCoord = new StyleCoord();
-            styleCoord.x.set( (double)dis.getDisplacementX().accept( getNumberExpressionVisitor(), null ) );
-            styleCoord.y.set( (double)dis.getDisplacementY().accept( getNumberExpressionVisitor(), null ) );
-            styleLabel.labelOffset.set( styleCoord );
+            styleLabel.labelOffset.createValue( offset -> {
+                offset.x.set( (double)dis.getDisplacementX().accept( getNumberExpressionVisitor(), null ) );
+                offset.y.set( (double)dis.getDisplacementY().accept( getNumberExpressionVisitor(), null ) );
+                return offset;
+            });
         }
     }
 

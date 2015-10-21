@@ -22,7 +22,7 @@ import java.util.List;
  *
  */
 public enum FeatureType {
-    POINT("Point"), LINE_STRING("Line string"), POLYGON("Polygon"), RASTER("Raster");
+    TEXT("Text"), POINT("Point"), LINE_STRING("Line string"), POLYGON("Polygon"), RASTER("Raster");
 
     private String label;
 
@@ -34,7 +34,7 @@ public enum FeatureType {
 
 
     public static List<FeatureType> getOrdered() {
-        return Arrays.asList( POINT, LINE_STRING, POLYGON, RASTER );
+        return Arrays.asList( TEXT, POINT, LINE_STRING, POLYGON, RASTER );
     }
 
 
