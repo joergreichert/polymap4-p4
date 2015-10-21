@@ -8,28 +8,28 @@
   <NamedLayer>
     <Name>Line with border</Name>
     <UserStyle>
-    <Title>SLD Cook Book: Line w2th border</Title>
+      <Title>SLD Cook Book: Line w2th border</Title>
       <FeatureTypeStyle>
-         <Rule>
+        <Rule>
           <LineSymbolizer>
             <Stroke>
-              <CssParameter name="stroke">#333333</CssParameter>                           
-              <CssParameter name="stroke-width">5</CssParameter>    
-              <CssParameter name="stroke-linecap">round</CssParameter>    
-            </Stroke> 
+              <CssParameter name="stroke">#333333</CssParameter>
+              <CssParameter name="stroke-linecap">round</CssParameter>
+              <CssParameter name="stroke-width">5.0</CssParameter>
+            </Stroke>
           </LineSymbolizer>
         </Rule>
       </FeatureTypeStyle>
       <FeatureTypeStyle>
-         <Rule>
+        <Rule>
           <LineSymbolizer>
-          <Stroke>
-              <CssParameter name="stroke">#6699FF</CssParameter>                           
-              <CssParameter name="stroke-width">3</CssParameter> 
-              <CssParameter name="stroke-linecap">round</CssParameter>  
+            <Stroke>
+              <CssParameter name="stroke">#6699FF</CssParameter>
+              <CssParameter name="stroke-linecap">round</CssParameter>
+              <CssParameter name="stroke-width">3.0</CssParameter>
             </Stroke>
-          </LineSymbolizer>                                          
-         </Rule>
+          </LineSymbolizer>
+        </Rule>
       </FeatureTypeStyle>
     </UserStyle>
   </NamedLayer>

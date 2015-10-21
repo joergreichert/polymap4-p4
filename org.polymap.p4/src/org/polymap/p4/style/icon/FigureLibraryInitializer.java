@@ -22,29 +22,15 @@ import com.google.common.collect.Lists;
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public class IconLibraryInitializer
+public class FigureLibraryInitializer
         extends AbstractImageLibraryInitializer {
 
     protected List<String> getNames() {
-        return Lists.newArrayList( "Simple icon places", "Pin of maps", "Maki icons" );
+        return Lists.newArrayList( "Predefined" );
     }
 
 
     protected void fillPaths( List<String> names, List<String> paths ) {
-        addToImageLibrary(
-                names.get( 1 ),
-                "simple-icon-places.lst",
-                "<a href=\"http://www.flaticon.com/packs/simpleicon-places/\">SimpleIcons Places</a>, designed by <a href=\"http://freepik.com\">freepik</a>",
-                paths );
-        addToImageLibrary(
-                names.get( 2 ),
-                "pin-of-maps.lst",
-                "<a href=\"http://www.flaticon.com/packs/pins-of-maps/\">Pin of maps</a>, designed by <a href=\"http://freepik.com\">freepik</a>",
-                paths );
-        addToImageLibrary(
-                names.get( 3 ),
-                "mapzone_maki.lst",
-                "<a href=\"https://github.com/mapbox/maki\">Maki icons</a>, designed by <a href=\"http://mapbox.com/\">Mapbox</a>",
-                paths );
+        addToImageLibrary( names.get( 0 ), "well_known.lst", "Predefined shapes by SLD", paths );
     }
 }

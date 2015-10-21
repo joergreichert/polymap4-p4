@@ -33,12 +33,11 @@ import org.geotools.styling.StyledLayerDescriptor;
 import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
 import org.geotools.util.Version;
 import org.junit.Assert;
-import org.polymap.p4.style.daos.SLDBuilder;
-import org.polymap.p4.style.daos.StyleIdentDao;
-import org.polymap.p4.style.daos.StyleLabelDao;
-import org.polymap.p4.style.daos.StylePointDao;
-import org.polymap.p4.style.daos.StylePolygonDao;
-import org.polymap.p4.style.daos.StylePolylineDao;
+import org.polymap.p4.style.entities.StyleIdent;
+import org.polymap.p4.style.entities.StyleLabel;
+import org.polymap.p4.style.entities.StyleLine;
+import org.polymap.p4.style.entities.StylePoint;
+import org.polymap.p4.style.entities.StylePolygon;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -48,18 +47,23 @@ public abstract class AbstractSLDTest {
 
     protected void assertRoundtrip( String fileName ) throws IOException, TransformerException, URISyntaxException {
         StyledLayerDescriptor sld = getSLD( fileName );
-        StyleIdentDao identDao = new StyleIdentDao( sld );
-        StyleLabelDao labelDao = new StyleLabelDao( sld );
-        StylePointDao pointDao = new StylePointDao( sld );
-        StylePolylineDao polylineDao = new StylePolylineDao( sld );
-        StylePolygonDao polygonDao = new StylePolygonDao( sld );
+        StyleIdent ident = new StyleIdent();
+        StyleLabel label = new StyleLabel();
+        StylePoint point = new StylePoint();
+        StyleLine line = new StyleLine();
+        StylePolygon polygon = new StylePolygon();
+        ident.fromSLD( sld );
+        label.fromSLD( sld );
+        point.fromSLD( sld );
+        line.fromSLD( sld );
+        polygon.fromSLD( sld );
         StyledLayerDescriptorBuilder wrappedBuilder = new StyledLayerDescriptorBuilder();
         SLDBuilder builder = new SLDBuilder( wrappedBuilder );
-        identDao.fillSLD( builder );
-        labelDao.fillSLD( builder );
-        pointDao.fillSLD( builder );
-        polylineDao.fillSLD( builder );
-        polygonDao.fillSLD( builder );
+        ident.fillSLD( builder );
+        label.fillSLD( builder );
+        point.fillSLD( builder );
+        line.fillSLD( builder );
+        polygon.fillSLD( builder );
         assertWrittenSLD( builder, fileName );
     }
 
@@ -100,7 +104,8 @@ public abstract class AbstractSLDTest {
         }
         sldContent = sldContent.replace( "      <Name/>\n", "" ).replace( "            <Font />\n", "" );
         // TODO: handle vendor extensions
-        sldContent = sldContent.replace( "<VendorOption name=\"maxDisplacement\">400</VendorOption>", "" ).replace("\t\t\t\n", "");
+        sldContent = sldContent.replace( "<VendorOption name=\"maxDisplacement\">400</VendorOption>", "" ).replace(
+                "\t\t\t\n", "" );
         return sldContent;
     }
 

@@ -1,0 +1,101 @@
+/*
+ * polymap.org 
+ * Copyright (C) 2015 individual contributors as indicated by the @authors tag. 
+ * All rights reserved.
+ * 
+ * This is free software; you can redistribute it and/or modify it under the terms of
+ * the GNU Lesser General Public License as published by the Free Software
+ * Foundation; either version 3 of the License, or (at your option) any later
+ * version.
+ * 
+ * This software is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+ */
+package org.polymap.p4.style.ui;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+
+import org.polymap.p4.style.color.IColorInfo;
+import org.polymap.p4.style.entities.FeatureType;
+import org.polymap.p4.style.entities.LineCapType;
+import org.polymap.p4.style.entities.StyleLine;
+import org.polymap.p4.style.icon.IImageInfo;
+import org.polymap.p4.util.PropertyAdapter;
+import org.polymap.rhei.batik.Context;
+import org.polymap.rhei.batik.IAppContext;
+import org.polymap.rhei.batik.IPanelSite;
+import org.polymap.rhei.field.ColorFormField;
+import org.polymap.rhei.field.PicklistFormField;
+import org.polymap.rhei.field.SpinnerFormField;
+import org.polymap.rhei.form.IFormPageSite;
+
+/**
+ * @author Joerg Reichert <joerg@mapzone.io>
+ *
+ */
+public class StyleLineUI {
+
+    private final IAppContext         context;
+
+    private final IPanelSite          panelSite;
+
+    private SpinnerFormField          lineWidthField;
+
+    private ColorFormField            colorFormField;
+
+    private SpinnerFormField          lineTransparencyField;
+
+    private final Context<IImageInfo> imageInfoInContext;
+
+    private final Context<IColorInfo> colorInfoInContext;
+
+    private PicklistFormField         lineCapFormField;
+
+    public StyleLineUI( StyleLine styleLine, IFormPageSite site, IAppContext context,
+            IPanelSite panelSite, Context<IImageInfo> imageInfoInContext, Context<IColorInfo> colorInfoInContext ) {
+        this(styleLine, "", site, context, panelSite, imageInfoInContext, colorInfoInContext);
+    }
+    
+    public StyleLineUI( StyleLine styleLine, String extraLabel, IFormPageSite site, IAppContext context,
+            IPanelSite panelSite, Context<IImageInfo> imageInfoInContext, Context<IColorInfo> colorInfoInContext ) {
+        this.context = context;
+        this.panelSite = panelSite;
+        this.imageInfoInContext = imageInfoInContext;
+        this.colorInfoInContext = colorInfoInContext;
+
+        createStyleLineContent( styleLine, extraLabel, site );
+    }
+
+
+    private void createStyleLineContent( StyleLine styleLine, String extraLabel, IFormPageSite site ) {
+        lineWidthField = new SpinnerFormField( 1, 128, 12 );
+        site.newFormField( new PropertyAdapter( styleLine.lineWidth ) ).label.put( "Line " + extraLabel + "width" ).field
+                .put( lineWidthField ).tooltip.put( "" ).create();
+        colorFormField = new ColorFormField();
+        if (colorInfoInContext.get().getColor() != null) {
+            colorFormField.setValue( colorInfoInContext.get().getColor() );
+        }
+        lineTransparencyField = new SpinnerFormField( 0, 1, 0.1, 1, 1 );
+        site.newFormField( new PropertyAdapter( styleLine.lineTransparency ) ).label.put( "Line " + extraLabel
+                + "transparency" ).field.put( lineTransparencyField ).tooltip.put( "" ).create();
+
+        List<String> orderedLabel = FeatureType.getOrdered().stream().map( value -> value.getLabel() )
+                .collect( Collectors.toList() );
+        Comparator<String> comparator = ( String ft1Label, String ft2Label ) -> Integer.valueOf(
+                orderedLabel.indexOf( ft1Label ) ).compareTo( orderedLabel.indexOf( ft2Label ) );
+        SortedMap<String,Object> orderFeatureTypes = new TreeMap<String,Object>( comparator );
+        LineCapType.getOrdered().stream().forEach( value -> orderFeatureTypes.put( value.getLabel(), value ) );
+        lineCapFormField = new PicklistFormField( ( ) -> orderFeatureTypes );
+        if (styleLine.lineCap.get() == null) {
+            styleLine.lineCap.set( LineCapType.BUTT );
+        }
+        site.newFormField( new PropertyAdapter( styleLine.lineCap ) ).label.put( "Line " + extraLabel + "cap" ).field
+                .put( lineCapFormField ).tooltip.put( "" ).create();
+        new StyleLineUI( styleLine, "border ", site, context, panelSite, imageInfoInContext, colorInfoInContext );
+    }
+}

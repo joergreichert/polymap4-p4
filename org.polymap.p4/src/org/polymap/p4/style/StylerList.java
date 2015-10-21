@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -40,14 +41,12 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.geoserver.catalog.SLDHandler;
-import org.geotools.styling.NamedLayer;
-import org.geotools.styling.StyledLayer;
 import org.geotools.styling.StyledLayerDescriptor;
-import org.geotools.styling.UserLayer;
 import org.geotools.util.Version;
 import org.polymap.core.runtime.Callback;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
+import org.polymap.p4.style.entities.StyleIdent;
 import org.polymap.rhei.batik.toolkit.md.MdListViewer;
 import org.polymap.rhei.batik.toolkit.md.MdToolkit;
 
@@ -58,26 +57,26 @@ import org.polymap.rhei.batik.toolkit.md.MdToolkit;
 public class StylerList
         extends Composite {
 
-    private Button                                newButton, loadButton, saveButton, deleteButton;
+    private Button                       newButton, loadButton, saveButton, deleteButton;
 
-    private List<StyledLayerDescriptor>           styles = new ArrayList<StyledLayerDescriptor>();
+    private List<SimpleStyler>           styles = new ArrayList<SimpleStyler>();
 
-    private MdListViewer                          styleList;
+    private MdListViewer                 styleList;
 
-    private Text                                  styleListFilter;
+    private Text                         styleListFilter;
 
-    private final Supplier<Boolean>                     newCallback;
+    private final Supplier<Boolean>      newCallback;
 
-    private final Supplier<StyledLayerDescriptor> saveSupplier;
+    private final Supplier<SimpleStyler> saveSupplier;
 
-    private final Callback<StyledLayerDescriptor> loadCallback;
+    private final Callback<SimpleStyler> loadCallback;
 
-    private final Supplier<Boolean>                     deleteCallback;
+    private final Supplier<Boolean>      deleteCallback;
 
+    private final Supplier<SimpleStyler> createNewSimpleStylerCallback;
 
     public StylerList( Composite parent, MdToolkit tk, int style, Supplier<Boolean> newCallback,
-            Supplier<StyledLayerDescriptor> saveSupplier, Callback<StyledLayerDescriptor> loadCallback,
-            Supplier<Boolean> deleteCallback ) {
+            Supplier<SimpleStyler> saveSupplier, Callback<SimpleStyler> loadCallback, Supplier<Boolean> deleteCallback, Supplier<SimpleStyler> createNewSimpleStylerCallback ) {
         super( parent, style );
         setLayout( FormLayoutFactory.defaults().spacing( dp( 16 ).pix() ).create() );
 
@@ -85,6 +84,7 @@ public class StylerList
         this.saveSupplier = saveSupplier;
         this.loadCallback = loadCallback;
         this.deleteCallback = deleteCallback;
+        this.createNewSimpleStylerCallback = createNewSimpleStylerCallback;
 
         Composite styleListFilterComp = createStyleListFilter( this, tk );
         FormDataFactory.on( styleListFilterComp ).left( 0 ).right( 100 );
@@ -109,23 +109,38 @@ public class StylerList
 
             @Override
             public void modifyText( ModifyEvent event ) {
-                List<StyledLayerDescriptor> newInput = styles.stream().filter( style -> {
+                List<SimpleStyler> newInput = styles.stream().filter( style -> {
                     String filterText = styleListFilter.getText();
-                    String name = getStyleIdentifyingName( style );
-                    if (filterText.startsWith( "*" )) {
-                        return name != null && name.contains( filterText.substring( 1 ) );
+                    Optional<StyleIdent> styleIdent = getStyleIdentifyingName( style );
+                    if (styleIdent.isPresent()) {
+                        String name = styleIdent.get().name.get();
+                        if (filterText.startsWith( "*" )) {
+                            return name != null && name.contains( filterText.substring( 1 ) );
+                        }
+                        else {
+                            return name != null && name.startsWith( filterText );
+                        }
                     }
                     else {
-                        return name != null && name.startsWith( filterText );
+                        return false;
                     }
                 } ).collect( Collectors.toList() );
                 styleList.setInput( newInput );
             }
+
         } );
 
         FormDataFactory.on( styleListFilter ).left( label, dp( 30 ).pix() ).right( 100 );
 
         return styleListFilterForm;
+    }
+
+
+    private Optional<StyleIdent> getStyleIdentifyingName( SimpleStyler style ) {
+        Optional<StyleIdent> styleIdent = style.sldFragments.stream()
+                .filter( fragment -> fragment instanceof StyleIdent ).map( fragment -> (StyleIdent)fragment )
+                .findFirst();
+        return styleIdent;
     }
 
 
@@ -138,8 +153,11 @@ public class StylerList
 
             @Override
             public void update( ViewerCell cell ) {
-                StyledLayerDescriptor desc = (StyledLayerDescriptor)cell.getElement();
-                cell.setText( getStyleIdentifyingName( desc ) );
+                SimpleStyler desc = (SimpleStyler)cell.getElement();
+                Optional<StyleIdent> name = getStyleIdentifyingName( desc );
+                if(name.isPresent()) {
+                    cell.setText( name.get().name.get() );
+                }
             }
 
         } );
@@ -189,29 +207,8 @@ public class StylerList
     }
 
 
-    private String getStyleIdentifyingName( StyledLayerDescriptor desc ) {
-        String name = desc.getTitle();
-        if (name == null) {
-            name = desc.getName();
-        }
-        if (name == null) {
-            for (StyledLayer layer : desc.getStyledLayers()) {
-                if (layer instanceof NamedLayer) {
-                    NamedLayer namedLayer = (NamedLayer)layer;
-                    name = namedLayer.getName();
-                }
-                else if (layer instanceof UserLayer) {
-                    UserLayer userLayer = (UserLayer)layer;
-                    name = userLayer.getName();
-                }
-            }
-        }
-        return name;
-    }
-
-
-    private List<StyledLayerDescriptor> loadPredefinedStyles() {
-        List<StyledLayerDescriptor> styles = new ArrayList<StyledLayerDescriptor>();
+    private List<SimpleStyler> loadPredefinedStyles() {
+        List<SimpleStyler> styles = new ArrayList<SimpleStyler>();
         try (BufferedReader br = new BufferedReader( new InputStreamReader( getClass().getClassLoader()
                 .getResourceAsStream( "resources/slds/sld.list" ) ) )) {
             String line;
@@ -221,7 +218,9 @@ public class StylerList
                 try (InputStreamReader reader = new InputStreamReader( getClass().getClassLoader().getResourceAsStream(
                         "resources/" + line ) )) {
                     StyledLayerDescriptor sld = sldHandler.parse( reader, styleVersion, null, null );
-                    styles.add( sld );
+                    SimpleStyler styler = createNewSimpleStylerCallback.get();
+                    styler.fromSLD(sld);
+                    styles.add( styler );
                 }
                 catch (IOException e) {
                     e.printStackTrace();
@@ -276,8 +275,8 @@ public class StylerList
 
             public void widgetSelected( SelectionEvent e ) {
                 IStructuredSelection selection = (IStructuredSelection)styleList.getSelection();
-                StyledLayerDescriptor style = (StyledLayerDescriptor)selection.getFirstElement();
-                loadCallback.handle( style );
+                SimpleStyler styler = (SimpleStyler)selection.getFirstElement();
+                loadCallback.handle( styler );
             }
         } );
     }
@@ -299,10 +298,10 @@ public class StylerList
         saveButton.addSelectionListener( new SelectionAdapter() {
 
             public void widgetSelected( SelectionEvent e ) {
-                StyledLayerDescriptor sld = saveSupplier.get();
-                styles.add( sld );
+                SimpleStyler styler = saveSupplier.get();
+                styles.add( styler );
                 styleList.setInput( styles );
-                styleList.setSelection( new StructuredSelection( sld ) );
+                styleList.setSelection( new StructuredSelection( styler ) );
             }
         } );
     }
