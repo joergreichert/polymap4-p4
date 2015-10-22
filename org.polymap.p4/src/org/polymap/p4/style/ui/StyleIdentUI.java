@@ -74,7 +74,16 @@ public class StyleIdentUI
                 orderedLabel.indexOf( ft1Label ) ).compareTo( orderedLabel.indexOf( ft2Label ) );
         SortedMap<String,Object> orderFeatureTypes = new TreeMap<String,Object>( comparator );
         FeatureType.getOrdered().stream().forEach( value -> orderFeatureTypes.put( value.getLabel(), value ) );
-        picklistFormField = new PicklistFormField( ( ) -> orderFeatureTypes );
+        picklistFormField = new PicklistFormField( ( ) -> orderFeatureTypes ) {
+            
+            protected Object getValue() {
+                Object value = super.getValue();
+                if(value == null) {
+                    value = FeatureType.POINT;
+                }
+                return value;
+            }
+        };
         site.newFormField( new PropertyAdapter( styleIdent.featureType ) ).label.put( "Feature type" ).field
                 .put( picklistFormField ).tooltip.put( "" ).create();
         return site.getPageBody();

@@ -29,6 +29,9 @@ public class StylePoint
         extends AbstractStyleSymbolizer {
 
     @Nullable
+    public Property<StyleLabel>  markerLabel;
+
+    @Nullable
     public Property<StyleFigure> markerFigure;
 
     @Nullable

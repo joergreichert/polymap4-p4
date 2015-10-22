@@ -20,10 +20,14 @@ import org.geotools.styling.builder.DisplacementBuilder;
 import org.geotools.styling.builder.PointPlacementBuilder;
 import org.geotools.styling.builder.RuleBuilder;
 import org.geotools.styling.builder.TextSymbolizerBuilder;
+import org.polymap.model2.Property;
 import org.polymap.p4.style.SLDBuilder;
+import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.StyleLabel;
 import org.polymap.p4.style.sld.to.helper.StyleColorToSLDHelper;
 import org.polymap.p4.style.sld.to.helper.StyleFontToSLDHelper;
+
+import com.google.common.collect.Lists;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -32,21 +36,26 @@ import org.polymap.p4.style.sld.to.helper.StyleFontToSLDHelper;
 public class StyleLabelToSLDVisitor
         extends AbstractStyleToSLDVisitor {
 
-    private static Double    ANCHOR_X_DEFAULT = 0.0d;
+    private static Double     ANCHOR_X_DEFAULT             = 0.0d;
 
-    private static Double    ANCHOR_Y_DEFAULT = 0.5d;
+    private static Double     ANCHOR_Y_DEFAULT             = 0.5d;
 
-    private static Double    OFFSET_X_DEFAULT = 0.0d;
+    private static Double     OFFSET_X_DEFAULT             = 0.0d;
 
-    private static Double    OFFSET_Y_DEFAULT = 0.0d;
+    private static Double     OFFSET_Y_DEFAULT             = 0.0d;
 
-    private static Double    ROTATION_DEFAULT = 0.0d;
+    private static Double     ROTATION_DEFAULT             = 0.0d;
 
-    private final StyleLabel styleLabel;
+    //private static Double     PERPENDICULAR_OFFSET_DEFAULT = 0.0d;
+
+    private final StyleLabel  styleLabel;
+
+    private final FeatureType host;
 
 
-    public StyleLabelToSLDVisitor( StyleLabel styleLabel ) {
+    public StyleLabelToSLDVisitor( StyleLabel styleLabel, FeatureType host ) {
         this.styleLabel = styleLabel;
+        this.host = host;
     }
 
 
@@ -68,7 +77,7 @@ public class StyleLabelToSLDVisitor
                 textBuilder.fill().color( new StyleColorToSLDHelper().getSLDColor( styleLabel.labelFontColor.get() ) );
             }
             if (styleLabel.labelFont.get() != null) {
-                new StyleFontToSLDHelper().fillSLD( styleLabel.labelFont.get(), () -> textBuilder.newFont() );
+                new StyleFontToSLDHelper().fillSLD( styleLabel.labelFont.get(), ( ) -> textBuilder.newFont() );
             }
             if ((styleLabel.labelAnchor.get() != null && !(styleLabel.labelAnchor.get().x.get().compareTo(
                     ANCHOR_X_DEFAULT ) == 0 && styleLabel.labelAnchor.get().y.get().compareTo( ANCHOR_Y_DEFAULT ) == 0))
@@ -76,22 +85,45 @@ public class StyleLabelToSLDVisitor
                             OFFSET_X_DEFAULT ) == 0 && styleLabel.labelOffset.get().y.get()
                             .compareTo( OFFSET_Y_DEFAULT ) == 0))
                     || (styleLabel.labelRotation.get() != null && styleLabel.labelRotation.get().compareTo(
-                            ROTATION_DEFAULT ) != 0)) {
-                PointPlacementBuilder placementBuilder = textBuilder.pointPlacement();
-                if (styleLabel.labelAnchor.get() != null) {
-                    AnchorPointBuilder anchorBuilder = placementBuilder.anchor();
-                    anchorBuilder.x( styleLabel.labelAnchor.get().x.get() );
-                    anchorBuilder.y( styleLabel.labelAnchor.get().y.get() );
+                            ROTATION_DEFAULT ) != 0) || host != FeatureType.POINT) {
+                if (host == FeatureType.POINT) {
+                    PointPlacementBuilder placementBuilder = textBuilder.pointPlacement();
+                    if (styleLabel.labelAnchor.get() != null) {
+                        AnchorPointBuilder anchorBuilder = placementBuilder.anchor();
+                        anchorBuilder.x( styleLabel.labelAnchor.get().x.get() );
+                        anchorBuilder.y( styleLabel.labelAnchor.get().y.get() );
+                    }
+                    if (styleLabel.labelOffset.get() != null) {
+                        DisplacementBuilder offsetBuilder = placementBuilder.displacement();
+                        offsetBuilder.x( styleLabel.labelOffset.get().x.get() );
+                        offsetBuilder.y( styleLabel.labelOffset.get().y.get() );
+                    }
+                    if (styleLabel.labelRotation.get() != null) {
+                        placementBuilder.rotation( styleLabel.labelRotation.get() );
+                    }
                 }
-                if (styleLabel.labelOffset.get() != null) {
-                    DisplacementBuilder offsetBuilder = placementBuilder.displacement();
-                    offsetBuilder.x( styleLabel.labelOffset.get().x.get() );
-                    offsetBuilder.y( styleLabel.labelOffset.get().y.get() );
-                }
-                if (styleLabel.labelRotation.get() != null) {
-                    placementBuilder.rotation( styleLabel.labelRotation.get() );
+                else if (host == FeatureType.LINE_STRING
+                        /*&& !(styleLabel.perpendicularOffset.get() != null && styleLabel.perpendicularOffset.get()
+                                .compareTo( PERPENDICULAR_OFFSET_DEFAULT ) == 0)*/) {
+                    textBuilder.linePlacement();
                 }
             }
+            handleGeoServerVendorExtensions( textBuilder, styleLabel );
+        }
+    }
+
+
+    private void handleGeoServerVendorExtensions( TextSymbolizerBuilder textBuilder, StyleLabel label ) {
+        Lists.<Property<?>>newArrayList( styleLabel.followLine, styleLabel.maxAngleDelta, styleLabel.maxDisplacement,
+                styleLabel.repeat ).stream()
+                .forEach( property -> handleGeoServerVendorExtension( textBuilder, property ) );
+    }
+
+
+    private void handleGeoServerVendorExtension( TextSymbolizerBuilder textBuilder, Property<?> property ) {
+        if (property.get() != null) {
+            String label = property.info().getName();
+            textBuilder.option( label, property.get() );
         }
     }
 }

@@ -111,7 +111,6 @@ public class StylerPanel
             styleIdent.featureType.set( FeatureType.POINT );
             return styleIdent;
         } );
-        simpleStyler.styleLabel.createValue( null );
         simpleStyler.stylePoint.createValue( null );
         simpleStyler.styleLine.createValue( null );
         simpleStyler.stylePolygon.createValue( null );

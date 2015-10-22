@@ -22,7 +22,6 @@ import org.opengis.feature.type.FeatureType;
 import org.polymap.model2.Property;
 import org.polymap.p4.style.entities.AbstractSLDModel;
 import org.polymap.p4.style.entities.StyleIdent;
-import org.polymap.p4.style.entities.StyleLabel;
 import org.polymap.p4.style.entities.StyleLine;
 import org.polymap.p4.style.entities.StylePoint;
 import org.polymap.p4.style.entities.StylePolygon;
@@ -36,8 +35,6 @@ public class SimpleStyler
         extends AbstractStyler {
 
     protected Property<StyleIdent>   styleIdent;
-
-    protected Property<StyleLabel>   styleLabel;
 
     protected Property<StylePoint>   stylePoint;
 
@@ -70,7 +67,6 @@ public class SimpleStyler
         if (fragments == null) {
             fragments = new ArrayList<AbstractSLDModel>();
             fragments.add( styleIdent.get() );
-            fragments.add( styleLabel.get() );
             fragments.add( stylePoint.get() );
             fragments.add( styleLine.get() );
             fragments.add( stylePolygon.get() );

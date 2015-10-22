@@ -27,6 +27,7 @@ import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.LineCapType;
 import org.polymap.p4.style.entities.StyleLine;
 import org.polymap.p4.style.icon.IImageInfo;
+import org.polymap.p4.style.icon.ShapeFigureLibraryInitializer;
 import org.polymap.p4.util.PropertyAdapter;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IAppContext;
@@ -91,8 +92,15 @@ public class StyleLineUI
         site.newFormField( new PropertyAdapter( styleLine.lineWidth ) ).label.put( "Line " + extraLabel + "width" ).field
                 .put( lineWidthField ).tooltip.put( "" ).create();
         colorFormField = new ColorFormField();
-        if (colorInfoInContext.get().getColor() != null) {
+        if (colorInfoInContext.get() != null && colorInfoInContext.get().getColor() != null) {
             colorFormField.setValue( colorInfoInContext.get().getColor() );
+        }
+        if (styleLine.lineSymbol.get() != null) {
+            ShapeFigureLibraryInitializer shapeFigureLibraryInitializer = new ShapeFigureLibraryInitializer();
+            StylePointUI ui = new StylePointUI( context, panelSite, imageInfoInContext, colorInfoInContext,
+                    shapeFigureLibraryInitializer );
+            ui.setModel( styleLine.lineSymbol.get() );
+            ui.createContents( site );
         }
         lineTransparencyField = new SpinnerFormField( 0, 1, 0.1, 1, 1 );
         site.newFormField( new PropertyAdapter( styleLine.lineTransparency ) ).label.put( "Line " + extraLabel

@@ -20,7 +20,7 @@ import org.junit.Test;
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public class PolylineStyleTest
+public class LineStyleTest
         extends AbstractSLDTest {
 
     @Test

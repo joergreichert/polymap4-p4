@@ -14,10 +14,10 @@
           <LineSymbolizer>
             <Stroke>
               <CssParameter name="stroke">#333333</CssParameter>
-              <CssParameter name="stroke-width">3</CssParameter>
+              <CssParameter name="stroke-width">3.0</CssParameter>
             </Stroke>
-          </LineSymbolizer> 
-        </Rule>         
+          </LineSymbolizer>
+        </Rule>
         <Rule>
           <LineSymbolizer>
             <Stroke>
@@ -27,10 +27,9 @@
                     <WellKnownName>shape://vertline</WellKnownName>
                     <Stroke>
                       <CssParameter name="stroke">#333333</CssParameter>
-                      <CssParameter name="stroke-width">1</CssParameter>
                     </Stroke>
                   </Mark>
-                  <Size>12</Size>
+                  <Size>12.0</Size>
                 </Graphic>
               </GraphicStroke>
             </Stroke>

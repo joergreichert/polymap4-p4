@@ -40,7 +40,6 @@ import org.polymap.model2.store.recordstore.RecordStoreAdapter;
 import org.polymap.p4.style.entities.StyleColor;
 import org.polymap.p4.style.entities.StyleFigure;
 import org.polymap.p4.style.entities.StyleIdent;
-import org.polymap.p4.style.entities.StyleLabel;
 import org.polymap.p4.style.entities.StyleLine;
 import org.polymap.p4.style.entities.StylePoint;
 import org.polymap.p4.style.entities.StylePolygon;
@@ -58,19 +57,16 @@ public abstract class AbstractSLDTest {
         SimpleStyler simpleStyler = createEmptySimpleStyler();
 
         StyleIdent ident = createStyleIdent( simpleStyler );
-        StyleLabel label = createStyleLabel( simpleStyler );
         StylePoint point = createStylePoint( simpleStyler );
         StyleLine line = createStyleLine( simpleStyler );
         StylePolygon polygon = createStylePolygon( simpleStyler );
         ident.fromSLD( sld );
-        label.fromSLD( sld );
         point.fromSLD( sld );
         line.fromSLD( sld );
         polygon.fromSLD( sld );
         StyledLayerDescriptorBuilder wrappedBuilder = new StyledLayerDescriptorBuilder();
         SLDBuilder builder = new SLDBuilder( wrappedBuilder );
         ident.fillSLD( builder );
-        label.fillSLD( builder );
         point.fillSLD( builder );
         line.fillSLD( builder );
         polygon.fillSLD( builder );
@@ -109,9 +105,6 @@ public abstract class AbstractSLDTest {
         return simpleStyler.styleIdent.createValue( null );
     }
 
-    protected StyleLabel createStyleLabel( SimpleStyler simpleStyler ) {
-        return simpleStyler.styleLabel.createValue( null );
-    }
 
     protected StylePoint createStylePoint( SimpleStyler simpleStyler ) {
         return simpleStyler.stylePoint.createValue( null );
@@ -126,6 +119,7 @@ public abstract class AbstractSLDTest {
     protected StylePolygon createStylePolygon( SimpleStyler simpleStyler ) {
         return simpleStyler.stylePolygon.createValue( null );
     }
+
 
     protected StyleFigure createStyleFigure( StylePoint point ) {
         return point.markerFigure.createValue( null );
@@ -161,9 +155,6 @@ public abstract class AbstractSLDTest {
             sldContent = sldContent.substring( index );
         }
         sldContent = sldContent.replace( "      <Name/>\n", "" ).replace( "            <Font />\n", "" );
-        // TODO: handle vendor extensions
-        sldContent = sldContent.replace( "<VendorOption name=\"maxDisplacement\">400</VendorOption>", "" ).replace(
-                "\t\t\t\n", "" );
         return sldContent;
     }
 

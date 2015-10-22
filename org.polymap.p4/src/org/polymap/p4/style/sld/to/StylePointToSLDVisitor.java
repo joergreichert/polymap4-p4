@@ -18,6 +18,7 @@ import org.geotools.styling.builder.GraphicBuilder;
 import org.geotools.styling.builder.PointSymbolizerBuilder;
 import org.geotools.styling.builder.RuleBuilder;
 import org.polymap.p4.style.SLDBuilder;
+import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.StylePoint;
 import org.polymap.p4.style.sld.to.helper.StyleFigureToSLDHelper;
 import org.polymap.p4.style.sld.to.helper.StyleImageToSLDHelper;
@@ -39,24 +40,32 @@ public class StylePointToSLDVisitor
 
     @Override
     public void fillSLD( SLDBuilder builder ) {
+        if (stylePoint.markerLabel.get() != null) {
+            new StyleLabelToSLDVisitor( stylePoint.markerLabel.get(), FeatureType.POINT ).fillSLD( builder );
+        }
         if (stylePoint.markerFigure.get() != null || stylePoint.markerImage.get() != null) {
             if (stylePoint.markerSize.get() != null || stylePoint.markerRotation.get() != null) {
                 RuleBuilder ruleBuilder = singletonRule( builder );
                 PointSymbolizerBuilder pointBuilder = builder.point( ruleBuilder );
                 GraphicBuilder pointGraphicBuilder = builder.pointGraphicBuilder( pointBuilder );
-                if (stylePoint.markerSize.get() != null) {
-                    pointGraphicBuilder.size( stylePoint.markerSize.get() );
-                }
-                if (stylePoint.markerRotation.get() != null) {
-                    pointGraphicBuilder.rotation( stylePoint.markerRotation.get() );
-                }
-                if (stylePoint.markerFigure.get() != null) {
-                    new StyleFigureToSLDHelper().fillSLD( stylePoint.markerFigure.get(), pointGraphicBuilder.mark() );
-                }
-                else if (stylePoint.markerImage.get() != null) {
-                    new StyleImageToSLDHelper().fillSLD( stylePoint.markerImage.get(), pointGraphicBuilder );
-                }
+                fillSLD( pointGraphicBuilder );
             }
+        }
+    }
+
+
+    public void fillSLD( GraphicBuilder graphicBuilder ) {
+        if (stylePoint.markerSize.get() != null) {
+            graphicBuilder.size( stylePoint.markerSize.get() );
+        }
+        if (stylePoint.markerRotation.get() != null) {
+            graphicBuilder.rotation( stylePoint.markerRotation.get() );
+        }
+        if (stylePoint.markerFigure.get() != null) {
+            new StyleFigureToSLDHelper().fillSLD( stylePoint.markerFigure.get(), graphicBuilder.mark() );
+        }
+        else if (stylePoint.markerImage.get() != null) {
+            new StyleImageToSLDHelper().fillSLD( stylePoint.markerImage.get(), graphicBuilder );
         }
     }
 }

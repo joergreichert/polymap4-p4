@@ -14,6 +14,7 @@
  */
 package org.polymap.p4.style.sld.from.helper;
 
+import org.geotools.styling.Fill;
 import org.geotools.styling.Mark;
 import org.geotools.styling.Stroke;
 import org.polymap.p4.style.entities.StyleFigure;
@@ -39,19 +40,20 @@ public class StyleFigureFromSLDHelper
             styleFigure.markerWellKnownName.set( (String)mark.getWellKnownName().accept( getStringExpressionVisitor(),
                     null ) );
         }
-        if (mark.getFill() != null) {
-            if (mark.getFill().getColor() != null) {
-                new StyleColorFromSLDHelper().fromSLD( styleFigure.markerFill, mark.getFill().getColor() );
-            }
-            if (mark.getFill().getOpacity() != null) {
-                styleFigure.markerTransparency.set( (double)mark.getFill().getOpacity()
-                        .accept( getNumberExpressionVisitor(), null ) );
-            }
-        }
-        if (mark.getStroke() != null) {
-            mark.getStroke().accept( this );
-        }
+        super.visit( mark );
         return styleFigure;
+    }
+    
+    @Override
+    public void visit( Fill fill ) {
+        if (fill.getColor() != null) {
+            new StyleColorFromSLDHelper().fromSLD( styleFigure.markerFill, fill.getColor() );
+        }
+        if (fill.getOpacity() != null) {
+            styleFigure.markerTransparency.set( (double) fill.getOpacity()
+                    .accept( getNumberExpressionVisitor(), null ) );
+        }
+        super.visit( fill );
     }
 
 

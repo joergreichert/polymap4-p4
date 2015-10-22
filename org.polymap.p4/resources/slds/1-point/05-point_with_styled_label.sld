@@ -36,7 +36,7 @@
             <Fill>
               <CssParameter name="fill">#000000</CssParameter>
             </Fill>
-			<VendorOption name="maxDisplacement">400</VendorOption>
+            <VendorOption name="maxDisplacement">400.0</VendorOption>
           </TextSymbolizer>
           <PointSymbolizer>
             <Graphic>

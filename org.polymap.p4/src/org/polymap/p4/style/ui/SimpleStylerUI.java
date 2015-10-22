@@ -38,6 +38,7 @@ import org.polymap.p4.style.entities.StyleLine;
 import org.polymap.p4.style.entities.StylePoint;
 import org.polymap.p4.style.entities.StylePolygon;
 import org.polymap.p4.style.font.IFontInfo;
+import org.polymap.p4.style.icon.FigureLibraryInitializer;
 import org.polymap.p4.style.icon.IImageInfo;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IAppContext;
@@ -87,7 +88,8 @@ public class SimpleStylerUI
 
         identUI = new StyleIdentUI( context, site );
         labelUI = new StyleLabelUI( context, site, fontInfoInContext );
-        pointUI = new StylePointUI( context, site, imageInfoInContext, colorInfoInContext );
+        FigureLibraryInitializer figureLibraryInitializer = new FigureLibraryInitializer();
+        pointUI = new StylePointUI( context, site, imageInfoInContext, colorInfoInContext, figureLibraryInitializer );
         lineUI = new StyleLineUI( context, site, imageInfoInContext, colorInfoInContext );
         polygonUI = new StylePolygonUI( context, site, imageInfoInContext, colorInfoInContext );
     }
@@ -123,51 +125,49 @@ public class SimpleStylerUI
                 }
             };
         }
-        else if (fragment instanceof StyleLabel) {
-            label = labelStr;
-            page = new DefaultFormPage() {
-
-                @Override
-                public void createFormContents( IFormPageSite formSite ) {
-                    labelUI.setModel( (StyleLabel)fragment );
-                    labelUI.createContents( formSite );
-                }
-            };
-        }
-        if(fragment instanceof AbstractStyleSymbolizer) {
+        if (fragment instanceof AbstractStyleSymbolizer) {
             label = styleStr;
             if (fragment instanceof StylePoint) {
                 featureType = FeatureType.POINT;
+                StylePoint point = (StylePoint)fragment;
                 page = new DefaultFormPage() {
-                    
+
                     @Override
                     public void createFormContents( IFormPageSite formSite ) {
-                        pointUI.setModel( (StylePoint)fragment );
+                        pointUI.setModel( point );
                         pointUI.createContents( formSite );
                     }
                 };
+                createLabelUI( point.markerLabel.get() != null ? point.markerLabel.get() : point.markerLabel
+                        .createValue( null ) );
             }
             else if (fragment instanceof StyleLine) {
                 featureType = FeatureType.LINE_STRING;
+                StyleLine styleLine = (StyleLine)fragment;
                 page = new DefaultFormPage() {
-                    
+
                     @Override
                     public void createFormContents( IFormPageSite formSite ) {
-                        lineUI.setModel( (StyleLine)fragment );
+                        lineUI.setModel( styleLine );
                         lineUI.createContents( formSite );
                     }
                 };
+                createLabelUI( styleLine.lineLabel.get() != null ? styleLine.lineLabel.get() : styleLine.lineLabel
+                        .createValue( null ) );
             }
             else if (fragment instanceof StylePolygon) {
                 featureType = FeatureType.POLYGON;
+                StylePolygon stylePolygon = (StylePolygon)fragment;
                 page = new DefaultFormPage() {
-                    
+
                     @Override
                     public void createFormContents( IFormPageSite formSite ) {
-                        polygonUI.setModel( (StylePolygon)fragment );
+                        polygonUI.setModel( stylePolygon );
                         polygonUI.createContents( formSite );
                     }
                 };
+                createLabelUI( stylePolygon.polygonLabel.get() != null ? stylePolygon.polygonLabel.get()
+                        : stylePolygon.polygonLabel.createValue( null ) );
             }
         }
         if (label != null && page != null) {
@@ -178,6 +178,24 @@ public class SimpleStylerUI
                 geometryContainers.put( featureType, contentFunction );
             }
             styleContainers.put( label, contentFunction );
+        }
+    }
+
+
+    private void createLabelUI( StyleLabel styleLabel ) {
+        if (styleContainers.get( labelStr ) == null) {
+            DefaultFormPage page = new DefaultFormPage() {
+
+                @Override
+                public void createFormContents( IFormPageSite formSite ) {
+                    labelUI.setModel( styleLabel );
+                    labelUI.createContents( formSite );
+                }
+            };
+            BatikFormContainer pageContainer = new BatikFormContainer( page );
+            Function<Composite,Composite> contentFunction = createContentFunction( (MdToolkit)site.toolkit(), labelStr,
+                    pageContainer );
+            styleContainers.put( labelStr, contentFunction );
         }
     }
 

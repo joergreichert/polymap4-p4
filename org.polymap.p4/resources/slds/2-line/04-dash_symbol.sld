@@ -27,7 +27,7 @@
                       <CssParameter name="stroke">#000033</CssParameter>
                     </Stroke>
                   </Mark>
-                  <Size>5</Size>
+                  <Size>5.0</Size>
                 </Graphic>
               </GraphicStroke>
               <CssParameter name="stroke-dashoffset">7.5</CssParameter>
@@ -39,3 +39,4 @@
     </UserStyle>
   </NamedLayer>
 </StyledLayerDescriptor>
+

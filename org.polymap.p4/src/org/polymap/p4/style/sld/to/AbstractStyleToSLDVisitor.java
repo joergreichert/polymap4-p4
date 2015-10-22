@@ -35,7 +35,7 @@ public abstract class AbstractStyleToSLDVisitor
         NamedLayerBuilder namedLayer = builder.namedLayer();
         return builder.style( namedLayer );
     }
-
+    
     protected FeatureTypeStyleBuilder singletonFeatureTypeStyle( SLDBuilder builder ) {
         StyleBuilder userStyle = singletonStyle( builder );
         return builder.featureTypeStyle( userStyle );

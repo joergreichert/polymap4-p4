@@ -18,6 +18,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.p4.style.color.IColorInfo;
 import org.polymap.p4.style.entities.StylePoint;
+import org.polymap.p4.style.icon.AbstractImageLibraryInitializer;
 import org.polymap.p4.style.icon.IImageInfo;
 import org.polymap.p4.util.PropertyAdapter;
 import org.polymap.rhei.batik.Context;
@@ -33,27 +34,30 @@ import org.polymap.rhei.form.IFormPageSite;
 public class StylePointUI
         extends AbstractStylerFragmentUI {
 
-    private final IAppContext         context;
+    private final IAppContext                     context;
 
-    private final IPanelSite          panelSite;
+    private final IPanelSite                      panelSite;
 
-    private SpinnerFormField          markerSizeField;
+    private SpinnerFormField                      markerSizeField;
 
-    private SpinnerFormField          markerRotationFormField;
+    private SpinnerFormField                      markerRotationFormField;
 
-    private final Context<IImageInfo> imageInfoInContext;
+    private final Context<IImageInfo>             imageInfoInContext;
 
-    private final Context<IColorInfo> colorInfoInContext;
+    private final Context<IColorInfo>             colorInfoInContext;
 
-    private StylePoint                stylePoint = null;
+    private final AbstractImageLibraryInitializer imageLibraryInitializer;
+
+    private StylePoint                            stylePoint = null;
 
 
     public StylePointUI( IAppContext context, IPanelSite panelSite, Context<IImageInfo> imageInfoInContext,
-            Context<IColorInfo> colorInfoInContext ) {
+            Context<IColorInfo> colorInfoInContext, AbstractImageLibraryInitializer imageLibraryInitializer ) {
         this.context = context;
         this.panelSite = panelSite;
         this.imageInfoInContext = imageInfoInContext;
         this.colorInfoInContext = colorInfoInContext;
+        this.imageLibraryInitializer = imageLibraryInitializer;
     }
 
 
@@ -71,7 +75,8 @@ public class StylePointUI
         site.newFormField( new PropertyAdapter( stylePoint.markerSize ) ).label.put( "Marker size" ).field
                 .put( markerSizeField ).tooltip.put( "" ).create();
         if (stylePoint.markerFigure.get() != null) {
-            StyleFigureUI ui = new StyleFigureUI( context, panelSite, imageInfoInContext, colorInfoInContext );
+            StyleFigureUI ui = new StyleFigureUI( context, panelSite, imageInfoInContext, colorInfoInContext,
+                    imageLibraryInitializer );
             ui.setModel( stylePoint.markerFigure.get() );
             ui.createContents( site );
         }

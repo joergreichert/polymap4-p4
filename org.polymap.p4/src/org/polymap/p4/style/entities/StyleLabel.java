@@ -14,19 +14,15 @@
  */
 package org.polymap.p4.style.entities;
 
-import org.geotools.styling.StyledLayerDescriptor;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
-import org.polymap.p4.style.SLDBuilder;
-import org.polymap.p4.style.sld.from.StyleLabelFromSLDVisitor;
-import org.polymap.p4.style.sld.to.StyleLabelToSLDVisitor;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
 public class StyleLabel
-        extends AbstractSLDModel {
+        extends AbstractSLDModelFragment {
 
     @Nullable
     public Property<String>     labelText;
@@ -44,17 +40,22 @@ public class StyleLabel
     public Property<StyleCoord> labelAnchor;
 
     @Nullable
+    public Property<Double>     perpendicularOffset;
+
+    @Nullable
     public Property<Double>     labelRotation;
 
+    // GeoServer vendor options
 
-    @Override
-    public void fromSLD( StyledLayerDescriptor style ) {
-        style.accept( new StyleLabelFromSLDVisitor( this ) );
-    }
+    @Nullable
+    public Property<Double>     maxDisplacement;
 
+    @Nullable
+    public Property<Boolean>    followLine;
 
-    @Override
-    public void fillSLD( SLDBuilder builder ) {
-        new StyleLabelToSLDVisitor( this ).fillSLD( builder );
-    }
+    @Nullable
+    public Property<Double>     maxAngleDelta;
+
+    @Nullable
+    public Property<Double>     repeat;
 }

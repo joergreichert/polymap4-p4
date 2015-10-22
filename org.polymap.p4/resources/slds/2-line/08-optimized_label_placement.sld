@@ -11,26 +11,28 @@
       <Title>SLD Cook Book: Optimized label placement</Title>
       <FeatureTypeStyle>
         <Rule>
-          <LineSymbolizer>
-            <Stroke>
-              <CssParameter name="stroke">#FF0000</CssParameter>
-            </Stroke>
-          </LineSymbolizer>
           <TextSymbolizer>
             <Label>
               <ogc:PropertyName>name</ogc:PropertyName>
             </Label>
             <LabelPlacement>
-              <LinePlacement />
+              <LinePlacement>
+                <PerpendicularOffset>0</PerpendicularOffset>
+              </LinePlacement>
             </LabelPlacement>
             <Fill>
               <CssParameter name="fill">#000000</CssParameter>
             </Fill>
             <VendorOption name="followLine">true</VendorOption>
-            <VendorOption name="maxAngleDelta">90</VendorOption>
-            <VendorOption name="maxDisplacement">400</VendorOption>
-            <VendorOption name="repeat">150</VendorOption>
+            <VendorOption name="maxAngleDelta">90.0</VendorOption>
+            <VendorOption name="maxDisplacement">400.0</VendorOption>
+            <VendorOption name="repeat">150.0</VendorOption>
           </TextSymbolizer>
+          <LineSymbolizer>
+            <Stroke>
+              <CssParameter name="stroke">#FF0000</CssParameter>
+            </Stroke>
+          </LineSymbolizer>
         </Rule>
       </FeatureTypeStyle>
     </UserStyle>

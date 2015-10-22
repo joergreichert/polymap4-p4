@@ -23,7 +23,7 @@ import org.polymap.p4.style.color.ColorInfo;
 import org.polymap.p4.style.color.ColorPanel;
 import org.polymap.p4.style.color.IColorInfo;
 import org.polymap.p4.style.entities.StyleFigure;
-import org.polymap.p4.style.icon.FigureLibraryInitializer;
+import org.polymap.p4.style.icon.AbstractImageLibraryInitializer;
 import org.polymap.p4.style.icon.IImageInfo;
 import org.polymap.p4.style.icon.ImageHelper;
 import org.polymap.p4.style.icon.ImageInfo;
@@ -58,8 +58,6 @@ public class StyleFigureUI
 
     private IconFormField             figureFormField;
 
-    private SpinnerFormField          markerSizeField;
-
     private EnablableFormField        backgroundFormEnabledField;
 
     private ColorFormField            backgroundFormField;
@@ -80,7 +78,7 @@ public class StyleFigureUI
 
 
     public StyleFigureUI( IAppContext context, IPanelSite panelSite, Context<IImageInfo> imageInfoInContext,
-            Context<IColorInfo> colorInfoInContext ) {
+            Context<IColorInfo> colorInfoInContext, AbstractImageLibraryInitializer figureLibraryInitializer ) {
         this.context = context;
         this.panelSite = panelSite;
         this.colorInfoInContext = colorInfoInContext;
@@ -88,8 +86,6 @@ public class StyleFigureUI
 
         ColorInfo colorInfo = new ColorInfo();
         colorInfoInContext.set( colorInfo );
-
-        FigureLibraryInitializer figureLibraryInitializer = new FigureLibraryInitializer();
 
         ImageInfo imageInfo = new ImageInfo();
         imageInfo.setImageLibrary( figureLibraryInitializer.getImageLibrary() );
@@ -197,7 +193,6 @@ public class StyleFigureUI
             else if (ev.getSource() == markerTransparencyField) {
                 boolean markerIsVisible = ev.getNewFieldValue() instanceof Integer
                         && ((Integer)ev.getNewFieldValue()).intValue() > 0;
-                markerSizeField.setEnabled( markerIsVisible );
                 // iconFormField.setEnabled( markerIsVisible );
                 backgroundFormEnabledField.setEnabled( markerIsVisible );
             }

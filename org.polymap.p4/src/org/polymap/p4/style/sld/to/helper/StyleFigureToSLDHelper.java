@@ -17,6 +17,7 @@ package org.polymap.p4.style.sld.to.helper;
 import org.geotools.styling.builder.FillBuilder;
 import org.geotools.styling.builder.MarkBuilder;
 import org.geotools.styling.builder.StrokeBuilder;
+import org.polymap.p4.style.entities.StyleColor;
 import org.polymap.p4.style.entities.StyleFigure;
 
 /**
@@ -25,9 +26,14 @@ import org.polymap.p4.style.entities.StyleFigure;
  */
 public class StyleFigureToSLDHelper {
 
+    private static String DEFAULT_FILL_COLOR = "808080";
+    private static double DEFAULT_TRANSPARENCY = 1.0d;
+
+
     public void fillSLD( StyleFigure styleFigure, MarkBuilder markBuilder ) {
         markBuilder.name( styleFigure.markerWellKnownName.get() );
-        if (styleFigure.markerFill.get() != null || styleFigure.markerTransparency.get() != null) {
+        if ((styleFigure.markerFill.get() != null && !isDefaultColor( styleFigure.markerFill.get() ))
+                || styleFigure.markerTransparency.get() != null && !(Math.abs( DEFAULT_TRANSPARENCY - styleFigure.markerTransparency.get() ) < 0.1d)) {
             FillBuilder fillBuilder = markBuilder.fill();
             if (styleFigure.markerFill.get() != null) {
                 fillBuilder.color( new StyleColorToSLDHelper().getSLDColor( styleFigure.markerFill.get() ) );
@@ -46,5 +52,11 @@ public class StyleFigureToSLDHelper {
                 strokeBuilder.opacity( styleFigure.markerStrokeTransparency.get() );
             }
         }
+    }
+
+
+    private boolean isDefaultColor( StyleColor color ) {
+        return DEFAULT_FILL_COLOR.equals( Integer.toHexString( color.red.get() ) + Integer.toHexString( color.green.get() )
+                + Integer.toHexString( color.blue.get() ) );
     }
 }

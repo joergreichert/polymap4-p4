@@ -14,21 +14,36 @@
  */
 package org.polymap.p4.style.entities;
 
-import org.geotools.styling.StyledLayerDescriptor;
-import org.polymap.model2.Composite;
-import org.polymap.p4.style.SLDBuilder;
+import java.util.Arrays;
+import java.util.List;
 
 /**
- * The data model of a SLD aspect.
- * 
+ * @author Joerg Reichert <joerg@mapzone.io>
  *
- * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public abstract class AbstractSLDModel
-        extends Composite {
+public enum LineJoinType {
+    MITRE("mitre"), ROUND("round"), BEVEL("bevel");
 
-    public abstract void fromSLD( StyledLayerDescriptor style );
+    private String label;
 
 
-    public abstract void fillSLD( SLDBuilder builder );
+    LineJoinType( String label ) {
+        this.label = label;
+
+    }
+
+
+    public static List<LineJoinType> getOrdered() {
+        return Arrays.asList( MITRE, ROUND, BEVEL );
+    }
+
+
+    public String getLabel() {
+        return label;
+    }
+
+
+    public static LineJoinType getTypeForLabel( String label ) {
+        return Arrays.asList( values() ).stream().filter( value -> value.getLabel().equals( label ) ).findFirst().get();
+    }
 }

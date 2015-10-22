@@ -19,9 +19,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.geotools.styling.FeatureTypeStyle;
 import org.geotools.styling.LineSymbolizer;
+import org.geotools.styling.Mark;
 import org.geotools.styling.Rule;
 import org.geotools.styling.Stroke;
+import org.geotools.styling.TextSymbolizer;
+import org.opengis.style.ExternalGraphic;
 import org.polymap.p4.style.entities.LineCapType;
 import org.polymap.p4.style.entities.StyleLine;
 import org.polymap.p4.style.sld.from.helper.StyleColorFromSLDHelper;
@@ -37,6 +41,10 @@ public class StyleLineFromSLDVisitor
 
     private final StyleLine styleLine;
 
+    private boolean         firstLine  = true;
+
+    private boolean         firstRule  = true;
+
     private boolean         borderMode = false;
 
 
@@ -46,8 +54,35 @@ public class StyleLineFromSLDVisitor
 
 
     @Override
+    public void visit( FeatureTypeStyle fts ) {
+        for (Rule rule : fts.rules()) {
+            rule.accept( this );
+            firstRule = false;
+        }
+        firstRule = true;
+        borderMode = true;
+    }
+
+
+    @Override
     public void visit( Rule rule ) {
-        List<LineSymbolizer> lines = Arrays
+        Arrays.asList( rule.getSymbolizers() )
+                .stream()
+                .filter( symb -> symb instanceof TextSymbolizer )
+                .forEach(
+                        t -> new StyleLabelFromSLDVisitor( getStyleLineToUse().lineLabel.createValue( null ) )
+                                .visit( (TextSymbolizer)t ) );
+        List<LineSymbolizer> lines = getLinesSortedAscendentByLineWidth( rule );
+        for (LineSymbolizer line : lines) {
+            line.accept( this );
+            firstLine = false;
+        }
+        firstLine = true;
+    }
+
+
+    private List<LineSymbolizer> getLinesSortedAscendentByLineWidth( Rule rule ) {
+        return Arrays
                 .asList( rule.getSymbolizers() )
                 .stream()
                 .filter( symb -> symb instanceof LineSymbolizer )
@@ -57,11 +92,6 @@ public class StyleLineFromSLDVisitor
                                 .getWidth().accept( getNumberExpressionVisitor(), null ) )).compareTo( (double)line2
                                 .getStroke().getWidth().accept( getNumberExpressionVisitor(), null ) ) )
                 .collect( Collectors.<LineSymbolizer>toList() );
-
-        for (LineSymbolizer line : lines) {
-            line.accept( this );
-            borderMode = true;
-        }
     }
 
 
@@ -75,15 +105,27 @@ public class StyleLineFromSLDVisitor
 
     @Override
     public void visit( Stroke stroke ) {
+        StyleLine styleLineToUse = getStyleLineToUse();
         if (stroke.getColor() != null) {
-            new StyleColorFromSLDHelper().fromSLD( getStyleLineToUse().lineColor, stroke.getColor() );
+            new StyleColorFromSLDHelper().fromSLD( styleLineToUse.lineColor, stroke.getColor() );
         }
         if (stroke.getWidth() != null) {
-            getStyleLineToUse().lineWidth.set( ((Double)stroke.getWidth().accept( getNumberExpressionVisitor(), null ))
+            styleLineToUse.lineWidth.set( ((Double)stroke.getWidth().accept( getNumberExpressionVisitor(), null ))
                     .intValue() );
         }
+        if (stroke.getGraphicStroke() != null) {
+            if (stroke.getGraphicStroke().graphicalSymbols().stream().filter( symbol -> symbol instanceof Mark )
+                    .map( symbol -> (Mark)symbol ).anyMatch( mark -> mark.getWellKnownName() != null )
+                    || stroke.getGraphicStroke().graphicalSymbols().stream()
+                            .anyMatch( symbol -> symbol instanceof ExternalGraphic )) {
+                styleLineToUse.lineSymbol.createValue( symbol -> {
+                    new StylePointFromSLDVisitor( symbol ).visit( stroke.getGraphicStroke() );
+                    return symbol;
+                } );
+            }
+        }
         if (stroke.getLineCap() != null) {
-            getStyleLineToUse().lineCap.set( LineCapType.getTypeForLabel( (String)stroke.getLineCap().accept(
+            styleLineToUse.lineCap.set( LineCapType.getTypeForLabel( (String)stroke.getLineCap().accept(
                     getStringExpressionVisitor(), null ) ) );
         }
         if (stroke.getDashArray() != null && stroke.getDashArray().length > 0) {
@@ -91,10 +133,10 @@ public class StyleLineFromSLDVisitor
             for (float value : stroke.getDashArray()) {
                 parts.add( String.valueOf( value ) );
             }
-            getStyleLineToUse().lineDashPattern.set( (String)Joiner.on( " " ).join( parts ) );
+            styleLineToUse.lineDashPattern.set( (String)Joiner.on( " " ).join( parts ) );
             if (stroke.getDashOffset() != null) {
-                getStyleLineToUse().lineDashOffset.set( ((Double)stroke.getDashOffset().accept(
-                        getNumberExpressionVisitor(), null )));
+                styleLineToUse.lineDashOffset.set( ((Double)stroke.getDashOffset().accept(
+                        getNumberExpressionVisitor(), null )) );
             }
         }
     }
@@ -107,6 +149,12 @@ public class StyleLineFromSLDVisitor
             if (styleLineToUse == null) {
                 styleLineToUse = styleLine.border.createValue( null );
             }
+        }
+        else if (!firstRule) {
+            styleLineToUse = styleLine.additionalLineStyles.createElement( null );
+        }
+        else if (!firstLine) {
+            styleLineToUse = styleLine.alternatingLineStyles.createElement( null );
         }
         else {
             styleLineToUse = styleLine;

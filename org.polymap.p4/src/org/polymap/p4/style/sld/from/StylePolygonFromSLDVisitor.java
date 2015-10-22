@@ -20,6 +20,7 @@ import org.geotools.styling.ExternalGraphic;
 import org.geotools.styling.PolygonSymbolizer;
 import org.geotools.styling.Rule;
 import org.geotools.styling.Stroke;
+import org.geotools.styling.TextSymbolizer;
 import org.polymap.p4.style.entities.StylePolygon;
 
 /**
@@ -39,6 +40,12 @@ public class StylePolygonFromSLDVisitor
 
     @Override
     public void visit( Rule rule ) {
+        Arrays.asList( rule.getSymbolizers() )
+                .stream()
+                .filter( symb -> symb instanceof TextSymbolizer )
+                .forEach(
+                        t -> new StyleLabelFromSLDVisitor( stylePolygon.polygonLabel.createValue( null ) )
+                                .visit( (TextSymbolizer)t ) );
         Arrays.asList( rule.getSymbolizers() ).stream().filter( symb -> symb instanceof PolygonSymbolizer )
                 .forEach( symb -> symb.accept( this ) );
     }
@@ -53,6 +60,7 @@ public class StylePolygonFromSLDVisitor
             poly.getStroke().accept( this );
         }
     }
+
 
     @Override
     public void visit( ExternalGraphic exgr ) {

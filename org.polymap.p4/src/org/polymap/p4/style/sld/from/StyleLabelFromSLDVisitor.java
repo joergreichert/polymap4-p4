@@ -14,12 +14,16 @@
  */
 package org.polymap.p4.style.sld.from;
 
+import java.util.function.Function;
+
 import org.geotools.styling.AnchorPoint;
 import org.geotools.styling.Displacement;
 import org.geotools.styling.Fill;
 import org.geotools.styling.LinePlacement;
 import org.geotools.styling.PointPlacement;
+import org.geotools.styling.TextSymbolizer;
 import org.opengis.style.Font;
+import org.polymap.model2.Property;
 import org.polymap.p4.style.entities.StyleLabel;
 import org.polymap.p4.style.sld.from.helper.StyleColorFromSLDHelper;
 import org.polymap.p4.style.sld.from.helper.StyleFontFromSLDHelper;
@@ -40,11 +44,51 @@ public class StyleLabelFromSLDVisitor
 
 
     @Override
-    public void visit( org.geotools.styling.TextSymbolizer ts ) {
+    public void visit( TextSymbolizer ts ) {
         if (ts.getLabel() != null) {
             styleLabel.labelText.set( (String)ts.getLabel().accept( getLabelExpressionVisitor(), null ) );
         }
+        handleGeoServerVendorExtensions( ts, styleLabel );
         super.visit( ts );
+    }
+
+
+    private void handleGeoServerVendorExtensions( TextSymbolizer ts, StyleLabel styleLabel ) {
+        handleDoubleVendorOption( ts, styleLabel.maxDisplacement );
+        handleBooleanVendorOption( ts, styleLabel.followLine );
+        handleDoubleVendorOption( ts, styleLabel.maxAngleDelta );
+        handleDoubleVendorOption( ts, styleLabel.repeat );
+    }
+
+
+    private void handleDoubleVendorOption( TextSymbolizer ts, Property<Double> property ) {
+        handleVendorOption( ts, property, value -> {
+            try {
+                return Double.valueOf( value );
+            }
+            catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+            return null;
+        } );
+    }
+
+
+    private void handleBooleanVendorOption( TextSymbolizer ts, Property<Boolean> property ) {
+        handleVendorOption( ts, property, value -> Boolean.valueOf( value ) );
+    }
+
+
+    private <T> void handleVendorOption( TextSymbolizer ts, Property<T> property, Function<String,T> converter ) {
+        String label = property.info().getName();
+        if (ts.hasOption( label )) {
+            try {
+                property.set( converter.apply( ts.getOptions().get( label ) ) );
+            }
+            catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 
@@ -81,7 +125,7 @@ public class StyleLabelFromSLDVisitor
                 anchor.x.set( (double)ap.getAnchorPointX().accept( getNumberExpressionVisitor(), null ) );
                 anchor.y.set( (double)ap.getAnchorPointY().accept( getNumberExpressionVisitor(), null ) );
                 return anchor;
-            });
+            } );
         }
     }
 
@@ -93,7 +137,7 @@ public class StyleLabelFromSLDVisitor
                 offset.x.set( (double)dis.getDisplacementX().accept( getNumberExpressionVisitor(), null ) );
                 offset.y.set( (double)dis.getDisplacementY().accept( getNumberExpressionVisitor(), null ) );
                 return offset;
-            });
+            } );
         }
     }
 

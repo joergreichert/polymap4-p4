@@ -18,17 +18,16 @@
                   <Mark>
                     <WellKnownName>circle</WellKnownName>
                     <Fill>
-                      <CssParameter name="stroke">#666666</CssParameter>  
+                      <CssParameter name="fill">#666666</CssParameter>
                     </Fill>
                     <Stroke>
                       <CssParameter name="stroke">#333333</CssParameter>
-                      <CssParameter name="stroke-width">1</CssParameter>
                     </Stroke>
                   </Mark>
-                  <Size>4</Size>
-                 </Graphic>
+                  <Size>4.0</Size>
+                </Graphic>
               </GraphicStroke>
-              <CssParameter name="stroke-dasharray">4 6</CssParameter>
+              <CssParameter name="stroke-dasharray">4.0 6.0</CssParameter>
             </Stroke>
           </LineSymbolizer>
         </Rule>
@@ -36,5 +35,4 @@
     </UserStyle>
   </NamedLayer>
 </StyledLayerDescriptor>
-
 

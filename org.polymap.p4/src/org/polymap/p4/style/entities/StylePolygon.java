@@ -15,6 +15,8 @@
 package org.polymap.p4.style.entities;
 
 import org.geotools.styling.StyledLayerDescriptor;
+import org.polymap.model2.Nullable;
+import org.polymap.model2.Property;
 import org.polymap.p4.style.SLDBuilder;
 import org.polymap.p4.style.sld.from.StylePolygonFromSLDVisitor;
 import org.polymap.p4.style.sld.to.StylePolygonToSLDVisitor;
@@ -26,6 +28,10 @@ import org.polymap.p4.style.sld.to.StylePolygonToSLDVisitor;
  */
 public class StylePolygon
         extends AbstractStyleSymbolizer {
+
+    @Nullable
+    public Property<StyleLabel> polygonLabel;
+
 
     @Override
     public void fromSLD( StyledLayerDescriptor style ) {

@@ -15,6 +15,7 @@
 package org.polymap.p4.style.entities;
 
 import org.geotools.styling.StyledLayerDescriptor;
+import org.polymap.model2.CollectionProperty;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
 import org.polymap.p4.style.SLDBuilder;
@@ -29,25 +30,52 @@ public class StyleLine
         extends AbstractStyleSymbolizer {
 
     @Nullable
-    public Property<Integer>     lineWidth;
+    public Property<Integer>             lineWidth;
 
     @Nullable
-    public Property<StyleColor>  lineColor;
+    public Property<StyleColor>          lineColor;
 
     @Nullable
-    public Property<LineCapType> lineCap;
+    public Property<StyleLabel>          lineLabel;
 
     @Nullable
-    public Property<String>      lineDashPattern;
+    public Property<StylePoint>          lineSymbol;
 
     @Nullable
-    public Property<Double>      lineDashOffset;
+    public Property<LineCapType>         lineCap;
 
     @Nullable
-    public Property<Double>      lineTransparency;
+    public Property<String>              lineDashPattern;
 
     @Nullable
-    public Property<StyleLine>   border;
+    public Property<Double>              lineDashOffset;
+
+    @Nullable
+    public Property<Double>              lineTransparency;
+
+    @Nullable
+    public Property<LineJoinType>        lineJoin;
+
+    @Nullable
+    public Property<StyleLine>           border;
+
+    public CollectionProperty<StyleLine> alternatingLineStyles;
+
+    public CollectionProperty<StyleLine> additionalLineStyles;
+
+    // GeoServer vendor options
+
+    @Nullable
+    public Property<Boolean>             followLine;
+
+    @Nullable
+    public Property<Double>              maxAngleDelta;        // angle -360° - 360°
+
+    @Nullable
+    public Property<Double>              maxDisplacement;
+
+    @Nullable
+    public Property<Double>              repeat;               // integer
 
 
     @Override

@@ -17,9 +17,11 @@ package org.polymap.p4.style.sld.from;
 import java.util.Arrays;
 
 import org.geotools.styling.ExternalGraphic;
+import org.geotools.styling.Graphic;
 import org.geotools.styling.Mark;
 import org.geotools.styling.PointSymbolizer;
 import org.geotools.styling.Rule;
+import org.geotools.styling.TextSymbolizer;
 import org.polymap.p4.style.entities.StylePoint;
 import org.polymap.p4.style.sld.from.helper.StyleFigureFromSLDHelper;
 import org.polymap.p4.style.sld.from.helper.StyleImageFromSLDHelper;
@@ -41,6 +43,12 @@ public class StylePointFromSLDVisitor
 
     @Override
     public void visit( Rule rule ) {
+        Arrays.asList( rule.getSymbolizers() )
+                .stream()
+                .filter( symb -> symb instanceof TextSymbolizer )
+                .forEach(
+                        t -> new StyleLabelFromSLDVisitor( stylePoint.markerLabel.createValue( null ) )
+                                .visit( (TextSymbolizer)t ) );
         Arrays.asList( rule.getSymbolizers() ).stream().filter( symb -> symb instanceof PointSymbolizer )
                 .forEach( symb -> symb.accept( this ) );
     }
@@ -50,15 +58,19 @@ public class StylePointFromSLDVisitor
     public void visit( PointSymbolizer ps ) {
         if (ps.getGraphic() != null) {
             ps.getGraphic().accept( this );
-            if (ps.getGraphic().getSize() != null) {
-                stylePoint.markerSize.set( ((Double)ps.getGraphic().getSize()
-                        .accept( getNumberExpressionVisitor(), null )) );
-            }
-            if (ps.getGraphic().getRotation() != null) {
-                stylePoint.markerRotation.set( ((Double)ps.getGraphic().getRotation()
-                        .accept( getNumberExpressionVisitor(), null )) );
-            }
         }
+    }
+
+
+    @Override
+    public void visit( Graphic gr ) {
+        if (gr.getSize() != null) {
+            stylePoint.markerSize.set( ((Double)gr.getSize().accept( getNumberExpressionVisitor(), null )) );
+        }
+        if (gr.getRotation() != null) {
+            stylePoint.markerRotation.set( ((Double)gr.getRotation().accept( getNumberExpressionVisitor(), null )) );
+        }
+        super.visit( gr );
     }
 
 
@@ -69,9 +81,6 @@ public class StylePointFromSLDVisitor
                 new StyleFigureFromSLDHelper( figure ).fillSLD( mark );
                 return figure;
             } );
-        }
-        if (mark.getStroke() != null) {
-            mark.getStroke().accept( this );
         }
     }
 

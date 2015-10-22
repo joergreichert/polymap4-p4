@@ -18,6 +18,7 @@ import org.geotools.styling.StyledLayerDescriptor;
 import org.geotools.styling.builder.FeatureTypeStyleBuilder;
 import org.geotools.styling.builder.FillBuilder;
 import org.geotools.styling.builder.GraphicBuilder;
+import org.geotools.styling.builder.LineSymbolizerBuilder;
 import org.geotools.styling.builder.NamedLayerBuilder;
 import org.geotools.styling.builder.PointSymbolizerBuilder;
 import org.geotools.styling.builder.RuleBuilder;
@@ -48,6 +49,8 @@ public class SLDBuilder {
     private FillBuilder                        textFillBuilder         = null;
 
     private GraphicBuilder                     pointGraphicBuilder     = null;
+
+    private GraphicBuilder                     lineGraphicBuilder      = null;
 
 
     public SLDBuilder( StyledLayerDescriptorBuilder wrappedBuilder ) {
@@ -94,12 +97,14 @@ public class SLDBuilder {
         return ruleBuilder;
     }
 
+
     public TextSymbolizerBuilder text() {
         if (textSymbolizerBuilder == null && ruleBuilder != null) {
             textSymbolizerBuilder = ruleBuilder.text();
         }
         return textSymbolizerBuilder;
     }
+
 
     public TextSymbolizerBuilder text( RuleBuilder ruleBuilder ) {
         if (textSymbolizerBuilder == null) {
@@ -124,17 +129,27 @@ public class SLDBuilder {
         return pointSymbolizerBuilder;
     }
 
-    public GraphicBuilder pointGraphicBuilder( ) {
+
+    public GraphicBuilder pointGraphicBuilder() {
         if (pointGraphicBuilder == null && pointSymbolizerBuilder != null) {
             pointGraphicBuilder = pointSymbolizerBuilder.graphic();
         }
         return pointGraphicBuilder;
     }
 
+
     public GraphicBuilder pointGraphicBuilder( PointSymbolizerBuilder pointSymbolizerBuilder ) {
         if (pointGraphicBuilder == null) {
             pointGraphicBuilder = pointSymbolizerBuilder.graphic();
         }
         return pointGraphicBuilder;
+    }
+
+
+    public GraphicBuilder lineGraphicBuilder( LineSymbolizerBuilder lineSymbolizerBuilder ) {
+        if (lineGraphicBuilder == null) {
+            lineGraphicBuilder = lineSymbolizerBuilder.stroke().graphicStroke();
+        }
+        return lineGraphicBuilder;
     }
 }

@@ -18,10 +18,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.geotools.styling.builder.FeatureTypeStyleBuilder;
+import org.geotools.styling.builder.GraphicBuilder;
 import org.geotools.styling.builder.LineSymbolizerBuilder;
 import org.geotools.styling.builder.RuleBuilder;
 import org.geotools.styling.builder.StrokeBuilder;
 import org.polymap.p4.style.SLDBuilder;
+import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.StyleLine;
 import org.polymap.p4.style.sld.to.helper.StyleColorToSLDHelper;
 
@@ -42,19 +45,28 @@ public class StyleLineToSLDVisitor
 
     @Override
     public void fillSLD( SLDBuilder builder ) {
-        internalFillSLD( styleLine, false, builder );
+        internalFillSLD( styleLine, false, false, builder );
     }
 
 
-    private void internalFillSLD( StyleLine styleLine, boolean newRule, SLDBuilder builder ) {
+    private void internalFillSLD( StyleLine styleLine, boolean newFeatureType, boolean newRule, SLDBuilder builder ) {
+        if (styleLine.lineLabel.get() != null) {
+            new StyleLabelToSLDVisitor( styleLine.lineLabel.get(), FeatureType.LINE_STRING ).fillSLD( builder );
+        }
         if (styleLine.lineWidth.get() != null && styleLine.lineWidth.get() > 0) {
-            RuleBuilder ruleBuilder = newRule ? builder.style( builder.namedLayer() ).featureTypeStyle().rule()
-                    : singletonRule( builder );
+            FeatureTypeStyleBuilder featureTypeBuilder = newFeatureType ? singletonStyle( builder ).featureTypeStyle()
+                    : singletonFeatureTypeStyle( builder );
+            RuleBuilder ruleBuilder = newRule ? featureTypeBuilder.rule() : builder.rule( featureTypeBuilder );
             LineSymbolizerBuilder polylineBuilder = ruleBuilder.line();
             StrokeBuilder strokeBuilder = polylineBuilder.stroke();
             strokeBuilder.width( styleLine.lineWidth.get() );
-            if (styleLine.lineColor.get() != null) {
+            // when figure is given, stroke color is set there
+            if (styleLine.lineSymbol.get() == null && styleLine.lineColor.get() != null) {
                 strokeBuilder.color( new StyleColorToSLDHelper().getSLDColor( styleLine.lineColor.get() ) );
+            }
+            if (styleLine.lineSymbol.get() != null) {
+                GraphicBuilder lineGraphicBuilder = builder.lineGraphicBuilder( polylineBuilder );
+                new StylePointToSLDVisitor( styleLine.lineSymbol.get() ).fillSLD( lineGraphicBuilder );
             }
             if (styleLine.lineCap.get() != null) {
                 strokeBuilder.lineCapName( styleLine.lineCap.get().getLabel() );
@@ -69,22 +81,28 @@ public class StyleLineToSLDVisitor
                 strokeBuilder.dashArray( dashArray );
             }
             if (styleLine.border.get() != null) {
-                internalFillSLD( styleLine.border.get(), true, builder );
+                internalFillSLD( styleLine.border.get(), true, true, builder );
             }
-            if(styleLine.lineDashPattern.get() != null) {
-                List<String> parts = Arrays.asList(styleLine.lineDashPattern.get().split( " " )).stream().filter( part -> part.trim().length() > 0 ).collect( Collectors.toList() );
-                float [] dashArray = new float [parts.size()];
-                for(int i=0; i<parts.size(); i++) {
+            if (styleLine.lineDashPattern.get() != null) {
+                List<String> parts = Arrays.asList( styleLine.lineDashPattern.get().split( " " ) ).stream()
+                        .filter( part -> part.trim().length() > 0 ).collect( Collectors.toList() );
+                float[] dashArray = new float[parts.size()];
+                for (int i = 0; i < parts.size(); i++) {
                     try {
-                        dashArray[i] = Float.parseFloat( parts.get(i) );
-                    } catch(NumberFormatException nfe) {
+                        dashArray[i] = Float.parseFloat( parts.get( i ) );
+                    }
+                    catch (NumberFormatException nfe) {
                         nfe.printStackTrace();
                     }
                 }
-                if(styleLine.lineDashOffset.get() != null) {
+                if (styleLine.lineDashOffset.get() != null) {
                     strokeBuilder.dashOffset( styleLine.lineDashOffset.get() );
                 }
             }
+            styleLine.alternatingLineStyles.forEach( additionalLine -> internalFillSLD( additionalLine, false, false,
+                    builder ) );
+            styleLine.additionalLineStyles.forEach( additionalLine -> internalFillSLD( additionalLine, false, true,
+                    builder ) );
         }
     }
 }

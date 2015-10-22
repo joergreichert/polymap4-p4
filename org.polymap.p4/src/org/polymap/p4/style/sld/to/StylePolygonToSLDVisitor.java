@@ -17,6 +17,7 @@ package org.polymap.p4.style.sld.to;
 import org.geotools.styling.builder.PolygonSymbolizerBuilder;
 import org.geotools.styling.builder.RuleBuilder;
 import org.polymap.p4.style.SLDBuilder;
+import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.StylePolygon;
 
 /**
@@ -45,6 +46,9 @@ public class StylePolygonToSLDVisitor
     public void fillSLD( SLDBuilder builder ) {
         if(false) {
             RuleBuilder ruleBuilder = singletonRule( builder );
+            if (stylePolygon.polygonLabel.get() != null) {
+                new StyleLabelToSLDVisitor( stylePolygon.polygonLabel.get(), FeatureType.POLYGON ).fillSLD( builder );
+            }
             PolygonSymbolizerBuilder polygonBuilder = ruleBuilder.polygon();
             // TODO
         }

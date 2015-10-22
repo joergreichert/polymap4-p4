@@ -12,23 +12,25 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  */
-package org.polymap.p4.style.entities;
+package org.polymap.p4.style.icon;
 
-import org.geotools.styling.StyledLayerDescriptor;
-import org.polymap.model2.Composite;
-import org.polymap.p4.style.SLDBuilder;
+import java.util.List;
+
+import com.google.common.collect.Lists;
 
 /**
- * The data model of a SLD aspect.
- * 
+ * @author Joerg Reichert <joerg@mapzone.io>
  *
- * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public abstract class AbstractSLDModel
-        extends Composite {
+public class ShapeFigureLibraryInitializer
+        extends AbstractImageLibraryInitializer {
 
-    public abstract void fromSLD( StyledLayerDescriptor style );
+    protected List<String> getNames() {
+        return Lists.newArrayList( "Predefined" );
+    }
 
 
-    public abstract void fillSLD( SLDBuilder builder );
+    protected void fillPaths( List<String> names, List<String> paths ) {
+        addToImageLibrary( names.get( 0 ), "well_known_shape.lst", "Predefined shapes by SLD", paths );
+    }
 }
