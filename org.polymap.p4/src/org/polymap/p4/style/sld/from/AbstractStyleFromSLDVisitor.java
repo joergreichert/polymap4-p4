@@ -15,6 +15,8 @@
 package org.polymap.p4.style.sld.from;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.geotools.filter.expression.AbstractExpressionVisitor;
 import org.geotools.renderer.lite.gridcoverage2d.StyleVisitorAdapter;
@@ -35,6 +37,7 @@ import org.geotools.styling.Style;
 import org.geotools.styling.StyledLayer;
 import org.geotools.styling.StyledLayerDescriptor;
 import org.geotools.styling.Symbolizer;
+import org.geotools.styling.TextSymbolizer;
 import org.geotools.styling.UserLayer;
 import org.opengis.filter.expression.ExpressionVisitor;
 import org.opengis.filter.expression.Literal;
@@ -199,9 +202,27 @@ public abstract class AbstractStyleFromSLDVisitor
 
     @Override
     public void visit( Rule rule ) {
-        for (Symbolizer symbolizer : rule.getSymbolizers()) {
+        for (Symbolizer symbolizer : sortByType( rule.getSymbolizers() )) {
             symbolizer.accept( this );
         }
+    }
+
+
+    // text symbolizers must come first, because they are memorized for later use
+    // when creating graphical symbolizers
+    private List<Symbolizer> sortByType( Symbolizer[] symbolizers ) {
+        List<Symbolizer> textSymbolizerList = new ArrayList<Symbolizer>();
+        List<Symbolizer> otherSymbolizerList = new ArrayList<Symbolizer>();
+        for (Symbolizer symbolizer : symbolizers) {
+            if (symbolizer instanceof TextSymbolizer) {
+                textSymbolizerList.add( symbolizer );
+            }
+            else {
+                otherSymbolizerList.add( symbolizer );
+            }
+        }
+        textSymbolizerList.addAll( otherSymbolizerList );
+        return textSymbolizerList;
     }
 
 

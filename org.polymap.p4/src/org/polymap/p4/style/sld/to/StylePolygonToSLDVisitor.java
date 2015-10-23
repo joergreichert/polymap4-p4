@@ -44,8 +44,13 @@ public class StylePolygonToSLDVisitor
     @Override
     public void fillSLD( SLDBuilder builder ) {
         RuleBuilder ruleBuilder = singletonRule( builder );
+        fillSLD( builder, ruleBuilder );
+    }
+
+
+    public void fillSLD( SLDBuilder builder, RuleBuilder ruleBuilder ) {
         if (stylePolygon.polygonLabel.get() != null) {
-            new StyleLabelToSLDVisitor( stylePolygon.polygonLabel.get(), FeatureType.POLYGON ).fillSLD( builder );
+            new StyleLabelToSLDVisitor( stylePolygon.polygonLabel.get(), FeatureType.POLYGON ).fillSLD( builder, ruleBuilder );
         }
         if (stylePolygon.fill.get() != null || stylePolygon.strokeWidth.get() != null
                 || stylePolygon.image.get() != null) {
@@ -59,10 +64,11 @@ public class StylePolygonToSLDVisitor
                 strokeBuilder.width( stylePolygon.strokeWidth.get() );
                 strokeBuilder.color( new StyleColorToSLDHelper().getSLDColor( stylePolygon.strokeColor.get() ) );
             }
-            if (stylePolygon.figure.get() != null || stylePolygon.image.get() != null || stylePolygon.symbolSize.get() != null) {
+            if (stylePolygon.figure.get() != null || stylePolygon.image.get() != null
+                    || stylePolygon.symbolSize.get() != null) {
                 GraphicBuilder polygonGraphicBuilder = builder.polygonGraphicBuilder( polygonBuilder );
                 fillSLD( polygonGraphicBuilder );
-                if(stylePolygon.symbolSize.get() != null) {
+                if (stylePolygon.symbolSize.get() != null) {
                     polygonGraphicBuilder.size( stylePolygon.symbolSize.get() );
                 }
             }

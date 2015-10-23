@@ -32,6 +32,8 @@ import org.polymap.p4.P4Plugin;
 import org.polymap.p4.map.ProjectMapPanel;
 import org.polymap.p4.style.color.IColorInfo;
 import org.polymap.p4.style.entities.FeatureType;
+import org.polymap.p4.style.entities.StyleComposite;
+import org.polymap.p4.style.entities.StyleFeature;
 import org.polymap.p4.style.font.IFontInfo;
 import org.polymap.p4.style.icon.IImageInfo;
 import org.polymap.p4.style.ui.SimpleStylerUI;
@@ -111,9 +113,14 @@ public class StylerPanel
             styleIdent.featureType.set( FeatureType.POINT );
             return styleIdent;
         } );
-        simpleStyler.stylePoint.createValue( null );
-        simpleStyler.styleLine.createValue( null );
-        simpleStyler.stylePolygon.createValue( null );
+        StyleFeature styleFeature = simpleStyler.styleFeatures.createElement( feature -> {
+            feature.styleComposite.createValue( null );
+            return feature;
+        } );
+        StyleComposite styleComposite = styleFeature.styleComposite.createValue( null );
+        styleComposite.stylePoints.createElement( null );
+        styleComposite.styleLines.createElement( null );
+        styleComposite.stylePolygons.createElement( null );
         return simpleStyler;
     }
 

@@ -12,23 +12,14 @@
       <FeatureTypeStyle>
         <Rule>
           <Name>Large</Name>
-          <MaxScaleDenominator>100000000</MaxScaleDenominator>
-          <PolygonSymbolizer>
-            <Fill>
-              <CssParameter name="fill">#0000CC</CssParameter>
-            </Fill>
-            <Stroke>
-              <CssParameter name="stroke">#000000</CssParameter>
-              <CssParameter name="stroke-width">7</CssParameter>
-            </Stroke>
-          </PolygonSymbolizer>
+          <MaxScaleDenominator>1000000.0</MaxScaleDenominator>
           <TextSymbolizer>
             <Label>
               <ogc:PropertyName>name</ogc:PropertyName>
-            </Label>  
+            </Label>
             <Font>
               <CssParameter name="font-family">Arial</CssParameter>
-              <CssParameter name="font-size">14</CssParameter>
+              <CssParameter name="font-size">14.0</CssParameter>
               <CssParameter name="font-style">normal</CssParameter>
               <CssParameter name="font-weight">bold</CssParameter>
             </Font>
@@ -44,35 +35,39 @@
               <CssParameter name="fill">#FFFFFF</CssParameter>
             </Fill>
           </TextSymbolizer>
-        </Rule>
-        <Rule>
-          <Name>Medium</Name>
-          <MinScaleDenominator>100000000</MinScaleDenominator>
-          <MaxScaleDenominator>200000000</MaxScaleDenominator>
           <PolygonSymbolizer>
             <Fill>
               <CssParameter name="fill">#0000CC</CssParameter>
             </Fill>
             <Stroke>
-              <CssParameter name="stroke">#000000</CssParameter>
-              <CssParameter name="stroke-width">4</CssParameter>
+              <CssParameter name="stroke-width">7.0</CssParameter>
+            </Stroke>
+          </PolygonSymbolizer>
+        </Rule>
+        <Rule>
+          <Name>Medium</Name>
+          <MinScaleDenominator>1000000.0</MinScaleDenominator>
+          <MaxScaleDenominator>2000000.0</MaxScaleDenominator>
+          <PolygonSymbolizer>
+            <Fill>
+              <CssParameter name="fill">#0000CC</CssParameter>
+            </Fill>
+            <Stroke>
+              <CssParameter name="stroke-width">4.0</CssParameter>
             </Stroke>
           </PolygonSymbolizer>
         </Rule>
         <Rule>
           <Name>Small</Name>
-          <MinScaleDenominator>200000000</MinScaleDenominator>
+          <MinScaleDenominator>2000000.0</MinScaleDenominator>
           <PolygonSymbolizer>
             <Fill>
               <CssParameter name="fill">#0000CC</CssParameter>
             </Fill>
-            <Stroke>
-              <CssParameter name="stroke">#000000</CssParameter>
-              <CssParameter name="stroke-width">1</CssParameter>
-            </Stroke>
           </PolygonSymbolizer>
         </Rule>
       </FeatureTypeStyle>
     </UserStyle>
   </NamedLayer>
 </StyledLayerDescriptor>
+

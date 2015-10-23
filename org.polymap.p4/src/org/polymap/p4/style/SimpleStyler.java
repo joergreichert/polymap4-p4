@@ -19,12 +19,11 @@ import java.util.List;
 
 import org.geotools.styling.StyledLayerDescriptor;
 import org.opengis.feature.type.FeatureType;
+import org.polymap.model2.CollectionProperty;
 import org.polymap.model2.Property;
 import org.polymap.p4.style.entities.AbstractSLDModel;
+import org.polymap.p4.style.entities.StyleFeature;
 import org.polymap.p4.style.entities.StyleIdent;
-import org.polymap.p4.style.entities.StyleLine;
-import org.polymap.p4.style.entities.StylePoint;
-import org.polymap.p4.style.entities.StylePolygon;
 
 /**
  * Configuration of simple stylers.
@@ -34,15 +33,11 @@ import org.polymap.p4.style.entities.StylePolygon;
 public class SimpleStyler
         extends AbstractStyler {
 
-    protected Property<StyleIdent>   styleIdent;
+    protected Property<StyleIdent>             styleIdent;
 
-    protected Property<StylePoint>   stylePoint;
+    protected CollectionProperty<StyleFeature> styleFeatures;
 
-    protected Property<StyleLine>    styleLine;
-
-    protected Property<StylePolygon> stylePolygon;
-
-    private List<AbstractSLDModel>   fragments = null;
+    private List<AbstractSLDModel>             fragments = null;
 
 
     @Override
@@ -67,9 +62,7 @@ public class SimpleStyler
         if (fragments == null) {
             fragments = new ArrayList<AbstractSLDModel>();
             fragments.add( styleIdent.get() );
-            fragments.add( stylePoint.get() );
-            fragments.add( styleLine.get() );
-            fragments.add( stylePolygon.get() );
+            styleFeatures.forEach( styleFeature -> fragments.add( styleFeature ) );
         }
         return fragments;
     }

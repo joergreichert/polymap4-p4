@@ -38,11 +38,10 @@ import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.model2.runtime.ValueInitializer;
 import org.polymap.model2.store.recordstore.RecordStoreAdapter;
 import org.polymap.p4.style.entities.StyleColor;
+import org.polymap.p4.style.entities.StyleFeature;
 import org.polymap.p4.style.entities.StyleFigure;
 import org.polymap.p4.style.entities.StyleIdent;
-import org.polymap.p4.style.entities.StyleLine;
 import org.polymap.p4.style.entities.StylePoint;
-import org.polymap.p4.style.entities.StylePolygon;
 import org.polymap.recordstore.lucene.LuceneRecordStore;
 
 /**
@@ -57,19 +56,13 @@ public abstract class AbstractSLDTest {
         SimpleStyler simpleStyler = createEmptySimpleStyler();
 
         StyleIdent ident = createStyleIdent( simpleStyler );
-        StylePoint point = createStylePoint( simpleStyler );
-        StyleLine line = createStyleLine( simpleStyler );
-        StylePolygon polygon = createStylePolygon( simpleStyler );
+        StyleFeature feature = createStyleFeature( simpleStyler );
         ident.fromSLD( sld );
-        point.fromSLD( sld );
-        line.fromSLD( sld );
-        polygon.fromSLD( sld );
+        feature.fromSLD( sld );
         StyledLayerDescriptorBuilder wrappedBuilder = new StyledLayerDescriptorBuilder();
         SLDBuilder builder = new SLDBuilder( wrappedBuilder );
         ident.fillSLD( builder );
-        point.fillSLD( builder );
-        line.fillSLD( builder );
-        polygon.fillSLD( builder );
+        feature.fillSLD( builder );
         assertWrittenSLD( builder, fileName );
     }
 
@@ -106,18 +99,11 @@ public abstract class AbstractSLDTest {
     }
 
 
-    protected StylePoint createStylePoint( SimpleStyler simpleStyler ) {
-        return simpleStyler.stylePoint.createValue( null );
-    }
-
-
-    protected StyleLine createStyleLine( SimpleStyler simpleStyler ) {
-        return simpleStyler.styleLine.createValue( null );
-    }
-
-
-    protected StylePolygon createStylePolygon( SimpleStyler simpleStyler ) {
-        return simpleStyler.stylePolygon.createValue( null );
+    protected StyleFeature createStyleFeature( SimpleStyler simpleStyler ) {
+        return simpleStyler.styleFeatures.createElement( feature -> {
+            feature.styleComposite.createValue( null );
+            return feature;
+        } );
     }
 
 

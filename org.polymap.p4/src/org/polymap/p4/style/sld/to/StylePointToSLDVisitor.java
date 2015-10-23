@@ -43,14 +43,30 @@ public class StylePointToSLDVisitor
         if (stylePoint.markerLabel.get() != null) {
             new StyleLabelToSLDVisitor( stylePoint.markerLabel.get(), FeatureType.POINT ).fillSLD( builder );
         }
-        if (stylePoint.markerFigure.get() != null || stylePoint.markerImage.get() != null) {
-            if (stylePoint.markerSize.get() != null || stylePoint.markerRotation.get() != null) {
-                RuleBuilder ruleBuilder = singletonRule( builder );
-                PointSymbolizerBuilder pointBuilder = builder.point( ruleBuilder );
-                GraphicBuilder pointGraphicBuilder = builder.pointGraphicBuilder( pointBuilder );
-                fillSLD( pointGraphicBuilder );
-            }
+        if (isPointDefined( stylePoint )) {
+            RuleBuilder ruleBuilder = singletonRule( builder );
+            internalFillSLD( builder, ruleBuilder );
         }
+    }
+
+
+    private boolean isPointDefined( StylePoint stylePoint ) {
+        return stylePoint.markerFigure.get() != null || stylePoint.markerImage.get() != null
+                || stylePoint.markerSize.get() != null || stylePoint.markerRotation.get() != null;
+    }
+
+
+    public void fillSLD( SLDBuilder builder, RuleBuilder ruleBuilder ) {
+        if (isPointDefined( stylePoint )) {
+            internalFillSLD( builder, ruleBuilder );
+        }
+    }
+
+
+    private void internalFillSLD( SLDBuilder builder, RuleBuilder ruleBuilder ) {
+        PointSymbolizerBuilder pointBuilder = builder.point( ruleBuilder );
+        GraphicBuilder pointGraphicBuilder = builder.pointGraphicBuilder( pointBuilder );
+        fillSLD( pointGraphicBuilder );
     }
 
 

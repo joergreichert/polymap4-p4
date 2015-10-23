@@ -14,6 +14,10 @@
  */
 package org.polymap.p4.style;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Supplier;
+
 import org.geotools.styling.StyledLayerDescriptor;
 import org.geotools.styling.builder.FeatureTypeStyleBuilder;
 import org.geotools.styling.builder.FillBuilder;
@@ -33,29 +37,30 @@ import org.geotools.styling.builder.TextSymbolizerBuilder;
  */
 public class SLDBuilder {
 
-    private final StyledLayerDescriptorBuilder wrappedBuilder;
+    private final StyledLayerDescriptorBuilder           wrappedBuilder;
 
-    private NamedLayerBuilder                  namedLayerBuilder       = null;
+    private NamedLayerBuilder                            namedLayerBuilder        = null;
 
-    private StyleBuilder                       namedLayerStyleBuilder  = null;
+    private Map<NamedLayerBuilder,StyleBuilder>          namedLayerStyleBuilders  = new HashMap<NamedLayerBuilder,StyleBuilder>();
 
-    private FeatureTypeStyleBuilder            featureTypeStyleBuilder = null;
+    private Map<StyleBuilder,FeatureTypeStyleBuilder>    featureTypeStyleBuilders = new HashMap<StyleBuilder,FeatureTypeStyleBuilder>();
 
-    private RuleBuilder                        ruleBuilder             = null;
+    private Map<FeatureTypeStyleBuilder,RuleBuilder>     ruleBuilders             = new HashMap<FeatureTypeStyleBuilder,RuleBuilder>();
 
-    private TextSymbolizerBuilder              textSymbolizerBuilder   = null;
+    private Map<RuleBuilder,TextSymbolizerBuilder>       textSymbolizerBuilders   = new HashMap<RuleBuilder,TextSymbolizerBuilder>();
 
-    private PointSymbolizerBuilder             pointSymbolizerBuilder  = null;
+    private Map<RuleBuilder,PointSymbolizerBuilder>      pointSymbolizerBuilders  = new HashMap<RuleBuilder,PointSymbolizerBuilder>();
 
-    private FillBuilder                        textFillBuilder         = null;
+    private Map<TextSymbolizerBuilder,FillBuilder>       textFillBuilders         = new HashMap<TextSymbolizerBuilder,FillBuilder>();
 
-    private GraphicBuilder                     pointGraphicBuilder     = null;
+    private Map<PointSymbolizerBuilder,GraphicBuilder>   pointGraphicBuilders     = new HashMap<PointSymbolizerBuilder,GraphicBuilder>();
 
-    private GraphicBuilder                     lineGraphicBuilder      = null;
+    private Map<LineSymbolizerBuilder,GraphicBuilder>    lineGraphicBuilders      = new HashMap<LineSymbolizerBuilder,GraphicBuilder>();
 
-    private FillBuilder                        polygonFillBuilder         = null;
+    private Map<PolygonSymbolizerBuilder,FillBuilder>    polygonFillBuilders      = new HashMap<PolygonSymbolizerBuilder,FillBuilder>();
 
-    private GraphicBuilder                     polygonGraphicBuilder      = null;
+    private Map<PolygonSymbolizerBuilder,GraphicBuilder> polygonGraphicBuilders   = new HashMap<PolygonSymbolizerBuilder,GraphicBuilder>();
+
 
     public SLDBuilder( StyledLayerDescriptorBuilder wrappedBuilder ) {
         this.wrappedBuilder = wrappedBuilder;
@@ -79,95 +84,63 @@ public class SLDBuilder {
 
 
     public StyleBuilder style( NamedLayerBuilder namedLayer ) {
-        if (namedLayerStyleBuilder == null) {
-            namedLayerStyleBuilder = namedLayer.style();
-        }
-        return namedLayerStyleBuilder;
+        return mapEntry( namedLayerStyleBuilders, namedLayer, ( ) -> namedLayer.style() );
     }
 
 
     public FeatureTypeStyleBuilder featureTypeStyle( StyleBuilder style ) {
-        if (featureTypeStyleBuilder == null) {
-            featureTypeStyleBuilder = style.featureTypeStyle();
-        }
-        return featureTypeStyleBuilder;
+        return mapEntry( featureTypeStyleBuilders, style, ( ) -> style.featureTypeStyle() );
     }
 
 
     public RuleBuilder rule( FeatureTypeStyleBuilder featureTypeStyle ) {
-        if (ruleBuilder == null) {
-            ruleBuilder = featureTypeStyle.rule();
-        }
-        return ruleBuilder;
-    }
-
-
-    public TextSymbolizerBuilder text() {
-        if (textSymbolizerBuilder == null && ruleBuilder != null) {
-            textSymbolizerBuilder = ruleBuilder.text();
-        }
-        return textSymbolizerBuilder;
+        return mapEntry( ruleBuilders, featureTypeStyle, ( ) -> featureTypeStyle.rule() );
     }
 
 
     public TextSymbolizerBuilder text( RuleBuilder ruleBuilder ) {
-        if (textSymbolizerBuilder == null) {
-            textSymbolizerBuilder = ruleBuilder.text();
-        }
-        return textSymbolizerBuilder;
+        return mapEntry( textSymbolizerBuilders, ruleBuilder, ( ) -> ruleBuilder.text() );
     }
 
 
     public FillBuilder textColor( TextSymbolizerBuilder textSymbolizerBuilder ) {
-        if (textFillBuilder == null) {
-            textFillBuilder = textSymbolizerBuilder.fill();
-        }
-        return textFillBuilder;
+        return mapEntry( textFillBuilders, textSymbolizerBuilder, ( ) -> textSymbolizerBuilder.fill() );
     }
 
 
     public PointSymbolizerBuilder point( RuleBuilder ruleBuilder ) {
-        if (pointSymbolizerBuilder == null) {
-            pointSymbolizerBuilder = ruleBuilder.point();
-        }
-        return pointSymbolizerBuilder;
-    }
-
-
-    public GraphicBuilder pointGraphicBuilder() {
-        if (pointGraphicBuilder == null && pointSymbolizerBuilder != null) {
-            pointGraphicBuilder = pointSymbolizerBuilder.graphic();
-        }
-        return pointGraphicBuilder;
+        return mapEntry( pointSymbolizerBuilders, ruleBuilder, ( ) -> ruleBuilder.point() );
     }
 
 
     public GraphicBuilder pointGraphicBuilder( PointSymbolizerBuilder pointSymbolizerBuilder ) {
-        if (pointGraphicBuilder == null) {
-            pointGraphicBuilder = pointSymbolizerBuilder.graphic();
-        }
-        return pointGraphicBuilder;
+        return mapEntry( pointGraphicBuilders, pointSymbolizerBuilder, ( ) -> pointSymbolizerBuilder.graphic() );
     }
 
 
     public GraphicBuilder lineGraphicBuilder( LineSymbolizerBuilder lineSymbolizerBuilder ) {
-        if (lineGraphicBuilder == null) {
-            lineGraphicBuilder = lineSymbolizerBuilder.stroke().graphicStroke();
-        }
-        return lineGraphicBuilder;
+        return mapEntry( lineGraphicBuilders, lineSymbolizerBuilder, ( ) -> lineSymbolizerBuilder.stroke()
+                .graphicStroke() );
     }
+
 
     public FillBuilder polygonFill( PolygonSymbolizerBuilder polygonSymbolizerBuilder ) {
-        if (polygonFillBuilder == null) {
-            polygonFillBuilder = polygonSymbolizerBuilder.fill();
-        }
-        return polygonFillBuilder;
+        return mapEntry( polygonFillBuilders, polygonSymbolizerBuilder, ( ) -> polygonSymbolizerBuilder.fill() );
     }
 
+
     public GraphicBuilder polygonGraphicBuilder( PolygonSymbolizerBuilder polygonSymbolizerBuilder ) {
-        if (polygonGraphicBuilder == null) {
-            polygonGraphicBuilder = polygonFill(polygonSymbolizerBuilder).graphicFill();
+        return mapEntry( polygonGraphicBuilders, polygonSymbolizerBuilder,
+                ( ) -> polygonFill( polygonSymbolizerBuilder ).graphicFill() );
+    }
+
+
+    private <K, V> V mapEntry( Map<K,V> map, K key, Supplier<V> calc ) {
+        V value = map.get( key );
+        if (value == null) {
+            value = calc.get();
+            map.put( key, value );
         }
-        return polygonGraphicBuilder;
+        return value;
     }
 }

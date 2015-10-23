@@ -19,6 +19,8 @@ import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 import org.polymap.p4.style.entities.FeatureType;
+import org.polymap.p4.style.entities.StyleComposite;
+import org.polymap.p4.style.entities.StyleFeature;
 import org.polymap.p4.style.entities.StyleFigure;
 import org.polymap.p4.style.entities.StyleIdent;
 import org.polymap.p4.style.entities.StylePoint;
@@ -37,7 +39,9 @@ public class SimpleStylerTest
         ident.name.set( "MeinStyle" );
         ident.featureType.set( FeatureType.POINT );
 
-        StylePoint point = createStylePoint( simpleStyler );
+        StyleFeature feature = createStyleFeature( simpleStyler );
+        StyleComposite composite = feature.styleComposite.createValue( null );
+        StylePoint point = composite.stylePoints.createElement( null );
         StyleFigure styleFigure = createStyleFigure( point );
         styleFigure.markerWellKnownName.set( "Circle" );
         point.markerSize.set( 12d );
@@ -64,7 +68,9 @@ public class SimpleStylerTest
         Assert.assertEquals( "MeinStyle", ident.name.get() );
         Assert.assertEquals( FeatureType.POINT, ident.featureType.get() );
 
-        StylePoint point = createStylePoint( simpleStyler );
+        StyleFeature feature = createStyleFeature( simpleStyler );
+        StyleComposite composite = feature.styleComposite.createValue( null );
+        StylePoint point = composite.stylePoints.createElement( null );
         point.fromSLD( sld );
         Assert.assertNotNull( point.markerFigure.get() );
         StyleFigure styleFigure = point.markerFigure.get();

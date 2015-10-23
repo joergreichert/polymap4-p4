@@ -67,50 +67,62 @@ public class StyleLabelToSLDVisitor
     public void fillSLD( SLDBuilder builder ) {
         if (styleLabel.labelText.get() != null) {
             RuleBuilder ruleBuilder = singletonRule( builder );
-            TextSymbolizerBuilder textBuilder = builder.text( ruleBuilder );
-            textBuilder.label( new AttributeExpressionImpl( new org.geotools.feature.NameImpl( styleLabel.labelText
-                    .get() ) ) );
-            if (styleLabel.labelFontColor.get() != null) {
-                textBuilder.fill().color( new StyleColorToSLDHelper().getSLDColor( styleLabel.labelFontColor.get() ) );
-            }
-            if (styleLabel.labelFont.get() != null) {
-                new StyleFontToSLDHelper().fillSLD( styleLabel.labelFont.get(), ( ) -> textBuilder.newFont() );
-            }
-            if (host == FeatureType.LINE_STRING
-                    && !(styleLabel.perpendicularOffset.get() == null || styleLabel.perpendicularOffset.get()
-                            .compareTo( PERPENDICULAR_OFFSET_DEFAULT ) == 0)) {
-                LinePlacementBuilder placementBuilder = textBuilder.linePlacement();
-                placementBuilder.offset( styleLabel.perpendicularOffset.get() );
-            }
-            else if (styleLabel.labelAnchor.get() != null || styleLabel.labelOffset.get() != null
-                    || styleLabel.labelRotation.get() != null) {
-                if ((!isDefaultPointPlacementAndOffset( styleLabel ) || !isDefaultLabelRotation( styleLabel ))) {
-                    PointPlacementBuilder placementBuilder = textBuilder.pointPlacement();
-                    if (styleLabel.labelAnchor.get() != null) {
-                        AnchorPointBuilder anchorBuilder = placementBuilder.anchor();
-                        anchorBuilder.x( styleLabel.labelAnchor.get().x.get() );
-                        anchorBuilder.y( styleLabel.labelAnchor.get().y.get() );
-                    }
-                    if (styleLabel.labelOffset.get() != null) {
-                        DisplacementBuilder offsetBuilder = placementBuilder.displacement();
-                        offsetBuilder.x( styleLabel.labelOffset.get().x.get() );
-                        offsetBuilder.y( styleLabel.labelOffset.get().y.get() );
-                    }
-                    if (styleLabel.labelRotation.get() != null) {
-                        placementBuilder.rotation( styleLabel.labelRotation.get() );
-                    }
-                }
-            }
-            if (styleLabel.haloRadius.get() != null && styleLabel.haloRadius.get() > 0) {
-                HaloBuilder haloBuilder = textBuilder.halo();
-                haloBuilder.radius( styleLabel.haloRadius.get() );
-                if (styleLabel.haloFill.get() != null) {
-                    FillBuilder haloFillBuilder = haloBuilder.fill();
-                    haloFillBuilder.color( new StyleColorToSLDHelper().getSLDColor( styleLabel.haloFill.get() ) );
-                }
-            }
-            handleGeoServerVendorExtensions( textBuilder, styleLabel );
+            internalFillSLD( builder, ruleBuilder );
         }
+    }
+
+
+    public void fillSLD( SLDBuilder builder, RuleBuilder ruleBuilder ) {
+        if (styleLabel.labelText.get() != null) {
+            internalFillSLD( builder, ruleBuilder );
+        }
+    }
+
+
+    private void internalFillSLD( SLDBuilder builder, RuleBuilder ruleBuilder ) {
+        TextSymbolizerBuilder textBuilder = builder.text( ruleBuilder );
+        textBuilder
+                .label( new AttributeExpressionImpl( new org.geotools.feature.NameImpl( styleLabel.labelText.get() ) ) );
+        if (styleLabel.labelFontColor.get() != null) {
+            textBuilder.fill().color( new StyleColorToSLDHelper().getSLDColor( styleLabel.labelFontColor.get() ) );
+        }
+        if (styleLabel.labelFont.get() != null) {
+            new StyleFontToSLDHelper().fillSLD( styleLabel.labelFont.get(), ( ) -> textBuilder.newFont() );
+        }
+        if (host == FeatureType.LINE_STRING
+                && !(styleLabel.perpendicularOffset.get() == null || styleLabel.perpendicularOffset.get().compareTo(
+                        PERPENDICULAR_OFFSET_DEFAULT ) == 0)) {
+            LinePlacementBuilder placementBuilder = textBuilder.linePlacement();
+            placementBuilder.offset( styleLabel.perpendicularOffset.get() );
+        }
+        else if (styleLabel.labelAnchor.get() != null || styleLabel.labelOffset.get() != null
+                || styleLabel.labelRotation.get() != null) {
+            if ((!isDefaultPointPlacementAndOffset( styleLabel ) || !isDefaultLabelRotation( styleLabel ))) {
+                PointPlacementBuilder placementBuilder = textBuilder.pointPlacement();
+                if (styleLabel.labelAnchor.get() != null) {
+                    AnchorPointBuilder anchorBuilder = placementBuilder.anchor();
+                    anchorBuilder.x( styleLabel.labelAnchor.get().x.get() );
+                    anchorBuilder.y( styleLabel.labelAnchor.get().y.get() );
+                }
+                if (styleLabel.labelOffset.get() != null) {
+                    DisplacementBuilder offsetBuilder = placementBuilder.displacement();
+                    offsetBuilder.x( styleLabel.labelOffset.get().x.get() );
+                    offsetBuilder.y( styleLabel.labelOffset.get().y.get() );
+                }
+                if (styleLabel.labelRotation.get() != null) {
+                    placementBuilder.rotation( styleLabel.labelRotation.get() );
+                }
+            }
+        }
+        if (styleLabel.haloRadius.get() != null && styleLabel.haloRadius.get() > 0) {
+            HaloBuilder haloBuilder = textBuilder.halo();
+            haloBuilder.radius( styleLabel.haloRadius.get() );
+            if (styleLabel.haloFill.get() != null) {
+                FillBuilder haloFillBuilder = haloBuilder.fill();
+                haloFillBuilder.color( new StyleColorToSLDHelper().getSLDColor( styleLabel.haloFill.get() ) );
+            }
+        }
+        handleGeoServerVendorExtensions( textBuilder, styleLabel );
     }
 
 

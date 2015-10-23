@@ -12,7 +12,7 @@
       <FeatureTypeStyle>
         <Rule>
           <Name>Large</Name>
-          <MaxScaleDenominator>160000000</MaxScaleDenominator>
+          <MaxScaleDenominator>1600000.0</MaxScaleDenominator>
           <PointSymbolizer>
             <Graphic>
               <Mark>
@@ -21,14 +21,14 @@
                   <CssParameter name="fill">#CC3300</CssParameter>
                 </Fill>
               </Mark>
-              <Size>12</Size>
+              <Size>12.0</Size>
             </Graphic>
           </PointSymbolizer>
         </Rule>
         <Rule>
           <Name>Medium</Name>
-          <MinScaleDenominator>160000000</MinScaleDenominator>
-          <MaxScaleDenominator>320000000</MaxScaleDenominator>
+          <MinScaleDenominator>1600000.0</MinScaleDenominator>
+          <MaxScaleDenominator>3200000.0</MaxScaleDenominator>
           <PointSymbolizer>
             <Graphic>
               <Mark>
@@ -37,13 +37,13 @@
                   <CssParameter name="fill">#CC3300</CssParameter>
                 </Fill>
               </Mark>
-              <Size>8</Size>
+              <Size>8.0</Size>
             </Graphic>
           </PointSymbolizer>
         </Rule>
         <Rule>
           <Name>Small</Name>
-          <MinScaleDenominator>320000000</MinScaleDenominator>
+          <MinScaleDenominator>3200000.0</MinScaleDenominator>
           <PointSymbolizer>
             <Graphic>
               <Mark>
@@ -52,7 +52,7 @@
                   <CssParameter name="fill">#CC3300</CssParameter>
                 </Fill>
               </Mark>
-              <Size>4</Size>
+              <Size>4.0</Size>
             </Graphic>
           </PointSymbolizer>
         </Rule>
