@@ -16,11 +16,6 @@
               <ogc:PropertyName>name</ogc:PropertyName>
             </Label>
             <Font />
-            <LabelPlacement>
-              <LinePlacement>
-                <PerpendicularOffset>0</PerpendicularOffset>
-              </LinePlacement>
-            </LabelPlacement>
             <Fill>
               <CssParameter name="fill">#000000</CssParameter>
             </Fill>

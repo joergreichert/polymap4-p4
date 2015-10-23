@@ -19,6 +19,7 @@ import java.util.function.Function;
 import org.geotools.styling.AnchorPoint;
 import org.geotools.styling.Displacement;
 import org.geotools.styling.Fill;
+import org.geotools.styling.Halo;
 import org.geotools.styling.LinePlacement;
 import org.geotools.styling.PointPlacement;
 import org.geotools.styling.TextSymbolizer;
@@ -48,12 +49,25 @@ public class StyleLabelFromSLDVisitor
         if (ts.getLabel() != null) {
             styleLabel.labelText.set( (String)ts.getLabel().accept( getLabelExpressionVisitor(), null ) );
         }
+        if(ts.getHalo() != null) {
+            ts.getHalo().accept( this );
+        }
         handleGeoServerVendorExtensions( ts, styleLabel );
         super.visit( ts );
     }
-
+    
+    @Override
+    public void visit( Halo halo ) {
+        if(halo.getRadius() != null) {
+            styleLabel.haloRadius.set( (double)halo.getRadius().accept( getNumberExpressionVisitor(), null ) );
+        }
+        if(halo.getFill() != null) {
+            new StyleColorFromSLDHelper().fromSLD( styleLabel.haloFill, halo.getFill().getColor() );
+        }
+    }
 
     private void handleGeoServerVendorExtensions( TextSymbolizer ts, StyleLabel styleLabel ) {
+        handleDoubleVendorOption( ts, styleLabel.autoWrap );
         handleDoubleVendorOption( ts, styleLabel.maxDisplacement );
         handleBooleanVendorOption( ts, styleLabel.followLine );
         handleDoubleVendorOption( ts, styleLabel.maxAngleDelta );
@@ -144,5 +158,9 @@ public class StyleLabelFromSLDVisitor
 
     @Override
     public void visit( LinePlacement lp ) {
+        if (lp.getPerpendicularOffset() != null) {
+            styleLabel.perpendicularOffset.set( (double)lp.getPerpendicularOffset().accept( getNumberExpressionVisitor(), null ) );
+        }
+        super.visit( lp );
     }
 }

@@ -45,6 +45,12 @@ public class StyleLabel
     @Nullable
     public Property<Double>     labelRotation;
 
+    @Nullable
+    public Property<Double>     haloRadius;
+
+    @Nullable
+    public Property<StyleColor> haloFill;
+
     // GeoServer vendor options
 
     @Nullable
@@ -58,4 +64,7 @@ public class StyleLabel
 
     @Nullable
     public Property<Double>     repeat;
+
+    @Nullable
+    public Property<Double>     autoWrap;
 }

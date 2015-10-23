@@ -16,12 +16,10 @@
               <GraphicFill>
                 <Graphic>
                   <ExternalGraphic>
-                    <OnlineResource
-                      xlink:type="simple"
-                      xlink:href="colorblocks.png" />
+                    <OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:type="simple" xlink:href="colorblocks.png"/>
                     <Format>image/png</Format>
                   </ExternalGraphic>
-                <Size>93</Size>
+                  <Size>93.0</Size>
                 </Graphic>
               </GraphicFill>
             </Fill>

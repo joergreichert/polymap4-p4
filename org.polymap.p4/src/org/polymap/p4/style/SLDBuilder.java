@@ -21,6 +21,7 @@ import org.geotools.styling.builder.GraphicBuilder;
 import org.geotools.styling.builder.LineSymbolizerBuilder;
 import org.geotools.styling.builder.NamedLayerBuilder;
 import org.geotools.styling.builder.PointSymbolizerBuilder;
+import org.geotools.styling.builder.PolygonSymbolizerBuilder;
 import org.geotools.styling.builder.RuleBuilder;
 import org.geotools.styling.builder.StyleBuilder;
 import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
@@ -52,6 +53,9 @@ public class SLDBuilder {
 
     private GraphicBuilder                     lineGraphicBuilder      = null;
 
+    private FillBuilder                        polygonFillBuilder         = null;
+
+    private GraphicBuilder                     polygonGraphicBuilder      = null;
 
     public SLDBuilder( StyledLayerDescriptorBuilder wrappedBuilder ) {
         this.wrappedBuilder = wrappedBuilder;
@@ -151,5 +155,19 @@ public class SLDBuilder {
             lineGraphicBuilder = lineSymbolizerBuilder.stroke().graphicStroke();
         }
         return lineGraphicBuilder;
+    }
+
+    public FillBuilder polygonFill( PolygonSymbolizerBuilder polygonSymbolizerBuilder ) {
+        if (polygonFillBuilder == null) {
+            polygonFillBuilder = polygonSymbolizerBuilder.fill();
+        }
+        return polygonFillBuilder;
+    }
+
+    public GraphicBuilder polygonGraphicBuilder( PolygonSymbolizerBuilder polygonSymbolizerBuilder ) {
+        if (polygonGraphicBuilder == null) {
+            polygonGraphicBuilder = polygonFill(polygonSymbolizerBuilder).graphicFill();
+        }
+        return polygonGraphicBuilder;
     }
 }

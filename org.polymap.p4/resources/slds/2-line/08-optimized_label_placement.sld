@@ -17,7 +17,7 @@
             </Label>
             <LabelPlacement>
               <LinePlacement>
-                <PerpendicularOffset>0</PerpendicularOffset>
+                <PerpendicularOffset>1.0</PerpendicularOffset>
               </LinePlacement>
             </LabelPlacement>
             <Fill>

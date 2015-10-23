@@ -17,12 +17,16 @@ package org.polymap.p4.style.sld.to;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.styling.builder.AnchorPointBuilder;
 import org.geotools.styling.builder.DisplacementBuilder;
+import org.geotools.styling.builder.FillBuilder;
+import org.geotools.styling.builder.HaloBuilder;
+import org.geotools.styling.builder.LinePlacementBuilder;
 import org.geotools.styling.builder.PointPlacementBuilder;
 import org.geotools.styling.builder.RuleBuilder;
 import org.geotools.styling.builder.TextSymbolizerBuilder;
 import org.polymap.model2.Property;
 import org.polymap.p4.style.SLDBuilder;
 import org.polymap.p4.style.entities.FeatureType;
+import org.polymap.p4.style.entities.StyleCoord;
 import org.polymap.p4.style.entities.StyleLabel;
 import org.polymap.p4.style.sld.to.helper.StyleColorToSLDHelper;
 import org.polymap.p4.style.sld.to.helper.StyleFontToSLDHelper;
@@ -46,7 +50,7 @@ public class StyleLabelToSLDVisitor
 
     private static Double     ROTATION_DEFAULT             = 0.0d;
 
-    //private static Double     PERPENDICULAR_OFFSET_DEFAULT = 0.0d;
+    private static Double     PERPENDICULAR_OFFSET_DEFAULT = 0.0d;
 
     private final StyleLabel  styleLabel;
 
@@ -59,13 +63,6 @@ public class StyleLabelToSLDVisitor
     }
 
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.polymap.p4.style.daos.AbstractStyleToSLDVisitor#fillSLD(org.geotools.styling
-     * .builder.StyledLayerDescriptorBuilder)
-     */
     @Override
     public void fillSLD( SLDBuilder builder ) {
         if (styleLabel.labelText.get() != null) {
@@ -79,14 +76,15 @@ public class StyleLabelToSLDVisitor
             if (styleLabel.labelFont.get() != null) {
                 new StyleFontToSLDHelper().fillSLD( styleLabel.labelFont.get(), ( ) -> textBuilder.newFont() );
             }
-            if ((styleLabel.labelAnchor.get() != null && !(styleLabel.labelAnchor.get().x.get().compareTo(
-                    ANCHOR_X_DEFAULT ) == 0 && styleLabel.labelAnchor.get().y.get().compareTo( ANCHOR_Y_DEFAULT ) == 0))
-                    || (styleLabel.labelOffset.get() != null && !(styleLabel.labelOffset.get().x.get().compareTo(
-                            OFFSET_X_DEFAULT ) == 0 && styleLabel.labelOffset.get().y.get()
-                            .compareTo( OFFSET_Y_DEFAULT ) == 0))
-                    || (styleLabel.labelRotation.get() != null && styleLabel.labelRotation.get().compareTo(
-                            ROTATION_DEFAULT ) != 0) || host != FeatureType.POINT) {
-                if (host == FeatureType.POINT) {
+            if (host == FeatureType.LINE_STRING
+                    && !(styleLabel.perpendicularOffset.get() == null || styleLabel.perpendicularOffset.get()
+                            .compareTo( PERPENDICULAR_OFFSET_DEFAULT ) == 0)) {
+                LinePlacementBuilder placementBuilder = textBuilder.linePlacement();
+                placementBuilder.offset( styleLabel.perpendicularOffset.get() );
+            }
+            else if (styleLabel.labelAnchor.get() != null || styleLabel.labelOffset.get() != null
+                    || styleLabel.labelRotation.get() != null) {
+                if ((!isDefaultPointPlacementAndOffset( styleLabel ) || !isDefaultLabelRotation( styleLabel ))) {
                     PointPlacementBuilder placementBuilder = textBuilder.pointPlacement();
                     if (styleLabel.labelAnchor.get() != null) {
                         AnchorPointBuilder anchorBuilder = placementBuilder.anchor();
@@ -102,10 +100,13 @@ public class StyleLabelToSLDVisitor
                         placementBuilder.rotation( styleLabel.labelRotation.get() );
                     }
                 }
-                else if (host == FeatureType.LINE_STRING
-                        /*&& !(styleLabel.perpendicularOffset.get() != null && styleLabel.perpendicularOffset.get()
-                                .compareTo( PERPENDICULAR_OFFSET_DEFAULT ) == 0)*/) {
-                    textBuilder.linePlacement();
+            }
+            if (styleLabel.haloRadius.get() != null && styleLabel.haloRadius.get() > 0) {
+                HaloBuilder haloBuilder = textBuilder.halo();
+                haloBuilder.radius( styleLabel.haloRadius.get() );
+                if (styleLabel.haloFill.get() != null) {
+                    FillBuilder haloFillBuilder = haloBuilder.fill();
+                    haloFillBuilder.color( new StyleColorToSLDHelper().getSLDColor( styleLabel.haloFill.get() ) );
                 }
             }
             handleGeoServerVendorExtensions( textBuilder, styleLabel );
@@ -113,9 +114,36 @@ public class StyleLabelToSLDVisitor
     }
 
 
-    private void handleGeoServerVendorExtensions( TextSymbolizerBuilder textBuilder, StyleLabel label ) {
-        Lists.<Property<?>>newArrayList( styleLabel.followLine, styleLabel.maxAngleDelta, styleLabel.maxDisplacement,
-                styleLabel.repeat ).stream()
+    private boolean isDefaultPointPlacementAndOffset( StyleLabel styleLabel ) {
+        return isDefaultPointPlacement( styleLabel.labelAnchor.get() )
+                && isDefaultPointOffset( styleLabel.labelOffset.get() );
+    }
+
+
+    private boolean isDefaultPointPlacement( StyleCoord labelAnchor ) {
+        return labelAnchor == null
+                || labelAnchor.x.get() == null
+                || (labelAnchor.x.get().compareTo( ANCHOR_X_DEFAULT ) == 0 && labelAnchor.y.get().compareTo(
+                        ANCHOR_Y_DEFAULT ) == 0);
+    }
+
+
+    private boolean isDefaultPointOffset( StyleCoord labelOffset ) {
+        return labelOffset == null
+                || labelOffset.x.get() == null
+                || (labelOffset.x.get().compareTo( OFFSET_X_DEFAULT ) == 0 && labelOffset.y.get().compareTo(
+                        OFFSET_Y_DEFAULT ) == 0);
+    }
+
+
+    private boolean isDefaultLabelRotation( StyleLabel styleLabel ) {
+        return styleLabel.labelRotation.get().compareTo( ROTATION_DEFAULT ) == 0;
+    }
+
+
+    private void handleGeoServerVendorExtensions( TextSymbolizerBuilder textBuilder, StyleLabel styleLabel ) {
+        Lists.<Property<?>>newArrayList( styleLabel.autoWrap, styleLabel.followLine, styleLabel.maxAngleDelta,
+                styleLabel.maxDisplacement, styleLabel.repeat ).stream()
                 .forEach( property -> handleGeoServerVendorExtension( textBuilder, property ) );
     }
 

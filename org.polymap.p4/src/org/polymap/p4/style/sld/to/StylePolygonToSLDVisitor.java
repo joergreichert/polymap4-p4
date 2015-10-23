@@ -14,11 +14,17 @@
  */
 package org.polymap.p4.style.sld.to;
 
+import org.geotools.styling.builder.FillBuilder;
+import org.geotools.styling.builder.GraphicBuilder;
 import org.geotools.styling.builder.PolygonSymbolizerBuilder;
 import org.geotools.styling.builder.RuleBuilder;
+import org.geotools.styling.builder.StrokeBuilder;
 import org.polymap.p4.style.SLDBuilder;
 import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.StylePolygon;
+import org.polymap.p4.style.sld.to.helper.StyleColorToSLDHelper;
+import org.polymap.p4.style.sld.to.helper.StyleFigureToSLDHelper;
+import org.polymap.p4.style.sld.to.helper.StyleImageToSLDHelper;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -35,22 +41,41 @@ public class StylePolygonToSLDVisitor
     }
 
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.polymap.p4.style.daos.AbstractStyleToSLDVisitor#fillSLD(org.geotools.styling
-     * .builder.StyledLayerDescriptorBuilder)
-     */
     @Override
     public void fillSLD( SLDBuilder builder ) {
-        if(false) {
-            RuleBuilder ruleBuilder = singletonRule( builder );
-            if (stylePolygon.polygonLabel.get() != null) {
-                new StyleLabelToSLDVisitor( stylePolygon.polygonLabel.get(), FeatureType.POLYGON ).fillSLD( builder );
-            }
+        RuleBuilder ruleBuilder = singletonRule( builder );
+        if (stylePolygon.polygonLabel.get() != null) {
+            new StyleLabelToSLDVisitor( stylePolygon.polygonLabel.get(), FeatureType.POLYGON ).fillSLD( builder );
+        }
+        if (stylePolygon.fill.get() != null || stylePolygon.strokeWidth.get() != null
+                || stylePolygon.image.get() != null) {
             PolygonSymbolizerBuilder polygonBuilder = ruleBuilder.polygon();
-            // TODO
+            if (stylePolygon.fill.get() != null) {
+                FillBuilder fillBuilder = builder.polygonFill( polygonBuilder );
+                fillBuilder.color( new StyleColorToSLDHelper().getSLDColor( stylePolygon.fill.get() ) );
+            }
+            if (stylePolygon.strokeWidth.get() != null) {
+                StrokeBuilder strokeBuilder = polygonBuilder.stroke();
+                strokeBuilder.width( stylePolygon.strokeWidth.get() );
+                strokeBuilder.color( new StyleColorToSLDHelper().getSLDColor( stylePolygon.strokeColor.get() ) );
+            }
+            if (stylePolygon.figure.get() != null || stylePolygon.image.get() != null || stylePolygon.symbolSize.get() != null) {
+                GraphicBuilder polygonGraphicBuilder = builder.polygonGraphicBuilder( polygonBuilder );
+                fillSLD( polygonGraphicBuilder );
+                if(stylePolygon.symbolSize.get() != null) {
+                    polygonGraphicBuilder.size( stylePolygon.symbolSize.get() );
+                }
+            }
+        }
+    }
+
+
+    public void fillSLD( GraphicBuilder graphicBuilder ) {
+        if (stylePolygon.figure.get() != null) {
+            new StyleFigureToSLDHelper().fillSLD( stylePolygon.figure.get(), graphicBuilder.mark() );
+        }
+        else if (stylePolygon.image.get() != null) {
+            new StyleImageToSLDHelper().fillSLD( stylePolygon.image.get(), graphicBuilder );
         }
     }
 }

@@ -11,20 +11,21 @@
       <Title>SLD Cook Book: Polygon with default label</Title>
       <FeatureTypeStyle>
         <Rule>
+          <TextSymbolizer>
+            <Label>
+              <ogc:PropertyName>name</ogc:PropertyName>
+            </Label>
+            <Fill/>
+          </TextSymbolizer>
           <PolygonSymbolizer>
             <Fill>
               <CssParameter name="fill">#40FF40</CssParameter>
             </Fill>
             <Stroke>
               <CssParameter name="stroke">#FFFFFF</CssParameter>
-              <CssParameter name="stroke-width">2</CssParameter>
+              <CssParameter name="stroke-width">2.0</CssParameter>
             </Stroke>
-          </PolygonSymbolizer>        
-          <TextSymbolizer>
-            <Label>
-              <ogc:PropertyName>name</ogc:PropertyName>
-            </Label>            
-          </TextSymbolizer>
+          </PolygonSymbolizer>
         </Rule>
       </FeatureTypeStyle>
     </UserStyle>

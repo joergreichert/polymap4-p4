@@ -17,7 +17,7 @@
             </Fill>
             <Stroke>
               <CssParameter name="stroke">#FFFFFF</CssParameter>
-              <CssParameter name="stroke-width">2</CssParameter>
+              <CssParameter name="stroke-width">2.0</CssParameter>
             </Stroke>
           </PolygonSymbolizer>
         </Rule>
@@ -25,3 +25,4 @@
     </UserStyle>
   </NamedLayer>
 </StyledLayerDescriptor>
+

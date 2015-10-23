@@ -21,11 +21,6 @@
               <CssParameter name="font-style">normal</CssParameter>
               <CssParameter name="font-weight">bold</CssParameter>
             </Font>
-            <LabelPlacement>
-              <LinePlacement>
-                <PerpendicularOffset>0</PerpendicularOffset>
-              </LinePlacement>
-            </LabelPlacement>
             <Fill>
               <CssParameter name="fill">#000000</CssParameter>
             </Fill>

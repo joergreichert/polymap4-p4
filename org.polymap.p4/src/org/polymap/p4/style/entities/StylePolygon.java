@@ -21,7 +21,6 @@ import org.polymap.p4.style.SLDBuilder;
 import org.polymap.p4.style.sld.from.StylePolygonFromSLDVisitor;
 import org.polymap.p4.style.sld.to.StylePolygonToSLDVisitor;
 
-
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
  *
@@ -30,7 +29,25 @@ public class StylePolygon
         extends AbstractStyleSymbolizer {
 
     @Nullable
-    public Property<StyleLabel> polygonLabel;
+    public Property<StyleLabel>  polygonLabel;
+
+    @Nullable
+    public Property<StyleColor>  fill;
+
+    @Nullable
+    public Property<Double>      strokeWidth;
+
+    @Nullable
+    public Property<StyleColor>  strokeColor;
+
+    @Nullable
+    public Property<StyleImage>  image;
+
+    @Nullable
+    public Property<StyleFigure> figure;
+
+    @Nullable
+    public Property<Double>      symbolSize;
 
 
     @Override

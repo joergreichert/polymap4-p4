@@ -11,26 +11,27 @@
       <Title>SLD Cook Book: Label halo</Title>
       <FeatureTypeStyle>
         <Rule>
+          <TextSymbolizer>
+            <Label>
+              <ogc:PropertyName>name</ogc:PropertyName>
+            </Label>
+            <Halo>
+              <Radius>3.0</Radius>
+              <Fill>
+                <CssParameter name="fill">#FFFFFF</CssParameter>
+              </Fill>
+            </Halo>
+            <Fill/>
+          </TextSymbolizer>
           <PolygonSymbolizer>
             <Fill>
               <CssParameter name="fill">#40FF40</CssParameter>
             </Fill>
             <Stroke>
               <CssParameter name="stroke">#FFFFFF</CssParameter>
-              <CssParameter name="stroke-width">2</CssParameter>
+              <CssParameter name="stroke-width">2.0</CssParameter>
             </Stroke>
-          </PolygonSymbolizer>        
-          <TextSymbolizer>
-            <Label>
-              <ogc:PropertyName>name</ogc:PropertyName>
-            </Label>
-            <Halo>
-              <Radius>3</Radius>
-              <Fill>
-                <CssParameter name="fill">#FFFFFF</CssParameter>
-              </Fill>
-            </Halo>
-          </TextSymbolizer>
+          </PolygonSymbolizer>
         </Rule>
       </FeatureTypeStyle>
     </UserStyle>
