@@ -18,7 +18,6 @@ import java.util.function.Supplier;
 
 import org.geotools.styling.builder.RuleBuilder;
 import org.polymap.p4.style.SLDBuilder;
-import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.StyleComposite;
 import org.polymap.p4.style.sld.to.StyleLabelToSLDVisitor;
 import org.polymap.p4.style.sld.to.StyleLineToSLDVisitor;
@@ -43,24 +42,21 @@ public class StyleCompositeToSLDHelper {
         styleComposite.stylePoints.forEach( stylePoint -> {
             RuleBuilder ruleBuilder = ruleBuilderSupplier.get();
             if (stylePoint.markerLabel.get() != null) {
-                new StyleLabelToSLDVisitor( stylePoint.markerLabel.get(), FeatureType.POINT ).fillSLD( builder,
-                        ruleBuilder );
+                new StyleLabelToSLDVisitor( stylePoint.markerLabel.get() ).fillSLD( builder, ruleBuilder );
             }
             new StylePointToSLDVisitor( stylePoint ).fillSLD( builder, ruleBuilder );
         } );
         styleComposite.styleLines.forEach( styleLine -> {
             RuleBuilder ruleBuilder = ruleBuilderSupplier.get();
             if (styleLine.lineLabel.get() != null) {
-                new StyleLabelToSLDVisitor( styleLine.lineLabel.get(), FeatureType.LINE_STRING ).fillSLD( builder,
-                        ruleBuilder );
+                new StyleLabelToSLDVisitor( styleLine.lineLabel.get() ).fillSLD( builder, ruleBuilder );
             }
             new StyleLineToSLDVisitor( styleLine ).fillSLD( builder, ruleBuilder );
         } );
         styleComposite.stylePolygons.forEach( stylePolygon -> {
             RuleBuilder ruleBuilder = ruleBuilderSupplier.get();
             if (stylePolygon.polygonLabel.get() != null) {
-                new StyleLabelToSLDVisitor( stylePolygon.polygonLabel.get(), FeatureType.POLYGON ).fillSLD( builder,
-                        ruleBuilder );
+                new StyleLabelToSLDVisitor( stylePolygon.polygonLabel.get() ).fillSLD( builder, ruleBuilder );
             }
             new StylePolygonToSLDVisitor( stylePolygon ).fillSLD( builder, ruleBuilder );
         } );

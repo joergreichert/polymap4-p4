@@ -20,19 +20,33 @@ import org.polymap.model2.Property;
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
  *
+ * @see http
+ *      ://docs.geoserver.org/stable/en/user/styling/sld-reference/textsymbolizer.
+ *      html#sld-reference-textsymbolizer
+ * @see http
+ *      ://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#labeling
+ *      -priority
  */
-public class StyleFont
+public class StyleLabelLinePlacement
         extends AbstractSLDModelFragment {
 
     @Nullable
-    public Property<String>     family;
+    public Property<Double>     perpendicularOffset;
+
+    // GeoServer vendor options: please note 
+    // that the attribute name must match the name in the vendor options
+    // as this is assumed in org.polymap.p4.style.sld.from.AbstractStyleFromSLDVisitor.
+    // handleVendorOption(TextSymbolizer, Property<T>, Function<String, T>)
 
     @Nullable
-    public Property<Double>     size;
+    public Property<Double>     maxDisplacement;
 
     @Nullable
-    public Property<Boolean>    italic;
+    public Property<Boolean>    followLine;
 
     @Nullable
-    public Property<Boolean>    bold;
+    public Property<Double>     maxAngleDelta;
+
+    @Nullable
+    public Property<Double>     repeat;
 }

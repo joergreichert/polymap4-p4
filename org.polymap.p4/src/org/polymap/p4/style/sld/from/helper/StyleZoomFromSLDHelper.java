@@ -39,7 +39,7 @@ public class StyleZoomFromSLDHelper
 
     @Override
     public void visit( Rule rule ) {
-        if (rule.getMaxScaleDenominator() > 0 || rule.getMinScaleDenominator() > 0) {
+        if (rule.getMinScaleDenominator() != 0 || rule.getMaxScaleDenominator() != Double.POSITIVE_INFINITY) {
             styleZoomConfiguration = styleZoomConfigurationInit.apply( rule.getName() );
             fillSymbolizers( rule );
             styleZoomConfiguration.minScaleDenominator.set( rule.getMinScaleDenominator() );

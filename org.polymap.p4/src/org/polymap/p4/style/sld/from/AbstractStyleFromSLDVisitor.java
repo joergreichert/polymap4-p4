@@ -16,7 +16,9 @@ package org.polymap.p4.style.sld.from;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 
 import org.geotools.filter.expression.AbstractExpressionVisitor;
 import org.geotools.renderer.lite.gridcoverage2d.StyleVisitorAdapter;
@@ -44,6 +46,7 @@ import org.opengis.filter.expression.Literal;
 import org.opengis.filter.expression.PropertyName;
 import org.opengis.style.Font;
 import org.opengis.style.GraphicalSymbol;
+import org.polymap.model2.Property;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -160,6 +163,44 @@ public abstract class AbstractStyleFromSLDVisitor
             };
         }
         return fontStyleExpressionVisitor;
+    }
+
+    protected static boolean hasAnyVendorOption( TextSymbolizer ts, String... properties ) {
+        if(properties.length == 0) {
+            return false;
+        }
+        return Arrays.asList(properties).stream().anyMatch( prop -> ts.hasOption( prop ) );
+    }
+
+
+    protected void handleDoubleVendorOption( TextSymbolizer ts, Property<Double> property ) {
+        handleVendorOption( ts, property, value -> {
+            try {
+                return Double.valueOf( value );
+            }
+            catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+            return null;
+        } );
+    }
+
+
+    protected void handleBooleanVendorOption( TextSymbolizer ts, Property<Boolean> property ) {
+        handleVendorOption( ts, property, value -> Boolean.valueOf( value ) );
+    }
+
+
+    private <T> void handleVendorOption( TextSymbolizer ts, Property<T> property, Function<String,T> converter ) {
+        String label = property.info().getName();
+        if (ts.hasOption( label )) {
+            try {
+                property.set( converter.apply( ts.getOptions().get( label ) ) );
+            }
+            catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 

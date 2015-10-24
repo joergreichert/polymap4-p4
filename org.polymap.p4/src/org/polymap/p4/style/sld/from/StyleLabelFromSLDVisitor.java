@@ -14,20 +14,20 @@
  */
 package org.polymap.p4.style.sld.from;
 
-import java.util.function.Function;
-
-import org.geotools.styling.AnchorPoint;
-import org.geotools.styling.Displacement;
 import org.geotools.styling.Fill;
 import org.geotools.styling.Halo;
 import org.geotools.styling.LinePlacement;
 import org.geotools.styling.PointPlacement;
 import org.geotools.styling.TextSymbolizer;
 import org.opengis.style.Font;
-import org.polymap.model2.Property;
+import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.StyleLabel;
+import org.polymap.p4.style.entities.StyleLabelLinePlacement;
+import org.polymap.p4.style.entities.StyleLabelPointPlacement;
 import org.polymap.p4.style.sld.from.helper.StyleColorFromSLDHelper;
 import org.polymap.p4.style.sld.from.helper.StyleFontFromSLDHelper;
+import org.polymap.p4.style.sld.from.helper.StyleLabelLinePlacementFromSLDHelper;
+import org.polymap.p4.style.sld.from.helper.StyleLabelPointPlacementFromSLDHelper;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -36,11 +36,14 @@ import org.polymap.p4.style.sld.from.helper.StyleFontFromSLDHelper;
 public class StyleLabelFromSLDVisitor
         extends AbstractStyleFromSLDVisitor {
 
-    private final StyleLabel styleLabel;
+    private final StyleLabel  styleLabel;
+
+    private final FeatureType host;
 
 
-    public StyleLabelFromSLDVisitor( StyleLabel styleLabel ) {
+    public StyleLabelFromSLDVisitor( StyleLabel styleLabel, FeatureType host ) {
         this.styleLabel = styleLabel;
+        this.host = host;
     }
 
 
@@ -49,60 +52,33 @@ public class StyleLabelFromSLDVisitor
         if (ts.getLabel() != null) {
             styleLabel.labelText.set( (String)ts.getLabel().accept( getLabelExpressionVisitor(), null ) );
         }
-        if(ts.getHalo() != null) {
+        if (ts.getHalo() != null) {
             ts.getHalo().accept( this );
         }
         handleGeoServerVendorExtensions( ts, styleLabel );
         super.visit( ts );
     }
-    
+
+
     @Override
     public void visit( Halo halo ) {
-        if(halo.getRadius() != null) {
+        if (halo.getRadius() != null) {
             styleLabel.haloRadius.set( (double)halo.getRadius().accept( getNumberExpressionVisitor(), null ) );
         }
-        if(halo.getFill() != null) {
+        if (halo.getFill() != null) {
             new StyleColorFromSLDHelper().fromSLD( styleLabel.haloFill, halo.getFill().getColor() );
         }
     }
 
+
     private void handleGeoServerVendorExtensions( TextSymbolizer ts, StyleLabel styleLabel ) {
-        handleDoubleVendorOption( ts, styleLabel.autoWrap );
-        handleDoubleVendorOption( ts, styleLabel.maxDisplacement );
-        handleBooleanVendorOption( ts, styleLabel.followLine );
-        handleDoubleVendorOption( ts, styleLabel.maxAngleDelta );
-        handleDoubleVendorOption( ts, styleLabel.repeat );
-    }
-
-
-    private void handleDoubleVendorOption( TextSymbolizer ts, Property<Double> property ) {
-        handleVendorOption( ts, property, value -> {
-            try {
-                return Double.valueOf( value );
-            }
-            catch (NumberFormatException e) {
-                e.printStackTrace();
-            }
-            return null;
-        } );
-    }
-
-
-    private void handleBooleanVendorOption( TextSymbolizer ts, Property<Boolean> property ) {
-        handleVendorOption( ts, property, value -> Boolean.valueOf( value ) );
-    }
-
-
-    private <T> void handleVendorOption( TextSymbolizer ts, Property<T> property, Function<String,T> converter ) {
-        String label = property.info().getName();
-        if (ts.hasOption( label )) {
-            try {
-                property.set( converter.apply( ts.getOptions().get( label ) ) );
-            }
-            catch (NumberFormatException e) {
-                e.printStackTrace();
-            }
+        if (host != FeatureType.LINE_STRING && StyleLabelPointPlacementFromSLDHelper.containsVendorOption( ts )) {
+            new StyleLabelPointPlacementFromSLDHelper( getOrCreatePointPlacement() ).fromSLD( ts );
         }
+        if (host != FeatureType.POINT && host != FeatureType.POLYGON && StyleLabelLinePlacementFromSLDHelper.containsVendorOption( ts )) {
+            new StyleLabelLinePlacementFromSLDHelper( getOrCreateLinePlacement() ).fromSLD( ts );
+        }
+        handleDoubleVendorOption( ts, styleLabel.autoWrap );
     }
 
 
@@ -125,42 +101,30 @@ public class StyleLabelFromSLDVisitor
 
     @Override
     public void visit( PointPlacement pp ) {
-        if (pp.getRotation() != null) {
-            styleLabel.labelRotation.set( (double)pp.getRotation().accept( getNumberExpressionVisitor(), null ) );
+        if (host != FeatureType.LINE_STRING && (pp.getRotation() != null || pp.getAnchorPoint() != null)) {
+            new StyleLabelPointPlacementFromSLDHelper( getOrCreatePointPlacement() ).fromSLD( pp );
         }
         super.visit( pp );
     }
 
 
     @Override
-    public void visit( AnchorPoint ap ) {
-        if (ap.getAnchorPointX() != null && ap.getAnchorPointY() != null) {
-            styleLabel.labelAnchor.createValue( anchor -> {
-                anchor.x.set( (double)ap.getAnchorPointX().accept( getNumberExpressionVisitor(), null ) );
-                anchor.y.set( (double)ap.getAnchorPointY().accept( getNumberExpressionVisitor(), null ) );
-                return anchor;
-            } );
-        }
-    }
-
-
-    @Override
-    public void visit( Displacement dis ) {
-        if (dis.getDisplacementX() != null && dis.getDisplacementY() != null) {
-            styleLabel.labelOffset.createValue( offset -> {
-                offset.x.set( (double)dis.getDisplacementX().accept( getNumberExpressionVisitor(), null ) );
-                offset.y.set( (double)dis.getDisplacementY().accept( getNumberExpressionVisitor(), null ) );
-                return offset;
-            } );
-        }
-    }
-
-
-    @Override
     public void visit( LinePlacement lp ) {
-        if (lp.getPerpendicularOffset() != null) {
-            styleLabel.perpendicularOffset.set( (double)lp.getPerpendicularOffset().accept( getNumberExpressionVisitor(), null ) );
+        if (host != FeatureType.POINT && host != FeatureType.POLYGON && lp.getPerpendicularOffset() != null) {
+            new StyleLabelLinePlacementFromSLDHelper( getOrCreateLinePlacement() ).fromSLD( lp );
         }
         super.visit( lp );
+    }
+
+
+    private StyleLabelPointPlacement getOrCreatePointPlacement() {
+        StyleLabelPointPlacement pp = styleLabel.pointPlacement.get();
+        return pp == null ? styleLabel.pointPlacement.createValue( null ) : pp;
+    }
+
+
+    private StyleLabelLinePlacement getOrCreateLinePlacement() {
+        StyleLabelLinePlacement lp = styleLabel.linePlacement.get();
+        return lp == null ? styleLabel.linePlacement.createValue( null ) : lp;
     }
 }

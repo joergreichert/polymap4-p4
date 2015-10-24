@@ -24,6 +24,7 @@ import org.geotools.styling.PolygonSymbolizer;
 import org.geotools.styling.Rule;
 import org.geotools.styling.Stroke;
 import org.geotools.styling.TextSymbolizer;
+import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.StylePolygon;
 import org.polymap.p4.style.sld.from.helper.StyleColorFromSLDHelper;
 import org.polymap.p4.style.sld.from.helper.StyleFigureFromSLDHelper;
@@ -50,8 +51,8 @@ public class StylePolygonFromSLDVisitor
                 .stream()
                 .filter( symb -> symb instanceof TextSymbolizer )
                 .forEach(
-                        t -> new StyleLabelFromSLDVisitor( stylePolygon.polygonLabel.createValue( null ) )
-                                .visit( (TextSymbolizer)t ) );
+                        t -> new StyleLabelFromSLDVisitor( stylePolygon.polygonLabel.createValue( null ),
+                                FeatureType.POLYGON ).visit( (TextSymbolizer)t ) );
         Arrays.asList( rule.getSymbolizers() ).stream().filter( symb -> symb instanceof PolygonSymbolizer )
                 .forEach( symb -> symb.accept( this ) );
     }
@@ -96,6 +97,7 @@ public class StylePolygonFromSLDVisitor
         }
     }
 
+
     @Override
     public void visit( Mark mark ) {
         if (mark.getWellKnownName() != null) {
@@ -105,6 +107,7 @@ public class StylePolygonFromSLDVisitor
             } );
         }
     }
+
 
     @Override
     public void visit( Stroke stroke ) {

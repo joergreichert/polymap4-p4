@@ -20,51 +20,63 @@ import org.polymap.model2.Property;
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
  *
+ * @see http
+ *      ://docs.geoserver.org/stable/en/user/styling/sld-reference/textsymbolizer.
+ *      html#sld-reference-textsymbolizer
+ * @see http
+ *      ://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#
+ *      labeling -priority
  */
 public class StyleLabel
         extends AbstractSLDModelFragment {
 
     @Nullable
-    public Property<String>     labelText;
+    public Property<String>                   labelText;
 
     @Nullable
-    public Property<StyleFont>  labelFont;
+    public Property<StyleFont>                labelFont;
+    
+    @Nullable
+    public Property<StyleColor>               labelFontColor;
 
     @Nullable
-    public Property<StyleColor> labelFontColor;
+    public Property<StyleLabelPointPlacement> pointPlacement;
 
     @Nullable
-    public Property<StyleCoord> labelOffset;
+    public Property<StyleLabelLinePlacement>  linePlacement;
 
     @Nullable
-    public Property<StyleCoord> labelAnchor;
+    public Property<Double>                   haloRadius;
 
     @Nullable
-    public Property<Double>     perpendicularOffset;
+    public Property<StyleColor>               haloFill;
+
+    // GeoServer vendor options: please note 
+    // that the attribute name must match the name in the vendor options
+    // as this is assumed in org.polymap.p4.style.sld.from.AbstractStyleFromSLDVisitor.
+    // handleVendorOption(TextSymbolizer, Property<T>, Function<String, T>)
 
     @Nullable
-    public Property<Double>     labelRotation;
+    public Property<Double>                   autoWrap;
 
-    @Nullable
-    public Property<Double>     haloRadius;
-
-    @Nullable
-    public Property<StyleColor> haloFill;
-
-    // GeoServer vendor options
-
-    @Nullable
-    public Property<Double>     maxDisplacement;
-
-    @Nullable
-    public Property<Boolean>    followLine;
-
-    @Nullable
-    public Property<Double>     maxAngleDelta;
-
-    @Nullable
-    public Property<Double>     repeat;
-
-    @Nullable
-    public Property<Double>     autoWrap;
+    
+    /* 
+     *  @formatter:off
+     *  
+     *  Left off geo server extensions:
+     *   
+     *  - http://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#priority-labeling
+     *  - http://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#grouping-features-group
+     *  - http://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#labelallgroup
+     *  - http://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#overlapping-and-separating-labels-spacearound
+     *  - http://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#forcelefttoright
+     *  - http://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#conflictresolution
+     *  - http://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#goodnessoffit
+     *  - http://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#polygonalign
+     *  - http://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#graphic-resize
+     *  - http://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#graphic-margin
+     *  - http://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#partials
+     *  
+     *  @formatter:on
+     */
 }

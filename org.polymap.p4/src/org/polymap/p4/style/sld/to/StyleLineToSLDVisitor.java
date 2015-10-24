@@ -25,7 +25,6 @@ import org.geotools.styling.builder.LineSymbolizerBuilder;
 import org.geotools.styling.builder.RuleBuilder;
 import org.geotools.styling.builder.StrokeBuilder;
 import org.polymap.p4.style.SLDBuilder;
-import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.StyleLine;
 import org.polymap.p4.style.sld.to.helper.StyleColorToSLDHelper;
 
@@ -58,7 +57,7 @@ public class StyleLineToSLDVisitor
     private void internalFillSLD( StyleLine styleLine, boolean newFeatureType, boolean newRule, SLDBuilder builder,
             Supplier<RuleBuilder> ruleBuilderSupplier ) {
         if (styleLine.lineLabel.get() != null) {
-            new StyleLabelToSLDVisitor( styleLine.lineLabel.get(), FeatureType.LINE_STRING ).fillSLD( builder );
+            new StyleLabelToSLDVisitor( styleLine.lineLabel.get()).fillSLD( builder );
         }
         if (styleLine.lineWidth.get() != null && styleLine.lineWidth.get() > 0) {
             FeatureTypeStyleBuilder featureTypeBuilder = newFeatureType ? singletonStyle( builder ).featureTypeStyle()

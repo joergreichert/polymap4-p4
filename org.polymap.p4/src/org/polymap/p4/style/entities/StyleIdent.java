@@ -15,6 +15,7 @@
 package org.polymap.p4.style.entities;
 
 import org.geotools.styling.StyledLayerDescriptor;
+import org.polymap.model2.DefaultValue;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
 import org.polymap.p4.style.SLDBuilder;
@@ -22,17 +23,25 @@ import org.polymap.p4.style.sld.from.StyleIdentFromSLDVisitor;
 import org.polymap.p4.style.sld.to.StyleIdentToSLDVisitor;
 
 /**
+ * Assumes combination of NamedLayer and UserStyle, where name is mapped to
+ * NamedLayer.name and title/description to the UserStyle attributes title resp.
+ * abstract.
+ * 
  * @author Joerg Reichert <joerg@mapzone.io>
  *
+ * @see http://docs.geoserver.org/stable/en/user/styling/sld-reference/layers.html
  */
 public class StyleIdent
         extends AbstractSLDModel {
 
-    @Nullable
+    @DefaultValue("MyStyle")
     public Property<String>      name;
 
     @Nullable
     public Property<String>      title;
+
+    @Nullable
+    public Property<String>      description;
 
     public Property<FeatureType> featureType;
 

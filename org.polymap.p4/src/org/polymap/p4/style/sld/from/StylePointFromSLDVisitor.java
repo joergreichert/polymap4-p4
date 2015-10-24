@@ -22,6 +22,7 @@ import org.geotools.styling.Mark;
 import org.geotools.styling.PointSymbolizer;
 import org.geotools.styling.Rule;
 import org.geotools.styling.TextSymbolizer;
+import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.StylePoint;
 import org.polymap.p4.style.sld.from.helper.StyleFigureFromSLDHelper;
 import org.polymap.p4.style.sld.from.helper.StyleImageFromSLDHelper;
@@ -47,8 +48,8 @@ public class StylePointFromSLDVisitor
                 .stream()
                 .filter( symb -> symb instanceof TextSymbolizer )
                 .forEach(
-                        t -> new StyleLabelFromSLDVisitor( stylePoint.markerLabel.createValue( null ) )
-                                .visit( (TextSymbolizer)t ) );
+                        t -> new StyleLabelFromSLDVisitor( stylePoint.markerLabel.createValue( null ),
+                                FeatureType.POINT ).visit( (TextSymbolizer)t ) );
         Arrays.asList( rule.getSymbolizers() ).stream().filter( symb -> symb instanceof PointSymbolizer )
                 .forEach( symb -> symb.accept( this ) );
     }

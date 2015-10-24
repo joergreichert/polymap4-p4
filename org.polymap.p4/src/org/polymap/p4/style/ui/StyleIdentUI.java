@@ -31,6 +31,7 @@ import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.StringFormField;
+import org.polymap.rhei.field.TextFormField;
 import org.polymap.rhei.form.IFormPageSite;
 
 /**
@@ -40,9 +41,9 @@ import org.polymap.rhei.form.IFormPageSite;
 public class StyleIdentUI
         extends AbstractStylerFragmentUI {
 
-    private final IPanelSite      panelSite;
+    private final IPanelSite  panelSite;
 
-    private StyleIdent            styleIdent;
+    private StyleIdent        styleIdent;
 
     private PicklistFormField picklistFormField;
 
@@ -75,10 +76,10 @@ public class StyleIdentUI
         SortedMap<String,Object> orderFeatureTypes = new TreeMap<String,Object>( comparator );
         FeatureType.getOrdered().stream().forEach( value -> orderFeatureTypes.put( value.getLabel(), value ) );
         picklistFormField = new PicklistFormField( ( ) -> orderFeatureTypes ) {
-            
+
             protected Object getValue() {
                 Object value = super.getValue();
-                if(value == null) {
+                if (value == null) {
                     value = FeatureType.POINT;
                 }
                 return value;
@@ -86,6 +87,8 @@ public class StyleIdentUI
         };
         site.newFormField( new PropertyAdapter( styleIdent.featureType ) ).label.put( "Feature type" ).field
                 .put( picklistFormField ).tooltip.put( "" ).create();
+        site.newFormField( new PropertyAdapter( styleIdent.description ) ).label.put( "Description" ).field
+                .put( new TextFormField() ).tooltip.put( "" ).create();
         return site.getPageBody();
     }
 
@@ -94,12 +97,13 @@ public class StyleIdentUI
         picklistFormField.addModifyListener( event -> {
             if (callback != null) {
                 try {
-                    if(styleIdent != null) {
+                    if (styleIdent != null) {
                         picklistFormField.store();
                         try {
                             callback.handle( styleIdent.featureType.get() );
-                        } catch(Exception e) {
-                            
+                        }
+                        catch (Exception e) {
+
                         }
                     }
                 }

@@ -36,16 +36,22 @@ public class StyleIdentToSLDVisitor
 
     @Override
     public void fillSLD( SLDBuilder builder ) {
-        if(styleIdent.name.get() != null | styleIdent.title.get() != null ) {
+        if (styleIdent.name.get() != null | styleIdent.title.get() != null) {
             NamedLayerBuilder namedLayer = builder.namedLayer();
-            if(styleIdent.name.get() != null) {
+            if (styleIdent.name.get() != null) {
                 namedLayer.name( styleIdent.name.get() );
             }
-            if(styleIdent.title.get() != null) {
-                StyleBuilder styleBuilder = builder.style(namedLayer);
-                styleBuilder.title( styleIdent.title.get() );
-                // have to call this here as otherwise the title wouldn't be set
-                builder.featureTypeStyle(styleBuilder);
+            if (styleIdent.title.get() != null || styleIdent.description.get() != null) {
+                StyleBuilder styleBuilder = builder.style( namedLayer );
+                if (styleIdent.title.get() != null) {
+                    styleBuilder.title( styleIdent.title.get() );
+                }
+                if (styleIdent.description.get() != null) {
+                    styleBuilder.styleAbstract( styleIdent.description.get() );
+                }
+                // have to call this here as otherwise the title/description wouldn't
+                // be set
+                builder.featureTypeStyle( styleBuilder );
             }
         }
     }

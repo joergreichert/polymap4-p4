@@ -26,6 +26,7 @@ import org.geotools.styling.Rule;
 import org.geotools.styling.Stroke;
 import org.geotools.styling.TextSymbolizer;
 import org.opengis.style.ExternalGraphic;
+import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.LineCapType;
 import org.polymap.p4.style.entities.StyleLine;
 import org.polymap.p4.style.sld.from.helper.StyleColorFromSLDHelper;
@@ -70,7 +71,8 @@ public class StyleLineFromSLDVisitor
                 .stream()
                 .filter( symb -> symb instanceof TextSymbolizer )
                 .forEach(
-                        t -> new StyleLabelFromSLDVisitor( getStyleLineToUse().lineLabel.createValue( null ) )
+                        t -> new StyleLabelFromSLDVisitor( getStyleLineToUse().lineLabel.createValue( null ),
+                                FeatureType.LINE_STRING )
                                 .visit( (TextSymbolizer)t ) );
         List<LineSymbolizer> lines = getLinesSortedAscendentByLineWidth( rule );
         for (LineSymbolizer line : lines) {

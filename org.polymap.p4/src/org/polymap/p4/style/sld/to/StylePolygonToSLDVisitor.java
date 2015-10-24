@@ -20,7 +20,6 @@ import org.geotools.styling.builder.PolygonSymbolizerBuilder;
 import org.geotools.styling.builder.RuleBuilder;
 import org.geotools.styling.builder.StrokeBuilder;
 import org.polymap.p4.style.SLDBuilder;
-import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.StylePolygon;
 import org.polymap.p4.style.sld.to.helper.StyleColorToSLDHelper;
 import org.polymap.p4.style.sld.to.helper.StyleFigureToSLDHelper;
@@ -50,7 +49,7 @@ public class StylePolygonToSLDVisitor
 
     public void fillSLD( SLDBuilder builder, RuleBuilder ruleBuilder ) {
         if (stylePolygon.polygonLabel.get() != null) {
-            new StyleLabelToSLDVisitor( stylePolygon.polygonLabel.get(), FeatureType.POLYGON ).fillSLD( builder, ruleBuilder );
+            new StyleLabelToSLDVisitor( stylePolygon.polygonLabel.get() ).fillSLD( builder, ruleBuilder );
         }
         if (stylePolygon.fill.get() != null || stylePolygon.strokeWidth.get() != null
                 || stylePolygon.image.get() != null) {

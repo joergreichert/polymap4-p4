@@ -19,6 +19,7 @@ import org.geotools.styling.PointSymbolizer;
 import org.geotools.styling.PolygonSymbolizer;
 import org.geotools.styling.Style;
 import org.geotools.styling.TextSymbolizer;
+import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.StyleComposite;
 import org.polymap.p4.style.entities.StyleLine;
 import org.polymap.p4.style.entities.StylePoint;
@@ -73,7 +74,7 @@ public class StyleCompositeFromSLDHelper
     public void visit( PointSymbolizer ps ) {
         StylePoint stylePoint = styleComposite.stylePoints.createElement( null );
         if (ts != null) {
-            new StyleLabelFromSLDVisitor( stylePoint.markerLabel.createValue( null ) ).visit( ts );
+            new StyleLabelFromSLDVisitor( stylePoint.markerLabel.createValue( null ), FeatureType.POINT ).visit( ts );
         }
         new StylePointFromSLDVisitor( stylePoint ).visit( ps );
     }
@@ -81,8 +82,9 @@ public class StyleCompositeFromSLDHelper
 
     @Override
     public void visit( LineSymbolizer ls ) {
-        // TODO what happens with lines with borders and line associated lines in zoom?
-        if(!linesHandled) {
+        // TODO what happens with lines with borders and line associated lines in
+        // zoom?
+        if (!linesHandled) {
             StyleLine styleLine = styleComposite.styleLines.createElement( null );
             new StyleLineFromSLDVisitor( styleLine ).visit( ls );
         }
@@ -93,7 +95,8 @@ public class StyleCompositeFromSLDHelper
     public void visit( PolygonSymbolizer ls ) {
         StylePolygon stylePolygon = styleComposite.stylePolygons.createElement( null );
         if (ts != null) {
-            new StyleLabelFromSLDVisitor( stylePolygon.polygonLabel.createValue( null ) ).visit( ts );
+            new StyleLabelFromSLDVisitor( stylePolygon.polygonLabel.createValue( null ), FeatureType.POLYGON )
+                    .visit( ts );
         }
         new StylePolygonFromSLDVisitor( stylePolygon ).visit( ls );
     }

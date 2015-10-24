@@ -65,6 +65,6 @@ public class StyleFeatureFromSLDVisitor
 
 
     private boolean hasZoomAttributes( Rule rule ) {
-        return rule.getMinScaleDenominator() > 0 | rule.getMaxScaleDenominator() > 0;
+        return rule.getMinScaleDenominator() != 0 || rule.getMaxScaleDenominator() != Double.POSITIVE_INFINITY;
     }
 }

@@ -14,7 +14,9 @@
  */
 package org.polymap.p4.style.ui;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.swt.graphics.FontData;
@@ -30,9 +32,9 @@ import org.polymap.p4.util.PropertyAdapter;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanelSite;
-import org.polymap.rhei.field.CoordFormField;
 import org.polymap.rhei.field.FontFormField;
 import org.polymap.rhei.field.FormFieldEvent;
+import org.polymap.rhei.field.IFormField;
 import org.polymap.rhei.field.IFormFieldListener;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.SpinnerFormField;
@@ -56,15 +58,15 @@ public class StyleLabelUI
 
     private FontFormField            fontFormField;
 
-    private CoordFormField           labelAnchorFormField;
-
-    private CoordFormField           labelOffsetFormField;
-
-    private SpinnerFormField         labelRotationFormField;
+    // GeoServer extension
+    // http://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#autowrap
+    private SpinnerFormField         autoWrap;
 
     private final Context<IFontInfo> fontInfoInContext;
 
     private StyleLabel               styleLabel = null;
+
+    private final List<IFormField>   formFields;
 
 
     public StyleLabelUI( IAppContext context, IPanelSite panelSite, Context<IFontInfo> fontInfoInContext ) {
@@ -74,6 +76,10 @@ public class StyleLabelUI
 
         FontInfo fontInfo = new FontInfo();
         fontInfoInContext.set( fontInfo );
+
+        formFields = new ArrayList<IFormField>();
+        formFields.add(fontFormField);
+        formFields.add(autoWrap);
 
         EventManager.instance().subscribe( fontInfo, ev -> ev.getSource() instanceof IFontInfo );
     }
@@ -100,20 +106,12 @@ public class StyleLabelUI
         fontFormField.setEnabled( false );
         site.newFormField( new PropertyAdapter( styleLabel.labelFont ) ).label.put( "Label font" ).field
                 .put( fontFormField ).tooltip.put( "" ).create();
-        labelAnchorFormField = new CoordFormField( new SpinnerFormField( 0, 1, 0.1, 0.0, 1 ), new SpinnerFormField( 0,
-                1, 0.1, 0.5, 1 ) );
-        labelAnchorFormField.setEnabled( false );
-        site.newFormField( new PropertyAdapter( styleLabel.labelAnchor ) ).label.put( "Label anchor" ).field
-                .put( labelAnchorFormField ).tooltip.put( "" ).create();
-        labelOffsetFormField = new CoordFormField( new SpinnerFormField( -128, 128, 0 ), new SpinnerFormField( -128,
-                128, 0 ) );
-        labelOffsetFormField.setEnabled( false );
-        site.newFormField( new PropertyAdapter( styleLabel.labelOffset ) ).label.put( "Label offset" ).field
-                .put( labelOffsetFormField ).tooltip.put( "" ).create();
-        labelRotationFormField = new SpinnerFormField( -360, 360, 0 );
-        labelRotationFormField.setEnabled( false );
-        site.newFormField( new PropertyAdapter( styleLabel.labelRotation ) ).label.put( "Label rotation" ).field
-                .put( labelRotationFormField ).tooltip.put( "" ).create();
+
+        // TODO
+        // line placement
+        // point placement
+        // halo
+
         return site.getPageBody();
     }
 
@@ -138,7 +136,7 @@ public class StyleLabelUI
             if (ev.getSource() == labelTextField) {
                 boolean newValueNotEmpty = !StringUtils.isEmpty( ev.getNewFieldValue() );
                 fontFormField.setEnabled( newValueNotEmpty );
-                labelOffsetFormField.setEnabled( newValueNotEmpty );
+                // labelOffsetFormField.setEnabled( newValueNotEmpty );
             }
             else if (ev.getSource() == fontFormField) {
                 fontInfoInContext.get().setFormField( fontFormField );

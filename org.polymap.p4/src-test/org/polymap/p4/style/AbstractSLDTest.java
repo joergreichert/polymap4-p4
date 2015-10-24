@@ -95,7 +95,10 @@ public abstract class AbstractSLDTest {
 
 
     protected StyleIdent createStyleIdent( SimpleStyler simpleStyler ) {
-        return simpleStyler.styleIdent.createValue( null );
+        return simpleStyler.styleIdent.createValue( ident -> {
+            ident.name.set( "MyStyle" );
+            return ident;
+        } );
     }
 
 
@@ -140,6 +143,7 @@ public abstract class AbstractSLDTest {
         if (index > 0) {
             sldContent = sldContent.substring( index );
         }
+        sldContent = sldContent.replace( "\r\n", "\n" );
         sldContent = sldContent.replace( "      <Name/>\n", "" ).replace( "            <Font />\n", "" );
         return sldContent;
     }

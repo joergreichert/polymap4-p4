@@ -32,6 +32,7 @@ import org.polymap.p4.style.color.IColorInfo;
 import org.polymap.p4.style.entities.AbstractSLDModel;
 import org.polymap.p4.style.entities.AbstractStyleSymbolizer;
 import org.polymap.p4.style.entities.FeatureType;
+import org.polymap.p4.style.entities.StyleFeature;
 import org.polymap.p4.style.entities.StyleIdent;
 import org.polymap.p4.style.entities.StyleLabel;
 import org.polymap.p4.style.entities.StyleLine;
@@ -110,7 +111,13 @@ public class SimpleStylerUI
         DefaultFormPage page = null;
         String label = null;
         FeatureType featureType = null;
-        if (fragment instanceof StyleIdent) {
+        if (fragment instanceof StyleFeature) {
+            StyleFeature styleFeature = (StyleFeature) fragment;
+            styleFeature.styleComposite.get().stylePoints.forEach( styleLine -> createContent(styleLine) );
+            styleFeature.styleComposite.get().styleLines.forEach( styleLine -> createContent(styleLine) );
+            styleFeature.styleComposite.get().stylePolygons.forEach( styleLine -> createContent(styleLine) );
+        }
+        else if (fragment instanceof StyleIdent) {
             label = styleIdentStr;
             page = new DefaultFormPage() {
 
@@ -125,7 +132,7 @@ public class SimpleStylerUI
                 }
             };
         }
-        if (fragment instanceof AbstractStyleSymbolizer) {
+        else if (fragment instanceof AbstractStyleSymbolizer) {
             label = styleStr;
             if (fragment instanceof StylePoint) {
                 featureType = FeatureType.POINT;

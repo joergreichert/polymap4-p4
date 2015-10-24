@@ -39,7 +39,9 @@ public class StyleIdentFromSLDVisitor
 
 
     public void visit( StyledLayerDescriptor sld ) {
-        styleIdent.name.set( sld.getName() );
+        if(sld.getName() != null) {
+            styleIdent.name.set( sld.getName() );
+        }
         styleIdent.title.set( sld.getTitle() );
         super.visit( sld );
     }
@@ -47,7 +49,9 @@ public class StyleIdentFromSLDVisitor
 
     @Override
     public void visit( NamedLayer layer ) {
-        styleIdent.name.set( layer.getName() );
+        if(layer.getName() != null) {
+            styleIdent.name.set( layer.getName() );
+        }
         Arrays.asList( layer.getStyles() ).stream().forEach( style -> style.accept( this ) );
         super.visit( layer );
     }
@@ -55,11 +59,16 @@ public class StyleIdentFromSLDVisitor
 
     @Override
     public void visit( Style style ) {
-        if (styleIdent.name.get() == null) {
+        if (styleIdent.name.get() == null && style.getName() != null) {
             styleIdent.name.set( style.getName() );
         }
-        if (style.getDescription() != null && style.getDescription().getTitle() != null) {
-            styleIdent.title.set( style.getDescription().getTitle().toString() );
+        if (style.getDescription() != null) {
+            if (style.getDescription().getTitle() != null) {
+                styleIdent.title.set( style.getDescription().getTitle().toString() );
+            }
+            if (style.getDescription().getAbstract() != null) {
+                styleIdent.description.set( style.getDescription().getAbstract().toString() );
+            }
         }
         super.visit( style );
     }

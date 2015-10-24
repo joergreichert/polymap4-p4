@@ -18,7 +18,6 @@ import org.geotools.styling.builder.GraphicBuilder;
 import org.geotools.styling.builder.PointSymbolizerBuilder;
 import org.geotools.styling.builder.RuleBuilder;
 import org.polymap.p4.style.SLDBuilder;
-import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.StylePoint;
 import org.polymap.p4.style.sld.to.helper.StyleFigureToSLDHelper;
 import org.polymap.p4.style.sld.to.helper.StyleImageToSLDHelper;
@@ -41,7 +40,7 @@ public class StylePointToSLDVisitor
     @Override
     public void fillSLD( SLDBuilder builder ) {
         if (stylePoint.markerLabel.get() != null) {
-            new StyleLabelToSLDVisitor( stylePoint.markerLabel.get(), FeatureType.POINT ).fillSLD( builder );
+            new StyleLabelToSLDVisitor( stylePoint.markerLabel.get() ).fillSLD( builder );
         }
         if (isPointDefined( stylePoint )) {
             RuleBuilder ruleBuilder = singletonRule( builder );

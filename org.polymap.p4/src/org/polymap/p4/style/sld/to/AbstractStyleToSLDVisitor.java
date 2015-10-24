@@ -28,14 +28,15 @@ import org.polymap.p4.style.SLDBuilder;
 public abstract class AbstractStyleToSLDVisitor
         extends StyleVisitorAdapter {
 
-
     public abstract void fillSLD( SLDBuilder builder );
+
 
     protected StyleBuilder singletonStyle( SLDBuilder builder ) {
         NamedLayerBuilder namedLayer = builder.namedLayer();
         return builder.style( namedLayer );
     }
-    
+
+
     protected FeatureTypeStyleBuilder singletonFeatureTypeStyle( SLDBuilder builder ) {
         StyleBuilder userStyle = singletonStyle( builder );
         return builder.featureTypeStyle( userStyle );
