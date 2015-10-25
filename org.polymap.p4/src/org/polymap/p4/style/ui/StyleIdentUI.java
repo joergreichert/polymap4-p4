@@ -64,10 +64,10 @@ public class StyleIdentUI
         parent.setLayout( ColumnLayoutFactory.defaults().spacing( 5 )
                 .margins( panelSite.getLayoutPreference().getSpacing() / 2 ).create() );
         site.newFormField( new PropertyAdapter( styleIdent.name ) ).label.put( "Style name" ).field
-                .put( new StringFormField() ).tooltip.put( "" ).validator.put( new NotEmptyValidator<String,String>() )
-                .create();
+                .put( new StringFormField() ).tooltip.put( "Identifying style name" ).validator.put(
+                new NotEmptyValidator<String,String>() ).create();
         site.newFormField( new PropertyAdapter( styleIdent.title ) ).label.put( "Style title" ).field
-                .put( new StringFormField() ).tooltip.put( "" ).create();
+                .put( new StringFormField() ).tooltip.put( "Descriptive title of style" ).create();
 
         List<String> orderedLabel = FeatureType.getOrdered().stream().map( value -> value.getLabel() )
                 .collect( Collectors.toList() );
@@ -85,10 +85,10 @@ public class StyleIdentUI
                 return value;
             }
         };
-        site.newFormField( new PropertyAdapter( styleIdent.featureType ) ).label.put( "Feature type" ).field
-                .put( picklistFormField ).tooltip.put( "" ).create();
         site.newFormField( new PropertyAdapter( styleIdent.description ) ).label.put( "Description" ).field
-                .put( new TextFormField() ).tooltip.put( "" ).create();
+                .put( new TextFormField() ).tooltip.put( "Full description of style" ).create();
+        site.newFormField( new PropertyAdapter( styleIdent.featureType ) ).label.put( "Feature type" ).field
+                .put( picklistFormField ).tooltip.put( "The symbolizer the style should be applied to " ).create();
         return site.getPageBody();
     }
 

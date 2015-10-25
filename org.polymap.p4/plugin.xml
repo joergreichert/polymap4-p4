@@ -83,6 +83,18 @@
             class="org.polymap.p4.style.font.FontPanel"
             id="org.polymap.p4.FontPanel">
       </panel>
+      <panel
+            class="org.polymap.p4.style.label.StyleLabelPointPlacementPanel"
+            id="org.polymap.p4.StyleLabelPointPlacementPanel">
+      </panel>
+      <panel
+            class="org.polymap.p4.style.label.StyleLabelLinePlacementPanel"
+            id="org.polymap.p4.StyleLabelLinePlacementPanel">
+      </panel>
+      <panel
+            class="org.polymap.p4.style.label.StyleLabelHaloPanel"
+            id="org.polymap.p4.StyleLabelHaloPanel">
+      </panel>
    </extension>
    <extension
          point="org.polymap.service.fs.contentProviders">

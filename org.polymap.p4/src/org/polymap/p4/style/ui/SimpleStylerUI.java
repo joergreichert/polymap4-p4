@@ -41,6 +41,7 @@ import org.polymap.p4.style.entities.StylePolygon;
 import org.polymap.p4.style.font.IFontInfo;
 import org.polymap.p4.style.icon.FigureLibraryInitializer;
 import org.polymap.p4.style.icon.IImageInfo;
+import org.polymap.p4.style.label.IStyleLabelInfo;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanelSite;
@@ -84,11 +85,12 @@ public class SimpleStylerUI
 
 
     public SimpleStylerUI( IAppContext context, IPanelSite panelSite, Context<IImageInfo> imageInfoInContext,
-            Context<IColorInfo> colorInfoInContext, Context<IFontInfo> fontInfoInContext ) {
+            Context<IColorInfo> colorInfoInContext, Context<IFontInfo> fontInfoInContext,
+            Context<IStyleLabelInfo> styleLabelInfo ) {
         this.site = panelSite;
 
         identUI = new StyleIdentUI( context, site );
-        labelUI = new StyleLabelUI( context, site, fontInfoInContext );
+        labelUI = new StyleLabelUI( context, site, fontInfoInContext, styleLabelInfo );
         FigureLibraryInitializer figureLibraryInitializer = new FigureLibraryInitializer();
         pointUI = new StylePointUI( context, site, imageInfoInContext, colorInfoInContext, figureLibraryInitializer );
         lineUI = new StyleLineUI( context, site, imageInfoInContext, colorInfoInContext );
@@ -112,10 +114,10 @@ public class SimpleStylerUI
         String label = null;
         FeatureType featureType = null;
         if (fragment instanceof StyleFeature) {
-            StyleFeature styleFeature = (StyleFeature) fragment;
-            styleFeature.styleComposite.get().stylePoints.forEach( styleLine -> createContent(styleLine) );
-            styleFeature.styleComposite.get().styleLines.forEach( styleLine -> createContent(styleLine) );
-            styleFeature.styleComposite.get().stylePolygons.forEach( styleLine -> createContent(styleLine) );
+            StyleFeature styleFeature = (StyleFeature)fragment;
+            styleFeature.styleComposite.get().stylePoints.forEach( styleLine -> createContent( styleLine ) );
+            styleFeature.styleComposite.get().styleLines.forEach( styleLine -> createContent( styleLine ) );
+            styleFeature.styleComposite.get().stylePolygons.forEach( styleLine -> createContent( styleLine ) );
         }
         else if (fragment instanceof StyleIdent) {
             label = styleIdentStr;

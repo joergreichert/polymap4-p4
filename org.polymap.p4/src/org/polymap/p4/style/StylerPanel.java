@@ -36,6 +36,7 @@ import org.polymap.p4.style.entities.StyleComposite;
 import org.polymap.p4.style.entities.StyleFeature;
 import org.polymap.p4.style.font.IFontInfo;
 import org.polymap.p4.style.icon.IImageInfo;
+import org.polymap.p4.style.label.IStyleLabelInfo;
 import org.polymap.p4.style.ui.SimpleStylerUI;
 import org.polymap.recordstore.lucene.LuceneRecordStore;
 import org.polymap.rhei.batik.Context;
@@ -63,6 +64,9 @@ public class StylerPanel
 
     @Scope(P4Plugin.Scope)
     private Context<IFontInfo>          fontInfo;
+
+    @Scope(P4Plugin.Scope)
+    private Context<IStyleLabelInfo>    styleLabelInfo;
 
     private MdToast                     mdToast;
 
@@ -127,7 +131,8 @@ public class StylerPanel
 
     private void internalCreateContents( Composite parent ) {
         MdToolkit tk = (MdToolkit)getSite().toolkit();
-        SimpleStylerUI simpleStylerUI = new SimpleStylerUI( getContext(), getSite(), imageInfo, colorInfo, fontInfo );
+        SimpleStylerUI simpleStylerUI = new SimpleStylerUI( getContext(), getSite(), imageInfo, colorInfo, fontInfo,
+                styleLabelInfo );
         simpleStylerUI.setModel( simpleStyler );
         Composite stylerComposite = simpleStylerUI.createContents( parent );
         FormDataFactory.on( stylerComposite ).left( 0 ).right( 100 );

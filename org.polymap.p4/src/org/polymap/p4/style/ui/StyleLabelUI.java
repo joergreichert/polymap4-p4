@@ -28,14 +28,21 @@ import org.polymap.p4.style.entities.StyleLabel;
 import org.polymap.p4.style.font.FontInfo;
 import org.polymap.p4.style.font.FontPanel;
 import org.polymap.p4.style.font.IFontInfo;
+import org.polymap.p4.style.label.IStyleLabelInfo;
+import org.polymap.p4.style.label.StyleLabelHaloPanel;
+import org.polymap.p4.style.label.StyleLabelInfo;
+import org.polymap.p4.style.label.StyleLabelLinePlacementPanel;
+import org.polymap.p4.style.label.StyleLabelPointPlacementPanel;
 import org.polymap.p4.util.PropertyAdapter;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanelSite;
+import org.polymap.rhei.field.AbstractDelegatingFormField;
 import org.polymap.rhei.field.FontFormField;
 import org.polymap.rhei.field.FormFieldEvent;
 import org.polymap.rhei.field.IFormField;
 import org.polymap.rhei.field.IFormFieldListener;
+import org.polymap.rhei.field.IFormFieldSite;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.SpinnerFormField;
 import org.polymap.rhei.form.IFormPageSite;
@@ -50,36 +57,45 @@ public class StyleLabelUI
         extends AbstractStylerFragmentUI
         implements IFormFieldListener {
 
-    private final IAppContext        context;
+    private final IAppContext                       context;
 
-    private final IPanelSite         panelSite;
+    private final IPanelSite                        panelSite;
 
-    private PicklistFormField        labelTextField;
+    private PicklistFormField                       labelTextField;
 
-    private FontFormField            fontFormField;
+    private FontFormField                           fontFormField;
+
+    private AbstractDelegatingFormField<StyleLabel> pointPlacementFormField;
+
+    private AbstractDelegatingFormField<StyleLabel> linePlacementFormField;
+
+    private AbstractDelegatingFormField<StyleLabel> haloFormField;
 
     // GeoServer extension
     // http://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#autowrap
-    private SpinnerFormField         autoWrap;
+    private SpinnerFormField                        autoWrap;
 
-    private final Context<IFontInfo> fontInfoInContext;
+    private final Context<IFontInfo>                fontInfoInContext;
 
-    private StyleLabel               styleLabel = null;
+    private final Context<IStyleLabelInfo>          styleLabelInfo;
 
-    private final List<IFormField>   formFields;
+    private StyleLabel                              styleLabel = null;
+
+    private final List<IFormField>                  formFields;
 
 
-    public StyleLabelUI( IAppContext context, IPanelSite panelSite, Context<IFontInfo> fontInfoInContext ) {
+    public StyleLabelUI( IAppContext context, IPanelSite panelSite, Context<IFontInfo> fontInfoInContext, Context<IStyleLabelInfo> styleLabelInfo ) {
         this.context = context;
         this.panelSite = panelSite;
         this.fontInfoInContext = fontInfoInContext;
+        this.styleLabelInfo = styleLabelInfo;
 
         FontInfo fontInfo = new FontInfo();
         fontInfoInContext.set( fontInfo );
 
         formFields = new ArrayList<IFormField>();
-        formFields.add(fontFormField);
-        formFields.add(autoWrap);
+        formFields.add( fontFormField );
+        formFields.add( autoWrap );
 
         EventManager.instance().subscribe( fontInfo, ev -> ev.getSource() instanceof IFontInfo );
     }
@@ -105,12 +121,90 @@ public class StyleLabelUI
         fontFormField = new FontFormField();
         fontFormField.setEnabled( false );
         site.newFormField( new PropertyAdapter( styleLabel.labelFont ) ).label.put( "Label font" ).field
-                .put( fontFormField ).tooltip.put( "" ).create();
+                .put( fontFormField ).tooltip.put( "Font style to be applied to this style label" ).create();
 
-        // TODO
-        // line placement
-        // point placement
-        // halo
+        pointPlacementFormField = new AbstractDelegatingFormField<StyleLabel>() {
+
+            protected void handleSelectionEvent( IFormFieldSite site, org.eclipse.swt.events.SelectionEvent e ) {
+                site.fireEvent( this, IFormFieldListener.VALUE_CHANGE, getCurrentValue() );
+            }
+
+
+            @Override
+            public IFormField setValue( Object value ) {
+                if (value instanceof StyleLabel) {
+                    setCurrentValue( (StyleLabel)styleLabel );
+                }
+                return this;
+            }
+
+
+            @Override
+            protected void processLoadedValue( Object loadedValue ) {
+                if (loadedValue instanceof StyleLabel) {
+                    setCurrentValue( (StyleLabel)styleLabel );
+                }
+            }
+        };
+
+        site.newFormField( new PropertyAdapter( styleLabel.pointPlacement ) ).label.put( "Label point placement" ).field
+            .put( pointPlacementFormField ).tooltip.put( "Label placement in relation to point symbolizer" ).create();
+
+        linePlacementFormField = new AbstractDelegatingFormField<StyleLabel>() {
+
+            protected void handleSelectionEvent( IFormFieldSite site, org.eclipse.swt.events.SelectionEvent e ) {
+                site.fireEvent( this, IFormFieldListener.VALUE_CHANGE, getCurrentValue() );
+            }
+
+
+            @Override
+            public IFormField setValue( Object value ) {
+                if (value instanceof StyleLabel) {
+                    setCurrentValue( (StyleLabel)styleLabel );
+                }
+                return this;
+            }
+
+
+            @Override
+            protected void processLoadedValue( Object loadedValue ) {
+                if (loadedValue instanceof StyleLabel) {
+                    setCurrentValue( (StyleLabel)styleLabel );
+                }
+            }
+        };
+        
+        site.newFormField( new PropertyAdapter( styleLabel.linePlacement ) ).label.put( "Label line placement" ).field
+                .put( linePlacementFormField ).tooltip.put( "Label placement in relation to line symbolizer" ).create();
+
+        haloFormField = new AbstractDelegatingFormField<StyleLabel>() {
+
+            protected void handleSelectionEvent( IFormFieldSite site, org.eclipse.swt.events.SelectionEvent e ) {
+                site.fireEvent( this, IFormFieldListener.VALUE_CHANGE, getCurrentValue() );
+            }
+
+
+            @Override
+            public IFormField setValue( Object value ) {
+                if (value instanceof StyleLabel) {
+                    setCurrentValue( (StyleLabel)styleLabel );
+                }
+                return this;
+            }
+
+
+            @Override
+            protected void processLoadedValue( Object loadedValue ) {
+                if (loadedValue instanceof StyleLabel) {
+                    setCurrentValue( (StyleLabel)styleLabel );
+                }
+            }
+        };
+        
+        site.newFormField( new PropertyAdapter( styleLabel.haloRadius ) ).label.put( "Label halo" ).field
+                .put( haloFormField ).tooltip.put( "Halo effect configuration for label" ).create();
+        
+        site.addFieldListener( this );
 
         return site.getPageBody();
     }
@@ -147,7 +241,27 @@ public class StyleLabelUI
                 }
                 context.openPanel( panelSite.getPath(), FontPanel.ID );
             }
+            else if (ev.getSource() == pointPlacementFormField) {
+                StyleLabelInfo impl = new StyleLabelInfo();
+                impl.setFormField( pointPlacementFormField );
+                impl.setStyleLabel( styleLabel );
+                styleLabelInfo.set( impl );
+                context.openPanel( panelSite.getPath(), StyleLabelPointPlacementPanel.ID );
+            }
+            else if (ev.getSource() == linePlacementFormField) {
+                StyleLabelInfo impl = new StyleLabelInfo();
+                impl.setFormField( linePlacementFormField );
+                impl.setStyleLabel( styleLabel );
+                styleLabelInfo.set( impl );
+                context.openPanel( panelSite.getPath(), StyleLabelLinePlacementPanel.ID );
+            }
+            else if (ev.getSource() == haloFormField) {
+                StyleLabelInfo impl = new StyleLabelInfo();
+                impl.setFormField( haloFormField );
+                impl.setStyleLabel( styleLabel );
+                styleLabelInfo.set( impl );
+                context.openPanel( panelSite.getPath(), StyleLabelHaloPanel.ID );
+            }
         }
     }
-
 }

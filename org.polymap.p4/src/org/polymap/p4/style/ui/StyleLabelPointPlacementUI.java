@@ -71,22 +71,21 @@ public class StyleLabelPointPlacementUI
                 .margins( panelSite.getLayoutPreference().getSpacing() / 2 ).create() );
         labelAnchorFormField = new CoordFormField( new SpinnerFormField( 0, 1, 0.1, 0.0, 1 ), new SpinnerFormField( 0,
                 1, 0.1, 0.5, 1 ) );
-        labelAnchorFormField.setEnabled( false );
         site.newFormField( new PropertyAdapter( styleLabelPointPlacement.anchor ) ).label.put( "Label anchor" ).field
                 .put( labelAnchorFormField ).tooltip.put( "" ).create();
         labelOffsetFormField = new CoordFormField( new SpinnerFormField( -128, 128, 0 ), new SpinnerFormField( -128,
                 128, 0 ) );
-        labelOffsetFormField.setEnabled( false );
         site.newFormField( new PropertyAdapter( styleLabelPointPlacement.offset ) ).label.put( "Label offset" ).field
                 .put( labelOffsetFormField ).tooltip.put( "" ).create();
         labelRotationFormField = new SpinnerFormField( -360, 360, 0 );
-        labelRotationFormField.setEnabled( false );
         site.newFormField( new PropertyAdapter( styleLabelPointPlacement.rotation ) ).label.put( "Label rotation" ).field
                 .put( labelRotationFormField ).tooltip.put( "" ).create();
-        labelMaxDisplacementFormField = new SpinnerFormField( -360, 360, 0 );
-        labelMaxDisplacementFormField.setEnabled( false );
+        labelMaxDisplacementFormField = new SpinnerFormField( 0, 30, 0 );
         site.newFormField( new PropertyAdapter( styleLabelPointPlacement.maxDisplacement ) ).label
-                .put( "Label max displacement" ).field.put( labelMaxDisplacementFormField ).tooltip.put( "" ).create();
+                .put( "Label max displacement" ).field.put( labelMaxDisplacementFormField ).tooltip.put(
+                "The allowed maximum displacement of the label from "
+                        + "the actually calculated label position at the point"
+                        + " when resolving conflicts with other labels " ).create();
         return site.getPageBody();
     }
 

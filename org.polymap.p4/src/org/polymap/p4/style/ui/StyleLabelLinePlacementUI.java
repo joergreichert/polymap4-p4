@@ -17,6 +17,7 @@ package org.polymap.p4.style.ui;
 import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.p4.style.entities.StyleLabelLinePlacement;
+import org.polymap.p4.util.PropertyAdapter;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.field.CheckboxFormField;
@@ -42,18 +43,19 @@ public class StyleLabelLinePlacementUI
 
     // GeoServer extension
     // http://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#followline
-    private CheckboxFormField       followLine;
+    private CheckboxFormField       followLineFormField;
 
     // GeoServer extension
     // requires followLine set to true
-    private SpinnerFormField        maxAngleDelta;
+    // http://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#maxAngleDelta
+    private SpinnerFormField        maxAngleDeltaFormField;
 
     // GeoServer extension
     // http://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#repeat
-    private SpinnerFormField        repeat;
+    private SpinnerFormField        repeatFormField;
 
     // http://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#maxdisplacement
-    private SpinnerFormField         maxDisplacement;
+    private SpinnerFormField        maxDisplacementFormField;
 
     private StyleLabelLinePlacement styleLabelLinePlacement = null;
 
@@ -74,7 +76,29 @@ public class StyleLabelLinePlacementUI
         Composite parent = site.getPageBody();
         parent.setLayout( ColumnLayoutFactory.defaults().spacing( 5 )
                 .margins( panelSite.getLayoutPreference().getSpacing() / 2 ).create() );
-        // TODO
+        labelPerpendicularOffsetFormField = new SpinnerFormField( -128, 128, 0 );
+        site.newFormField( new PropertyAdapter( styleLabelLinePlacement.perpendicularOffset ) ).label
+                .put( "Label perpendicular offset" ).field.put( labelPerpendicularOffsetFormField ).tooltip.put(
+                "Positive values puts the label above the line, negative values places the label below the line" )
+                .create();
+        followLineFormField = new CheckboxFormField();
+        site.newFormField( new PropertyAdapter( styleLabelLinePlacement.followLine ) ).label.put( "Label follow line" ).field
+                .put( followLineFormField ).tooltip.put( "If checked, the label is rotate to the angle of the line" )
+                .create();
+        maxAngleDeltaFormField = new SpinnerFormField( 0, 360, 30 );
+        site.newFormField( new PropertyAdapter( styleLabelLinePlacement.maxAngleDelta ) ).label
+                .put( "Label max angle delta" ).field.put( maxAngleDeltaFormField ).tooltip.put(
+                "The angle a label should be rotated at maximum when following a line. "
+                        + "This property applies only when follow line property is enabled." ).create();
+        repeatFormField = new SpinnerFormField( 0, 128, 1 );
+        site.newFormField( new PropertyAdapter( styleLabelLinePlacement.repeat ) ).label.put( "Label repeat" ).field
+                .put( repeatFormField ).tooltip.put( "How often a label should be repeated at a line." ).create();
+        maxDisplacementFormField = new SpinnerFormField( 0, 128, 1 );
+        site.newFormField( new PropertyAdapter( styleLabelLinePlacement.maxDisplacement ) ).label
+                .put( "Label max displacement" ).field.put( maxDisplacementFormField ).tooltip.put(
+                "The allowed maximum displacement of the label from "
+                        + "the actually calculated label position at the line"
+                        + " when resolving conflicts with other labels " ).create();
         return site.getPageBody();
     }
 

@@ -17,6 +17,7 @@ package org.polymap.p4.style.ui;
 import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.p4.style.entities.StyleLabel;
+import org.polymap.p4.util.PropertyAdapter;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.field.ColorFormField;
@@ -57,7 +58,13 @@ public class StyleLabelHaloUI
         Composite parent = site.getPageBody();
         parent.setLayout( ColumnLayoutFactory.defaults().spacing( 5 )
                 .margins( panelSite.getLayoutPreference().getSpacing() / 2 ).create() );
-        // TODO
+        labelHaloRadiusFormField = new SpinnerFormField( 0, 128, 10 );
+        site.newFormField( new PropertyAdapter( styleLabel.haloRadius ) ).label.put( "Label halo radius" ).field
+                .put( labelHaloRadiusFormField ).tooltip.put(
+                "The radius around the label to halo to improve readability" ).create();
+        labelHaloFillFormField = new ColorFormField();
+        site.newFormField( new PropertyAdapter( styleLabel.haloFill ) ).label.put( "Label halo fill" ).field
+                .put( labelHaloFillFormField ).tooltip.put( "The halo fill color" ).create();
         return site.getPageBody();
     }
 
