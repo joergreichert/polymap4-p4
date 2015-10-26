@@ -23,6 +23,8 @@ import org.polymap.model2.CollectionProperty;
 public class StyleComposite
         extends AbstractSLDModelFragment {
 
+    public CollectionProperty<StyleLabel>   styleLabels;
+
     public CollectionProperty<StylePoint>   stylePoints;
 
     public CollectionProperty<StyleLine>    styleLines;

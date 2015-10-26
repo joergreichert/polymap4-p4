@@ -58,6 +58,8 @@ public class StyleLabelLinePlacementPanel
 
     private BatikFormContainer          linePlacementPageContainer;
 
+    private boolean                     valueWasInitialEmpty = false;
+
 
     @Override
     public void createContents( Composite panelBody ) {
@@ -78,6 +80,7 @@ public class StyleLabelLinePlacementPanel
                 Property<StyleLabelLinePlacement> linePlacementProp = info.getStyleLabel().linePlacement;
                 StyleLabelLinePlacement linePlacement = null;
                 if(linePlacementProp.get() == null) {
+                    valueWasInitialEmpty = true;
                     linePlacement = linePlacementProp.createValue( null );
                 }
                 ui.setModel( linePlacement );
@@ -115,4 +118,12 @@ public class StyleLabelLinePlacementPanel
         } );
         return applyButton;
     }
+    
+    @Override
+    public void dispose() {
+        if(valueWasInitialEmpty) {
+            IStyleLabelInfo info = styleLabelInfo.get();
+            info.getStyleLabel().pointPlacement.set( null );
+        }
+    }    
 }

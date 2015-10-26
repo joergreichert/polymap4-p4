@@ -14,8 +14,12 @@
  */
 package org.polymap.p4.style.entities;
 
+import org.geotools.styling.StyledLayerDescriptor;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
+import org.polymap.p4.style.SLDBuilder;
+import org.polymap.p4.style.sld.from.StyleLabelFromSLDVisitor;
+import org.polymap.p4.style.sld.to.StyleLabelToSLDVisitor;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -28,7 +32,7 @@ import org.polymap.model2.Property;
  *      labeling -priority
  */
 public class StyleLabel
-        extends AbstractSLDModelFragment {
+        extends AbstractSLDModel {
 
     @Nullable
     public Property<String>                   labelText;
@@ -79,4 +83,14 @@ public class StyleLabel
      *  
      *  @formatter:on
      */
+    
+    @Override
+    public void fromSLD( StyledLayerDescriptor style ) {
+        new StyleLabelFromSLDVisitor( this, FeatureType.TEXT );
+    }
+
+    @Override
+    public void fillSLD( SLDBuilder builder ) {
+        new StyleLabelToSLDVisitor( this ).fillSLD( builder );
+    }    
 }

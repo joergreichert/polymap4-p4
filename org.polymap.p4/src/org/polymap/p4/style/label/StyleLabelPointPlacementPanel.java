@@ -47,7 +47,7 @@ import org.polymap.rhei.form.batik.BatikFormContainer;
 public class StyleLabelPointPlacementPanel
         extends DefaultPanel {
 
-    public static final PanelIdentifier ID = PanelIdentifier.parse( "point_placement" );
+    public static final PanelIdentifier ID                   = PanelIdentifier.parse( "point_placement" );
 
     private MdToolkit                   toolkit;
 
@@ -57,6 +57,8 @@ public class StyleLabelPointPlacementPanel
     private DefaultFormPage             pointPlacementPage;
 
     private BatikFormContainer          pointPlacementPageContainer;
+
+    private boolean                     valueWasInitialEmpty = false;
 
 
     @Override
@@ -77,7 +79,8 @@ public class StyleLabelPointPlacementPanel
                 IStyleLabelInfo info = styleLabelInfo.get();
                 Property<StyleLabelPointPlacement> pointPlacementProp = info.getStyleLabel().pointPlacement;
                 StyleLabelPointPlacement pointPlacement = null;
-                if(pointPlacementProp.get() == null) {
+                if (pointPlacementProp.get() == null) {
+                    valueWasInitialEmpty = true;
                     pointPlacement = pointPlacementProp.createValue( null );
                 }
                 ui.setModel( pointPlacement );
@@ -114,5 +117,14 @@ public class StyleLabelPointPlacementPanel
             }
         } );
         return applyButton;
+    }
+
+
+    @Override
+    public void dispose() {
+        if (valueWasInitialEmpty) {
+            IStyleLabelInfo info = styleLabelInfo.get();
+            info.getStyleLabel().pointPlacement.set( null );
+        }
     }
 }

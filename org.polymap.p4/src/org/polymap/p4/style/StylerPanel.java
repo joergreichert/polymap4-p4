@@ -122,6 +122,7 @@ public class StylerPanel
             return feature;
         } );
         StyleComposite styleComposite = styleFeature.styleComposite.createValue( null );
+        styleComposite.styleLabels.createElement( null );
         styleComposite.stylePoints.createElement( null );
         styleComposite.styleLines.createElement( null );
         styleComposite.stylePolygons.createElement( null );

@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.runtime.Callback;
 import org.polymap.core.ui.FormDataFactory;
+import org.polymap.model2.Property;
 import org.polymap.p4.style.SimpleStyler;
 import org.polymap.p4.style.color.IColorInfo;
 import org.polymap.p4.style.entities.AbstractSLDModel;
@@ -69,7 +70,11 @@ public class SimpleStylerUI
 
     private Map<FeatureType,Function<Composite,Composite>> geometryContainers = new HashMap<FeatureType,Function<Composite,Composite>>();
 
+    private Map<FeatureType,AbstractSLDModel>              models             = new HashMap<FeatureType,AbstractSLDModel>();
+
     private SimpleStyler                                   simpleStyler       = null;
+
+    private FeatureType                                    currentFeatureType = null;
 
     private final StyleIdentUI                             identUI;
 
@@ -104,35 +109,73 @@ public class SimpleStylerUI
 
 
     public Composite createContents( Composite parent ) {
-        simpleStyler.getSldFragments().forEach( sldFragment -> createContent( sldFragment ) );
+        simpleStyler.getSldFragments().forEach( sldFragment -> {
+            createLabelContent( sldFragment );
+            createGeometryContent( sldFragment );
+        } );
         return internalCreateContents( parent );
     }
 
 
-    private void createContent( AbstractSLDModel fragment ) {
+    private void createLabelContent( AbstractSLDModel fragment ) {
+        if (fragment instanceof StyleFeature) {
+            StyleFeature styleFeature = (StyleFeature)fragment;
+            styleFeature.styleComposite.get().styleLabels.forEach( styleLabel -> createLabelContent( styleLabel ) );
+            styleFeature.styleComposite.get().stylePoints.forEach( stylePoint -> createLabelContent( stylePoint ) );
+            styleFeature.styleComposite.get().styleLines.forEach( styleLine -> createLabelContent( styleLine ) );
+            styleFeature.styleComposite.get().stylePolygons
+                    .forEach( stylePolygon -> createLabelContent( stylePolygon ) );
+        }
+        else if (fragment instanceof StyleLabel) {
+            models.put( FeatureType.TEXT, fragment );
+        }
+        else if (fragment instanceof StylePoint) {
+            models.put( FeatureType.POINT, fragment );
+        }
+        else if (fragment instanceof StyleLine) {
+            models.put( FeatureType.LINE_STRING, fragment );
+        }
+        else if (fragment instanceof StylePolygon) {
+            models.put( FeatureType.POLYGON, fragment );
+        }
+    }
+
+
+    private void createGeometryContent( AbstractSLDModel fragment ) {
         DefaultFormPage page = null;
         String label = null;
         FeatureType featureType = null;
         if (fragment instanceof StyleFeature) {
             StyleFeature styleFeature = (StyleFeature)fragment;
-            styleFeature.styleComposite.get().stylePoints.forEach( styleLine -> createContent( styleLine ) );
-            styleFeature.styleComposite.get().styleLines.forEach( styleLine -> createContent( styleLine ) );
-            styleFeature.styleComposite.get().stylePolygons.forEach( styleLine -> createContent( styleLine ) );
+            styleFeature.styleComposite.get().stylePoints.forEach( stylePoint -> createGeometryContent( stylePoint ) );
+            styleFeature.styleComposite.get().styleLines.forEach( styleLine -> createGeometryContent( styleLine ) );
+            styleFeature.styleComposite.get().stylePolygons
+                    .forEach( stylePolygon -> createGeometryContent( stylePolygon ) );
         }
         else if (fragment instanceof StyleIdent) {
+            StyleIdent styleIdent = (StyleIdent)fragment;
             label = styleIdentStr;
             page = new DefaultFormPage() {
 
                 @Override
                 public void createFormContents( IFormPageSite formSite ) {
-                    identUI.setModel( (StyleIdent)fragment );
+                    identUI.setModel( styleIdent );
                     identUI.createContents( formSite );
                     Callback<FeatureType> callback = ( ft ) -> {
-                        tabFolder.replaceTabContent( styleStr, geometryContainers.get( ft ) );
+                        if (ft == FeatureType.TEXT) {
+                            tabFolder.setTabVisibility( styleStr, false );
+                        }
+                        else {
+                            tabFolder.setTabVisibility( styleStr, true );
+                            tabFolder.replaceTabContent( styleStr, geometryContainers.get( ft ) );
+                        }
+                        updateUI( ft );
+                        tabFolder.replaceTabContent( labelStr, styleContainers.get( labelStr ) );
                     };
                     identUI.addCallback( callback );
                 }
             };
+            currentFeatureType = styleIdent.featureType.get();
         }
         else if (fragment instanceof AbstractStyleSymbolizer) {
             label = styleStr;
@@ -147,8 +190,6 @@ public class SimpleStylerUI
                         pointUI.createContents( formSite );
                     }
                 };
-                createLabelUI( point.markerLabel.get() != null ? point.markerLabel.get() : point.markerLabel
-                        .createValue( null ) );
             }
             else if (fragment instanceof StyleLine) {
                 featureType = FeatureType.LINE_STRING;
@@ -161,8 +202,6 @@ public class SimpleStylerUI
                         lineUI.createContents( formSite );
                     }
                 };
-                createLabelUI( styleLine.lineLabel.get() != null ? styleLine.lineLabel.get() : styleLine.lineLabel
-                        .createValue( null ) );
             }
             else if (fragment instanceof StylePolygon) {
                 featureType = FeatureType.POLYGON;
@@ -175,8 +214,6 @@ public class SimpleStylerUI
                         polygonUI.createContents( formSite );
                     }
                 };
-                createLabelUI( stylePolygon.polygonLabel.get() != null ? stylePolygon.polygonLabel.get()
-                        : stylePolygon.polygonLabel.createValue( null ) );
             }
         }
         if (label != null && page != null) {
@@ -191,21 +228,65 @@ public class SimpleStylerUI
     }
 
 
-    private void createLabelUI( StyleLabel styleLabel ) {
-        if (styleContainers.get( labelStr ) == null) {
-            DefaultFormPage page = new DefaultFormPage() {
+    private void updateUI( FeatureType ft ) {
+        createLabelUI( getStyleLabelForFeatureType( ft ), ft );
+        updateGeometryUI( ft );
+    }
 
-                @Override
-                public void createFormContents( IFormPageSite formSite ) {
+
+    private void updateGeometryUI( FeatureType ft ) {
+        if (ft == FeatureType.POINT) {
+            pointUI.setModel( (StylePoint)models.get( ft ) );
+        }
+        else if (ft == FeatureType.LINE_STRING) {
+            lineUI.setModel( (StyleLine)models.get( ft ) );
+        }
+        else if (ft == FeatureType.POLYGON) {
+            polygonUI.setModel( (StylePolygon)models.get( ft ) );
+        }
+    }
+
+
+    private StyleLabel getStyleLabelForFeatureType( FeatureType featureType ) {
+        AbstractSLDModel model = models.get( featureType );
+        StyleLabel styleLabel = null;
+        if (model instanceof StyleLabel) {
+            styleLabel = (StyleLabel)model;
+        }
+        else if (model instanceof StylePoint) {
+            styleLabel = getOrCreateLabel( ((StylePoint)model).markerLabel );
+        }
+        else if (model instanceof StyleLine) {
+            styleLabel = getOrCreateLabel( ((StyleLine)model).lineLabel );
+        }
+        else if (model instanceof StylePolygon) {
+            styleLabel = getOrCreateLabel( ((StylePolygon)model).polygonLabel );
+        }
+        return styleLabel;
+    }
+
+
+    private StyleLabel getOrCreateLabel( Property<StyleLabel> prop ) {
+        return prop.get() == null ? prop.createValue( null ) : prop.get();
+    }
+
+
+    private void createLabelUI( StyleLabel styleLabel, FeatureType featureType ) {
+        DefaultFormPage page = new DefaultFormPage() {
+
+            @Override
+            public void createFormContents( IFormPageSite formSite ) {
+                if(styleLabel != null) {
                     labelUI.setModel( styleLabel );
+                    labelUI.setFeatureType( featureType );
                     labelUI.createContents( formSite );
                 }
-            };
-            BatikFormContainer pageContainer = new BatikFormContainer( page );
-            Function<Composite,Composite> contentFunction = createContentFunction( (MdToolkit)site.toolkit(), labelStr,
-                    pageContainer );
-            styleContainers.put( labelStr, contentFunction );
-        }
+            }
+        };
+        BatikFormContainer pageContainer = new BatikFormContainer( page );
+        Function<Composite,Composite> contentFunction = createContentFunction( (MdToolkit)site.toolkit(), labelStr,
+                pageContainer );
+        styleContainers.put( labelStr, contentFunction );
     }
 
 
@@ -225,6 +306,10 @@ public class SimpleStylerUI
 
     private Composite internalCreateContents( Composite parent ) {
         MdToolkit tk = (MdToolkit)site.toolkit();
+
+        createLabelUI( getStyleLabelForFeatureType( currentFeatureType ), currentFeatureType );
+        updateUI( currentFeatureType );
+
         List<String> tabItems = new ArrayList<String>();
         tabItems.add( styleIdentStr );
         tabItems.add( labelStr );
@@ -244,6 +329,7 @@ public class SimpleStylerUI
         } );
         tabFolder.replaceTabContent( styleStr, geometryContainers.get( FeatureType.POINT ) );
         FormDataFactory.on( tabFolder ).left( 0 ).right( 100 );
+
         return tabFolder;
     }
 

@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.runtime.event.EventManager;
 import org.polymap.core.ui.ColumnLayoutFactory;
+import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.StyleLabel;
 import org.polymap.p4.style.font.FontInfo;
 import org.polymap.p4.style.font.FontPanel;
@@ -73,18 +74,55 @@ public class StyleLabelUI
 
     // GeoServer extension
     // http://docs.geoserver.org/stable/en/user/styling/sld-reference/labeling.html#autowrap
-    private SpinnerFormField                        autoWrap;
+    private SpinnerFormField                        autoWrapFormField;
 
     private final Context<IFontInfo>                fontInfoInContext;
 
     private final Context<IStyleLabelInfo>          styleLabelInfo;
 
-    private StyleLabel                              styleLabel = null;
+    private StyleLabel                              styleLabel  = null;
+
+    private FeatureType                             featureType = null;
 
     private final List<IFormField>                  formFields;
 
 
-    public StyleLabelUI( IAppContext context, IPanelSite panelSite, Context<IFontInfo> fontInfoInContext, Context<IStyleLabelInfo> styleLabelInfo ) {
+    private static class StyleLabelUIDelegatingFormField
+            extends AbstractDelegatingFormField<StyleLabel> {
+
+        private StyleLabel styleLabel;
+
+
+        StyleLabelUIDelegatingFormField( StyleLabel styleLabel ) {
+            this.styleLabel = styleLabel;
+        }
+
+
+        protected void handleSelectionEvent( IFormFieldSite site, org.eclipse.swt.events.SelectionEvent e ) {
+            site.fireEvent( this, IFormFieldListener.VALUE_CHANGE, getCurrentValue() );
+        }
+
+
+        @Override
+        public IFormField setValue( Object value ) {
+            if (value instanceof StyleLabel) {
+                setCurrentValue( (StyleLabel)styleLabel );
+            }
+            return this;
+        }
+
+
+        @Override
+        protected void processLoadedValue( Object loadedValue ) {
+            if (loadedValue instanceof StyleLabel) {
+                setCurrentValue( (StyleLabel)styleLabel );
+            }
+        }
+    }
+
+
+    public StyleLabelUI( IAppContext context, IPanelSite panelSite, Context<IFontInfo> fontInfoInContext,
+            Context<IStyleLabelInfo> styleLabelInfo ) {
         this.context = context;
         this.panelSite = panelSite;
         this.fontInfoInContext = fontInfoInContext;
@@ -95,7 +133,14 @@ public class StyleLabelUI
 
         formFields = new ArrayList<IFormField>();
         formFields.add( fontFormField );
-        formFields.add( autoWrap );
+        if (featureType == FeatureType.LINE_STRING) {
+            formFields.add( linePlacementFormField );
+        }
+        else if (featureType != FeatureType.TEXT) {
+            formFields.add( pointPlacementFormField );
+        }
+        formFields.add( haloFormField );
+        formFields.add( autoWrapFormField );
 
         EventManager.instance().subscribe( fontInfo, ev -> ev.getSource() instanceof IFontInfo );
     }
@@ -103,6 +148,11 @@ public class StyleLabelUI
 
     public void setModel( StyleLabel styleLabel ) {
         this.styleLabel = styleLabel;
+    }
+
+
+    public void setFeatureType( FeatureType featureType ) {
+        this.featureType = featureType;
     }
 
 
@@ -122,88 +172,25 @@ public class StyleLabelUI
         fontFormField.setEnabled( false );
         site.newFormField( new PropertyAdapter( styleLabel.labelFont ) ).label.put( "Label font" ).field
                 .put( fontFormField ).tooltip.put( "Font style to be applied to this style label" ).create();
-
-        pointPlacementFormField = new AbstractDelegatingFormField<StyleLabel>() {
-
-            protected void handleSelectionEvent( IFormFieldSite site, org.eclipse.swt.events.SelectionEvent e ) {
-                site.fireEvent( this, IFormFieldListener.VALUE_CHANGE, getCurrentValue() );
-            }
-
-
-            @Override
-            public IFormField setValue( Object value ) {
-                if (value instanceof StyleLabel) {
-                    setCurrentValue( (StyleLabel)styleLabel );
-                }
-                return this;
-            }
-
-
-            @Override
-            protected void processLoadedValue( Object loadedValue ) {
-                if (loadedValue instanceof StyleLabel) {
-                    setCurrentValue( (StyleLabel)styleLabel );
-                }
-            }
-        };
-
-        site.newFormField( new PropertyAdapter( styleLabel.pointPlacement ) ).label.put( "Label point placement" ).field
-            .put( pointPlacementFormField ).tooltip.put( "Label placement in relation to point symbolizer" ).create();
-
-        linePlacementFormField = new AbstractDelegatingFormField<StyleLabel>() {
-
-            protected void handleSelectionEvent( IFormFieldSite site, org.eclipse.swt.events.SelectionEvent e ) {
-                site.fireEvent( this, IFormFieldListener.VALUE_CHANGE, getCurrentValue() );
-            }
-
-
-            @Override
-            public IFormField setValue( Object value ) {
-                if (value instanceof StyleLabel) {
-                    setCurrentValue( (StyleLabel)styleLabel );
-                }
-                return this;
-            }
-
-
-            @Override
-            protected void processLoadedValue( Object loadedValue ) {
-                if (loadedValue instanceof StyleLabel) {
-                    setCurrentValue( (StyleLabel)styleLabel );
-                }
-            }
-        };
-        
-        site.newFormField( new PropertyAdapter( styleLabel.linePlacement ) ).label.put( "Label line placement" ).field
-                .put( linePlacementFormField ).tooltip.put( "Label placement in relation to line symbolizer" ).create();
-
-        haloFormField = new AbstractDelegatingFormField<StyleLabel>() {
-
-            protected void handleSelectionEvent( IFormFieldSite site, org.eclipse.swt.events.SelectionEvent e ) {
-                site.fireEvent( this, IFormFieldListener.VALUE_CHANGE, getCurrentValue() );
-            }
-
-
-            @Override
-            public IFormField setValue( Object value ) {
-                if (value instanceof StyleLabel) {
-                    setCurrentValue( (StyleLabel)styleLabel );
-                }
-                return this;
-            }
-
-
-            @Override
-            protected void processLoadedValue( Object loadedValue ) {
-                if (loadedValue instanceof StyleLabel) {
-                    setCurrentValue( (StyleLabel)styleLabel );
-                }
-            }
-        };
-        
+        if (featureType == FeatureType.LINE_STRING) {
+            linePlacementFormField = new StyleLabelUIDelegatingFormField( styleLabel );
+            site.newFormField( new PropertyAdapter( styleLabel.linePlacement ) ).label.put( "Label line placement" ).field
+                    .put( linePlacementFormField ).tooltip.put( "Label placement in relation to line symbolizer" )
+                    .create();
+        }
+        else if (featureType != FeatureType.TEXT) {
+            pointPlacementFormField = new StyleLabelUIDelegatingFormField( styleLabel );
+            site.newFormField( new PropertyAdapter( styleLabel.pointPlacement ) ).label.put( "Label point placement" ).field
+                    .put( pointPlacementFormField ).tooltip.put( "Label placement in relation to point symbolizer" )
+                    .create();
+        }
+        haloFormField = new StyleLabelUIDelegatingFormField( styleLabel );
         site.newFormField( new PropertyAdapter( styleLabel.haloRadius ) ).label.put( "Label halo" ).field
                 .put( haloFormField ).tooltip.put( "Halo effect configuration for label" ).create();
-        
+        autoWrapFormField = new SpinnerFormField( 0, 128, 60 );
+        site.newFormField( new PropertyAdapter( styleLabel.autoWrap ) ).label.put( "Label auto wrap" ).field
+                .put( autoWrapFormField ).tooltip.put( "When to add a line break in label text" ).create();
+
         site.addFieldListener( this );
 
         return site.getPageBody();
