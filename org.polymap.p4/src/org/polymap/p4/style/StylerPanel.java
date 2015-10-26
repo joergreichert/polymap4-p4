@@ -161,6 +161,14 @@ public class StylerPanel
         };
         Supplier<SimpleStyler> createNewSimpleStylerCallback = ( ) -> {
             simpleStylerUI.resetUI();
+            SimpleStyler newSimpleStyler = null;
+            try {
+                newSimpleStyler = createEmptySimpleStyler();
+                simpleStyler = newSimpleStyler;
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
             return simpleStyler;
         };
         StylerList stylerList = new StylerList( parent, tk, SWT.NONE, newCallback, saveSupplier, loadCallback,
