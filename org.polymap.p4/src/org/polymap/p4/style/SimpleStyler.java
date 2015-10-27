@@ -33,11 +33,11 @@ import org.polymap.p4.style.entities.StyleIdent;
 public class SimpleStyler
         extends AbstractStyler {
 
-    protected Property<StyleIdent>             styleIdent;
+    public Property<StyleIdent>             styleIdent;
 
-    protected CollectionProperty<StyleFeature> styleFeatures;
+    public CollectionProperty<StyleFeature> styleFeatures;
 
-    private List<AbstractSLDModel>             fragments = null;
+    private List<AbstractSLDModel>          fragments = null;
 
 
     @Override

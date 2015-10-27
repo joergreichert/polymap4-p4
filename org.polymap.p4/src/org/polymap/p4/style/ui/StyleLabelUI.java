@@ -17,6 +17,7 @@ package org.polymap.p4.style.ui;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.swt.graphics.FontData;
@@ -24,6 +25,7 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.runtime.event.EventManager;
 import org.polymap.core.ui.ColumnLayoutFactory;
+import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.StyleLabel;
 import org.polymap.p4.style.font.FontInfo;
@@ -80,11 +82,15 @@ public class StyleLabelUI
 
     private final Context<IStyleLabelInfo>          styleLabelInfo;
 
-    private StyleLabel                              styleLabel  = null;
+    private Supplier<StyleLabel>                    styleLabelSupplier   = null;
 
-    private FeatureType                             featureType = null;
+    private UnitOfWork                              styleLabelUnitOfWork = null;
 
-    private final List<IFormField>                  formFields;
+    private StyleLabel                              styleLabel           = null;
+
+    private FeatureType                             featureType          = null;
+
+    private List<IFormField>                        formFields;
 
 
     private static class StyleLabelUIDelegatingFormField
@@ -99,7 +105,7 @@ public class StyleLabelUI
 
 
         protected void handleSelectionEvent( IFormFieldSite site, org.eclipse.swt.events.SelectionEvent e ) {
-            site.fireEvent( this, IFormFieldListener.VALUE_CHANGE, getCurrentValue() );
+            site.fireEvent( this, IFormFieldListener.VALUE_CHANGE, null );
         }
 
 
@@ -131,23 +137,18 @@ public class StyleLabelUI
         FontInfo fontInfo = new FontInfo();
         fontInfoInContext.set( fontInfo );
 
-        formFields = new ArrayList<IFormField>();
-        formFields.add( fontFormField );
-        if (featureType == FeatureType.LINE_STRING) {
-            formFields.add( linePlacementFormField );
-        }
-        else if (featureType != FeatureType.TEXT) {
-            formFields.add( pointPlacementFormField );
-        }
-        formFields.add( haloFormField );
-        formFields.add( autoWrapFormField );
-
         EventManager.instance().subscribe( fontInfo, ev -> ev.getSource() instanceof IFontInfo );
     }
 
 
-    public void setModel( StyleLabel styleLabel ) {
-        this.styleLabel = styleLabel;
+    public void setModelFunction( Supplier<StyleLabel> styleLabelSupplier ) {
+        this.styleLabelSupplier = styleLabelSupplier;
+        this.styleLabel = null;
+    }
+
+
+    public void setUnitOfWork( UnitOfWork styleLabelUnitOfWork ) {
+        this.styleLabelUnitOfWork = styleLabelUnitOfWork;
     }
 
 
@@ -163,13 +164,28 @@ public class StyleLabelUI
                 .margins( panelSite.getLayoutPreference().getSpacing() / 2 ).create() );
         HashSet<String> labels = Sets.newHashSet( "", "<Placeholder>" );
         labelTextField = new PicklistFormField( labels );
+        // labelTextField.addModifyListener( new ModifyListener() {
+        //
+        // @Override
+        // public void modifyText( ModifyEvent event ) {
+        // try {
+        // labelTextField.store();
+        // updateEnablementOfFormFields( styleLabel.labelText.get() );
+        // }
+        // catch (Exception e) {
+        // e.printStackTrace();
+        // }
+        // }
+        // } );
+        if(styleLabel == null) {
+            styleLabel = styleLabelSupplier.get();
+        }
         site.newFormField( new PropertyAdapter( styleLabel.labelText ) ).label.put( "Label text" ).field
                 .put( labelTextField ).tooltip.put(
                 "The actual label value can be assigned later when "
                         + "combining this style with a layer resp. a feature type of that layer. "
                         + "If you don't want to use labels, just leave this field blank." ).create();
         fontFormField = new FontFormField();
-        fontFormField.setEnabled( false );
         site.newFormField( new PropertyAdapter( styleLabel.labelFont ) ).label.put( "Label font" ).field
                 .put( fontFormField ).tooltip.put( "Font style to be applied to this style label" ).create();
         if (featureType == FeatureType.LINE_STRING) {
@@ -191,23 +207,50 @@ public class StyleLabelUI
         site.newFormField( new PropertyAdapter( styleLabel.autoWrap ) ).label.put( "Label auto wrap" ).field
                 .put( autoWrapFormField ).tooltip.put( "When to add a line break in label text" ).create();
 
+        collectFormFields();
+
+        updateEnablementOfFormFields( styleLabel.labelText.get() );
+
         site.addFieldListener( this );
 
         return site.getPageBody();
     }
 
 
+    private void collectFormFields() {
+        formFields = new ArrayList<IFormField>();
+        formFields.add( fontFormField );
+        if (featureType == FeatureType.LINE_STRING) {
+            formFields.add( linePlacementFormField );
+        }
+        else if (featureType != FeatureType.TEXT) {
+            formFields.add( pointPlacementFormField );
+        }
+        formFields.add( haloFormField );
+        formFields.add( autoWrapFormField );
+    }
+
+
+    private void updateEnablementOfFormFields( String labelText ) {
+        boolean enabled = !StringUtils.isEmpty( labelText );
+        formFields.stream().filter( formField -> formField != null )
+                .forEach( formField -> formField.setEnabled( enabled ) );
+    }
+
+
     @Override
     public void submitUI() {
-        // TODO Auto-generated method stub
-
+        if(styleLabelUnitOfWork != null && styleLabelUnitOfWork.isOpen()) {
+            styleLabelUnitOfWork.commit();
+        }
     }
 
 
     @Override
     public void resetUI() {
-        // TODO Auto-generated method stub
-
+        if(styleLabelUnitOfWork != null && styleLabelUnitOfWork.isOpen()) {
+            styleLabelUnitOfWork.close();
+        }
     }
 
 
@@ -215,9 +258,7 @@ public class StyleLabelUI
     public void fieldChange( FormFieldEvent ev ) {
         if (ev.getEventCode() == VALUE_CHANGE) {
             if (ev.getSource() == labelTextField) {
-                boolean newValueNotEmpty = !StringUtils.isEmpty( ev.getNewFieldValue() );
-                fontFormField.setEnabled( newValueNotEmpty );
-                // labelOffsetFormField.setEnabled( newValueNotEmpty );
+                updateEnablementOfFormFields( ev.getNewFieldValue() );
             }
             else if (ev.getSource() == fontFormField) {
                 fontInfoInContext.get().setFormField( fontFormField );

@@ -86,6 +86,7 @@ public class StyleLabelPointPlacementUI
                 "The allowed maximum displacement of the label from "
                         + "the actually calculated label position at the point"
                         + " when resolving conflicts with other labels " ).create();
+
         return site.getPageBody();
     }
 

@@ -14,7 +14,11 @@
  */
 package org.polymap.p4.style.ui;
 
+import java.util.function.Supplier;
+
 import org.eclipse.swt.widgets.Composite;
+import org.polymap.core.ui.ColumnLayoutFactory;
+import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.p4.style.color.IColorInfo;
 import org.polymap.p4.style.entities.StylePolygon;
 import org.polymap.p4.style.icon.IImageInfo;
@@ -38,7 +42,11 @@ public class StylePolygonUI
 
     private final Context<IColorInfo> colorInfoInContext;
 
-    private StylePolygon              stylePolygon = null;
+    private Supplier<StylePolygon>    stylePolygonSupplier   = null;
+
+    private UnitOfWork                stylePolygonUnitOfWork = null;
+
+    private StylePolygon              stylePolygon           = null;
 
 
     public StylePolygonUI( IAppContext context, IPanelSite panelSite, Context<IImageInfo> imageInfoInContext,
@@ -50,28 +58,42 @@ public class StylePolygonUI
     }
 
 
-    public void setModel( StylePolygon stylePolygon ) {
-        this.stylePolygon = stylePolygon;
+    public void setModelFunction( Supplier<StylePolygon> stylePolygonSupplier ) {
+        this.stylePolygonSupplier = stylePolygonSupplier;
+        this.stylePolygon = null;
+    }
+
+
+    public void setUnitOfWork( UnitOfWork stylePolygonUnitOfWork ) {
+        this.stylePolygonUnitOfWork = stylePolygonUnitOfWork;
     }
 
 
     @Override
     public Composite createContents( IFormPageSite site ) {
-        // TODO Auto-generated method stub
-        return null;
+        Composite parent = site.getPageBody();
+        parent.setLayout( ColumnLayoutFactory.defaults().spacing( 5 )
+                .margins( panelSite.getLayoutPreference().getSpacing() / 2 ).create() );
+        if(stylePolygon == null) {
+            stylePolygon = stylePolygonSupplier.get();
+        }
+        // TODO
+        return site.getPageBody();
     }
 
 
     @Override
     public void submitUI() {
-        // TODO Auto-generated method stub
-
+        if(stylePolygonUnitOfWork != null && stylePolygonUnitOfWork.isOpen()) {
+            stylePolygonUnitOfWork.commit();
+        }
     }
 
 
     @Override
     public void resetUI() {
-        // TODO Auto-generated method stub
-
+        if(stylePolygonUnitOfWork != null && stylePolygonUnitOfWork.isOpen()) {
+            stylePolygonUnitOfWork.close();
+        }
     }
 }

@@ -124,7 +124,9 @@ public class StyleLabelPointPlacementPanel
     public void dispose() {
         if (valueWasInitialEmpty) {
             IStyleLabelInfo info = styleLabelInfo.get();
-            info.getStyleLabel().pointPlacement.set( null );
+            if(info.getStyleLabel().pointPlacement.get() != null) {
+                info.getStyleLabel().pointPlacement.set( null );
+            }
         }
     }
 }

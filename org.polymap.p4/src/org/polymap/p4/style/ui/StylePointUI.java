@@ -14,8 +14,11 @@
  */
 package org.polymap.p4.style.ui;
 
+import java.util.function.Supplier;
+
 import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.ui.ColumnLayoutFactory;
+import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.p4.style.color.IColorInfo;
 import org.polymap.p4.style.entities.StylePoint;
 import org.polymap.p4.style.icon.AbstractImageLibraryInitializer;
@@ -48,7 +51,11 @@ public class StylePointUI
 
     private final AbstractImageLibraryInitializer imageLibraryInitializer;
 
-    private StylePoint                            stylePoint = null;
+    private Supplier<StylePoint>                  stylePointSupplier   = null;
+
+    private UnitOfWork                            stylePointUnitOfWork = null;
+
+    private StylePoint                            stylePoint           = null;
 
 
     public StylePointUI( IAppContext context, IPanelSite panelSite, Context<IImageInfo> imageInfoInContext,
@@ -61,8 +68,14 @@ public class StylePointUI
     }
 
 
-    public void setModel( StylePoint stylePoint ) {
-        this.stylePoint = stylePoint;
+    public void setModelFunction( Supplier<StylePoint> stylePointSupplier ) {
+        this.stylePointSupplier = stylePointSupplier;
+        this.stylePoint = null;
+    }
+
+
+    public void setUnitOfWork( UnitOfWork stylePointUnitOfWork ) {
+        this.stylePointUnitOfWork = stylePointUnitOfWork;
     }
 
 
@@ -71,9 +84,13 @@ public class StylePointUI
         Composite parent = site.getPageBody();
         parent.setLayout( ColumnLayoutFactory.defaults().spacing( 5 )
                 .margins( panelSite.getLayoutPreference().getSpacing() / 2 ).create() );
+        if(stylePoint == null) {
+            stylePoint = stylePointSupplier.get();
+        }
         markerSizeField = new SpinnerFormField( 1, 128, 12 );
         site.newFormField( new PropertyAdapter( stylePoint.markerSize ) ).label.put( "Marker size" ).field
                 .put( markerSizeField ).tooltip.put( "" ).create();
+        // TODO extract image and figure as sub panels 
         if (stylePoint.markerFigure.get() != null) {
             StyleFigureUI ui = new StyleFigureUI( context, panelSite, imageInfoInContext, colorInfoInContext,
                     imageLibraryInitializer );
@@ -95,12 +112,16 @@ public class StylePointUI
 
     @Override
     public void submitUI() {
-        // TODO Auto-generated method stub
+        if(stylePointUnitOfWork != null && stylePointUnitOfWork.isOpen()) {
+            stylePointUnitOfWork.commit();
+        }
     }
 
 
     @Override
     public void resetUI() {
-        // TODO Auto-generated method stub
+        if(stylePointUnitOfWork != null && stylePointUnitOfWork.isOpen()) {
+            stylePointUnitOfWork.close();
+        }
     }
 }

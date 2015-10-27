@@ -17,6 +17,7 @@ package org.polymap.p4.style;
 import static org.polymap.rhei.batik.toolkit.md.dp.dp;
 
 import java.io.IOException;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.eclipse.swt.SWT;
@@ -24,10 +25,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.runtime.Callback;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
-import org.polymap.model2.runtime.EntityRepository;
 import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.model2.runtime.ValueInitializer;
-import org.polymap.model2.store.recordstore.RecordStoreAdapter;
 import org.polymap.p4.P4Plugin;
 import org.polymap.p4.map.ProjectMapPanel;
 import org.polymap.p4.style.color.IColorInfo;
@@ -38,7 +37,6 @@ import org.polymap.p4.style.font.IFontInfo;
 import org.polymap.p4.style.icon.IImageInfo;
 import org.polymap.p4.style.label.IStyleLabelInfo;
 import org.polymap.p4.style.ui.SimpleStylerUI;
-import org.polymap.recordstore.lucene.LuceneRecordStore;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.DefaultPanel;
 import org.polymap.rhei.batik.PanelIdentifier;
@@ -68,9 +66,9 @@ public class StylerPanel
     @Scope(P4Plugin.Scope)
     private Context<IStyleLabelInfo>    styleLabelInfo;
 
-    private MdToast                     mdToast;
+    private UnitOfWork newSimpleStylerUnitOfWork;
 
-    private SimpleStyler                simpleStyler;
+    private SimpleStyler simpleStyler;
 
 
     @Override
@@ -93,10 +91,9 @@ public class StylerPanel
         setTitle();
         parent.setLayout( FormLayoutFactory.defaults().spacing( dp( 16 ).pix() ).create() );
 
-        mdToast = ((MdToolkit)getSite().toolkit()).createToast( 60, SWT.NONE );
-
         try {
-            simpleStyler = createEmptySimpleStyler();
+            newSimpleStylerUnitOfWork = StyleRepository.newUnitOfWork();
+            simpleStyler = createEmptySimpleStyler( newSimpleStylerUnitOfWork );
             internalCreateContents( parent );
         }
         catch (IOException e) {
@@ -106,13 +103,9 @@ public class StylerPanel
 
 
     @SuppressWarnings("unchecked")
-    protected SimpleStyler createEmptySimpleStyler() throws IOException {
-        LuceneRecordStore store = new LuceneRecordStore();
-        EntityRepository entityRepository = EntityRepository.newConfiguration().store.set( new RecordStoreAdapter(
-                store ) ).entities.set( new Class[] { SimpleStyler.class } ).create();
-        UnitOfWork unitOfWork = entityRepository.newUnitOfWork();
+    protected SimpleStyler createEmptySimpleStyler( UnitOfWork newSimpleStylerUnitOfWork ) throws IOException {
         ValueInitializer<SimpleStyler> init = ( styler ) -> styler;
-        SimpleStyler simpleStyler = unitOfWork.createEntity( SimpleStyler.class, null, init );
+        SimpleStyler simpleStyler = newSimpleStylerUnitOfWork.createEntity( SimpleStyler.class, null, init );
         simpleStyler.styleIdent.createValue( styleIdent -> {
             styleIdent.featureType.set( FeatureType.POINT );
             return styleIdent;
@@ -122,37 +115,66 @@ public class StylerPanel
             return feature;
         } );
         StyleComposite styleComposite = styleFeature.styleComposite.createValue( null );
-        styleComposite.styleLabels.createElement( null );
-        styleComposite.stylePoints.createElement( null );
-        styleComposite.styleLines.createElement( null );
-        styleComposite.stylePolygons.createElement( null );
+        // styleComposite.styleLabels.createElement( null );
+        // styleComposite.stylePoints.createElement( null );
+        // styleComposite.styleLines.createElement( null );
+        // styleComposite.stylePolygons.createElement( null );
+
         return simpleStyler;
     }
 
 
     private void internalCreateContents( Composite parent ) {
         MdToolkit tk = (MdToolkit)getSite().toolkit();
-        SimpleStylerUI simpleStylerUI = new SimpleStylerUI( getContext(), getSite(), imageInfo, colorInfo, fontInfo,
-                styleLabelInfo );
+        SimpleStylerUI simpleStylerUI = new SimpleStylerUI( getContext(), getSite(), newSimpleStylerUnitOfWork,
+                imageInfo, colorInfo, fontInfo, styleLabelInfo );
         simpleStylerUI.setModel( simpleStyler );
         Composite stylerComposite = simpleStylerUI.createContents( parent );
         FormDataFactory.on( stylerComposite ).left( 0 ).right( 100 );
 
-        Supplier<Boolean> newCallback = ( ) -> {
+        Function<Boolean,SimpleStyler> createNewSimpleStylerCallback = ( Boolean resetUI ) -> {
             simpleStylerUI.resetUI();
-            return true;
+            if (newSimpleStylerUnitOfWork != null) {
+                if (newSimpleStylerUnitOfWork.isOpen()) {
+                    // TODO ask for save current styler, if dirty, before closing
+                    // unit (= transaction)
+                    newSimpleStylerUnitOfWork.close();
+                }
+                SimpleStyler newSimpleStyler = null;
+                try {
+                    newSimpleStylerUnitOfWork = StyleRepository.newUnitOfWork();
+                    newSimpleStyler = createEmptySimpleStyler( newSimpleStylerUnitOfWork );
+                    simpleStyler = newSimpleStyler;
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            return simpleStyler;
         };
         Supplier<SimpleStyler> saveSupplier = ( ) -> {
             try {
                 simpleStylerUI.submitUI();
+                if (newSimpleStylerUnitOfWork != null) {
+                    newSimpleStylerUnitOfWork.commit();
+                }
                 return simpleStyler;
             }
             catch (Exception exc) {
+                MdToast mdToast = ((MdToolkit)getSite().toolkit()).createToast( 60, SWT.NONE );
                 mdToast.showIssue( AbstractFeedbackComponent.MessageType.ERROR, exc.getMessage() );
             }
             return null;
         };
         Callback<SimpleStyler> loadCallback = ( SimpleStyler newStyler ) -> {
+            if (newSimpleStylerUnitOfWork != null) {
+                if (newSimpleStylerUnitOfWork.isOpen()) {
+                    // TODO ask for save current styler, if dirty, before closing
+                    // unit (= transaction)
+                    newSimpleStylerUnitOfWork.close();
+                }
+                newSimpleStylerUnitOfWork.entity( newStyler );
+            }
             simpleStyler = newStyler;
             simpleStylerUI.setModel( simpleStyler );
         };
@@ -160,20 +182,8 @@ public class StylerPanel
             simpleStylerUI.resetUI();
             return true;
         };
-        Supplier<SimpleStyler> createNewSimpleStylerCallback = ( ) -> {
-            simpleStylerUI.resetUI();
-            SimpleStyler newSimpleStyler = null;
-            try {
-                newSimpleStyler = createEmptySimpleStyler();
-                simpleStyler = newSimpleStyler;
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-            return simpleStyler;
-        };
-        StylerList stylerList = new StylerList( parent, tk, SWT.NONE, newCallback, saveSupplier, loadCallback,
-                deleteCallback, createNewSimpleStylerCallback );
+        StylerList stylerList = new StylerList( parent, tk, SWT.NONE, createNewSimpleStylerCallback, saveSupplier,
+                loadCallback, deleteCallback );
         FormDataFactory.on( stylerList ).fill().top( stylerComposite, dp( 30 ).pix() );
 
         // try {

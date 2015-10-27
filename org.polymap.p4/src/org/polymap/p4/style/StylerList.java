@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -55,34 +56,33 @@ import org.polymap.rhei.batik.toolkit.md.MdToolkit;
 public class StylerList
         extends Composite {
 
-    private Button                       newButton, loadButton, saveButton, deleteButton;
+    private Button                               newButton, loadButton, saveButton, deleteButton;
 
-    private List<SimpleStyler>           styles = new ArrayList<SimpleStyler>();
+    private List<SimpleStyler>                   styles = new ArrayList<SimpleStyler>();
 
-    private MdListViewer                 styleList;
+    private MdListViewer                         styleList;
 
-    private Text                         styleListFilter;
+    private Text                                 styleListFilter;
 
-    private final Supplier<Boolean>      newCallback;
+    private final Function<Boolean,SimpleStyler> newCallback;
 
-    private final Supplier<SimpleStyler> saveSupplier;
+    private final Supplier<SimpleStyler>         saveSupplier;
 
-    private final Callback<SimpleStyler> loadCallback;
+    private final Callback<SimpleStyler>         loadCallback;
 
-    private final Supplier<Boolean>      deleteCallback;
+    private final Supplier<Boolean>              deleteCallback;
 
-    private final Supplier<SimpleStyler> createNewSimpleStylerCallback;
 
-    public StylerList( Composite parent, MdToolkit tk, int style, Supplier<Boolean> newCallback,
-            Supplier<SimpleStyler> saveSupplier, Callback<SimpleStyler> loadCallback, Supplier<Boolean> deleteCallback, Supplier<SimpleStyler> createNewSimpleStylerCallback ) {
+    public StylerList( Composite parent, MdToolkit tk, int style,
+            Function<Boolean,SimpleStyler> createNewSimpleStylerCallback, Supplier<SimpleStyler> saveSupplier,
+            Callback<SimpleStyler> loadCallback, Supplier<Boolean> deleteCallback ) {
         super( parent, style );
         setLayout( FormLayoutFactory.defaults().spacing( dp( 16 ).pix() ).create() );
 
-        this.newCallback = newCallback;
+        this.newCallback = createNewSimpleStylerCallback;
         this.saveSupplier = saveSupplier;
         this.loadCallback = loadCallback;
         this.deleteCallback = deleteCallback;
-        this.createNewSimpleStylerCallback = createNewSimpleStylerCallback;
 
         Composite styleListFilterComp = createStyleListFilter( this, tk );
         FormDataFactory.on( styleListFilterComp ).left( 0 ).right( 100 );
@@ -132,6 +132,7 @@ public class StylerList
         return styleListFilterForm;
     }
 
+
     private Composite createStyleList( Composite parent, MdToolkit tk ) {
         Composite styleListComp = tk.createComposite( parent, SWT.NONE );
         styleListComp.setLayout( FormLayoutFactory.defaults().spacing( dp( 16 ).pix() ).create() );
@@ -142,7 +143,7 @@ public class StylerList
             @Override
             public void update( ViewerCell cell ) {
                 SimpleStyler style = (SimpleStyler)cell.getElement();
-                if(style.styleIdent.get() != null) {
+                if (style.styleIdent.get() != null) {
                     cell.setText( style.styleIdent.get().name.get() );
                 }
             }
@@ -205,8 +206,8 @@ public class StylerList
                 try (InputStreamReader reader = new InputStreamReader( getClass().getClassLoader().getResourceAsStream(
                         "resources/" + line ) )) {
                     StyledLayerDescriptor sld = sldHandler.parse( reader, styleVersion, null, null );
-                    SimpleStyler styler = createNewSimpleStylerCallback.get();
-                    styler.fromSLD(sld);
+                    SimpleStyler styler = newCallback.apply(false);
+                    styler.fromSLD( sld );
                     styles.add( styler );
                 }
                 catch (IOException e) {
@@ -274,7 +275,7 @@ public class StylerList
         newButton.addSelectionListener( new SelectionAdapter() {
 
             public void widgetSelected( SelectionEvent e ) {
-                newCallback.get();
+                newCallback.apply(true);
             }
         } );
     }

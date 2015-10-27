@@ -18,10 +18,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.ui.ColumnLayoutFactory;
+import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.p4.style.color.IColorInfo;
 import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.LineCapType;
@@ -60,9 +62,13 @@ public class StyleLineUI
 
     private PicklistFormField         lineCapFormField;
 
-    private StyleLine                 styleLine = null;
+    private Supplier<StyleLine>       styleLineSupplier   = null;
 
-    private boolean                   border    = false;
+    private UnitOfWork                styleLineUnitOfWork = null;
+
+    private StyleLine                 styleLine           = null;
+
+    private boolean                   border              = false;
 
 
     public StyleLineUI( IAppContext context, IPanelSite panelSite, Context<IImageInfo> imageInfoInContext,
@@ -74,8 +80,14 @@ public class StyleLineUI
     }
 
 
-    public void setModel( StyleLine styleLine ) {
-        this.styleLine = styleLine;
+    public void setModelFunction( Supplier<StyleLine> styleLineSupplier ) {
+        this.styleLineSupplier = styleLineSupplier;
+        this.styleLine = null;
+    }
+
+
+    public void setUnitOfWork( UnitOfWork styleLineUnitOfWork ) {
+        this.styleLineUnitOfWork = styleLineUnitOfWork;
     }
 
 
@@ -84,6 +96,9 @@ public class StyleLineUI
         Composite parent = site.getPageBody();
         parent.setLayout( ColumnLayoutFactory.defaults().spacing( 5 )
                 .margins( panelSite.getLayoutPreference().getSpacing() / 2 ).create() );
+        if(styleLine == null) {
+            styleLine = styleLineSupplier.get();
+        }
         lineWidthField = new SpinnerFormField( 1, 128, 12 );
         String extraLabel = "";
         if (border) {
@@ -99,7 +114,8 @@ public class StyleLineUI
             ShapeFigureLibraryInitializer shapeFigureLibraryInitializer = new ShapeFigureLibraryInitializer();
             StylePointUI ui = new StylePointUI( context, panelSite, imageInfoInContext, colorInfoInContext,
                     shapeFigureLibraryInitializer );
-            ui.setModel( styleLine.lineSymbol.get() );
+            ui.setUnitOfWork( styleLineUnitOfWork.newUnitOfWork() );
+            ui.setModelFunction( () -> styleLine.lineSymbol.get() );
             ui.createContents( site );
         }
         lineTransparencyField = new SpinnerFormField( 0, 1, 0.1, 1, 1 );
@@ -121,7 +137,8 @@ public class StyleLineUI
         if (extraLabel.isEmpty()) {
             StyleLineUI borderUI = new StyleLineUI( context, panelSite, imageInfoInContext, colorInfoInContext );
             borderUI.setBorder( true );
-            borderUI.setModel( styleLine.border.get() );
+            borderUI.setUnitOfWork( styleLineUnitOfWork.newUnitOfWork() );
+            borderUI.setModelFunction( () -> styleLine.border.get() );
             borderUI.createContents( site );
         }
         return site.getPageBody();
@@ -135,14 +152,16 @@ public class StyleLineUI
 
     @Override
     public void submitUI() {
-        // TODO Auto-generated method stub
-
+        if(styleLineUnitOfWork != null && styleLineUnitOfWork.isOpen()) {
+            styleLineUnitOfWork.commit();
+        }
     }
 
 
     @Override
     public void resetUI() {
-        // TODO Auto-generated method stub
-
+        if(styleLineUnitOfWork != null && styleLineUnitOfWork.isOpen()) {
+            styleLineUnitOfWork.close();
+        }
     }
 }
