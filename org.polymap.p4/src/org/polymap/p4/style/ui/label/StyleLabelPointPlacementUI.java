@@ -12,11 +12,12 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  */
-package org.polymap.p4.style.ui;
+package org.polymap.p4.style.ui.label;
 
 import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.p4.style.entities.StyleLabelPointPlacement;
+import org.polymap.p4.style.ui.AbstractStylerFragmentUI;
 import org.polymap.p4.util.PropertyAdapter;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanelSite;
@@ -70,11 +71,32 @@ public class StyleLabelPointPlacementUI
         parent.setLayout( ColumnLayoutFactory.defaults().spacing( 5 )
                 .margins( panelSite.getLayoutPreference().getSpacing() / 2 ).create() );
         labelAnchorFormField = new CoordFormField( new SpinnerFormField( 0, 1, 0.1, 0.0, 1 ), new SpinnerFormField( 0,
-                1, 0.1, 0.5, 1 ) );
+                1, 0.1, 0.5, 1 ) ) {
+
+            @Override
+            public void store() throws Exception {
+                site.setFieldValue( styleLabelPointPlacement.anchor.createValue( a -> {
+                    a.x.set( (Double) super.newValue1 );
+                    a.y.set( (Double) super.newValue2 );
+                    return a;
+                } ) );
+            }
+        };
         site.newFormField( new PropertyAdapter( styleLabelPointPlacement.anchor ) ).label.put( "Label anchor" ).field
                 .put( labelAnchorFormField ).tooltip.put( "" ).create();
         labelOffsetFormField = new CoordFormField( new SpinnerFormField( -128, 128, 0 ), new SpinnerFormField( -128,
-                128, 0 ) );
+                128, 0 ) ) {
+
+            @Override
+            public void store() throws Exception {
+                site.setFieldValue( styleLabelPointPlacement.anchor.createValue( a -> {
+                    a.x.set( (Double) super.newValue1 );
+                    a.y.set( (Double) super.newValue2 );
+                    return a;
+                } ) );
+            }
+        };
+
         site.newFormField( new PropertyAdapter( styleLabelPointPlacement.offset ) ).label.put( "Label offset" ).field
                 .put( labelOffsetFormField ).tooltip.put( "" ).create();
         labelRotationFormField = new SpinnerFormField( -360, 360, 0 );

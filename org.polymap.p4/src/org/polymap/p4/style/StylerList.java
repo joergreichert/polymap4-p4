@@ -201,19 +201,20 @@ public class StylerList
                 .getResourceAsStream( "resources/slds/sld.list" ) ) )) {
             String line;
             Version styleVersion = new Version( "1.0.0" );
-            SLDHandler sldHandler = new SLDHandler();
-            while ((line = br.readLine()) != null) {
-                try (InputStreamReader reader = new InputStreamReader( getClass().getClassLoader().getResourceAsStream(
-                        "resources/" + line ) )) {
-                    StyledLayerDescriptor sld = sldHandler.parse( reader, styleVersion, null, null );
-                    SimpleStyler styler = newCallback.apply(false);
-                    styler.fromSLD( sld );
-                    styles.add( styler );
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            // TODO: SLDHandler cannot be resolved on classpath! 
+//            SLDHandler sldHandler = new SLDHandler();
+//            while ((line = br.readLine()) != null) {
+//                try (InputStreamReader reader = new InputStreamReader( getClass().getClassLoader().getResourceAsStream(
+//                        "resources/" + line ) )) {
+//                    StyledLayerDescriptor sld = sldHandler.parse( reader, styleVersion, null, null );
+//                    SimpleStyler styler = newCallback.apply(false);
+//                    styler.fromSLD( sld );
+//                    styles.add( styler );
+//                }
+//                catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
         }
         catch (IOException e) {
             e.printStackTrace();

@@ -14,6 +14,7 @@
  */
 package org.polymap.p4.style.label;
 
+import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.p4.style.IFormFieldInfo;
 import org.polymap.p4.style.entities.StyleLabel;
 
@@ -24,8 +25,6 @@ import org.polymap.p4.style.entities.StyleLabel;
 public interface IStyleLabelInfo
         extends IFormFieldInfo {
 
+    UnitOfWork getUnitOfWork();
     StyleLabel getStyleLabel();
-
-
-    void setStyleLabel( StyleLabel styleLabel );
 }

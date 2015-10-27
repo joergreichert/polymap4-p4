@@ -29,7 +29,7 @@ import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.model2.Property;
 import org.polymap.p4.P4Plugin;
 import org.polymap.p4.style.entities.StyleLabelPointPlacement;
-import org.polymap.p4.style.ui.StyleLabelPointPlacementUI;
+import org.polymap.p4.style.ui.label.StyleLabelPointPlacementUI;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.DefaultPanel;
 import org.polymap.rhei.batik.PanelIdentifier;
@@ -47,7 +47,7 @@ import org.polymap.rhei.form.batik.BatikFormContainer;
 public class StyleLabelPointPlacementPanel
         extends DefaultPanel {
 
-    public static final PanelIdentifier ID                   = PanelIdentifier.parse( "point_placement" );
+    public static final PanelIdentifier ID = PanelIdentifier.parse( "point_placement" );
 
     private MdToolkit                   toolkit;
 
@@ -57,8 +57,6 @@ public class StyleLabelPointPlacementPanel
     private DefaultFormPage             pointPlacementPage;
 
     private BatikFormContainer          pointPlacementPageContainer;
-
-    private boolean                     valueWasInitialEmpty = false;
 
 
     @Override
@@ -80,7 +78,6 @@ public class StyleLabelPointPlacementPanel
                 Property<StyleLabelPointPlacement> pointPlacementProp = info.getStyleLabel().pointPlacement;
                 StyleLabelPointPlacement pointPlacement = null;
                 if (pointPlacementProp.get() == null) {
-                    valueWasInitialEmpty = true;
                     pointPlacement = pointPlacementProp.createValue( null );
                 }
                 ui.setModel( pointPlacement );
@@ -107,6 +104,10 @@ public class StyleLabelPointPlacementPanel
             public void widgetSelected( SelectionEvent e ) {
                 try {
                     pointPlacementPageContainer.submit();
+                    IStyleLabelInfo info = styleLabelInfo.get();
+                    if (info.getUnitOfWork() != null && info.getUnitOfWork().isOpen()) {
+                        info.getUnitOfWork().commit();
+                    }
                     PanelPath path = getSite().getPath();
                     getContext().closePanel( path );
                     EventManager.instance().publish( new EventObject( styleLabelInfo.get() ) );
@@ -122,11 +123,9 @@ public class StyleLabelPointPlacementPanel
 
     @Override
     public void dispose() {
-        if (valueWasInitialEmpty) {
-            IStyleLabelInfo info = styleLabelInfo.get();
-            if(info.getStyleLabel().pointPlacement.get() != null) {
-                info.getStyleLabel().pointPlacement.set( null );
-            }
+        IStyleLabelInfo info = styleLabelInfo.get();
+        if (info.getUnitOfWork() != null && info.getUnitOfWork().isOpen()) {
+            info.getUnitOfWork().close();
         }
     }
 }

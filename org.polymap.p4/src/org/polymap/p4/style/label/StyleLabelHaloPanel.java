@@ -27,7 +27,7 @@ import org.polymap.core.runtime.event.EventManager;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.p4.P4Plugin;
-import org.polymap.p4.style.ui.StyleLabelHaloUI;
+import org.polymap.p4.style.ui.label.StyleLabelHaloUI;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.DefaultPanel;
 import org.polymap.rhei.batik.PanelIdentifier;

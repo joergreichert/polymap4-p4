@@ -14,8 +14,10 @@
  */
 package org.polymap.p4.style.label;
 
+import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.p4.style.AbstractFormFieldInfo;
 import org.polymap.p4.style.entities.StyleLabel;
+import org.polymap.rhei.field.IFormField;
 
 /**
  * @author "Joerg Reichert <joerg@mapzone.io>"
@@ -24,16 +26,27 @@ import org.polymap.p4.style.entities.StyleLabel;
 public class StyleLabelInfo
         extends AbstractFormFieldInfo
         implements IStyleLabelInfo {
-    
-    private StyleLabel styleLabel;
+
+    private final UnitOfWork unitOfWork;
+
+    private final StyleLabel styleLabel;
+
+
+    public StyleLabelInfo( IFormField formField, UnitOfWork unitOfWork, StyleLabel styleLabel ) {
+        this.unitOfWork = unitOfWork;
+        this.styleLabel = styleLabel;
+        setFormField( formField );
+    }
+
 
     @Override
     public StyleLabel getStyleLabel() {
         return styleLabel;
     }
 
+
     @Override
-    public void setStyleLabel( StyleLabel styleLabel ) {
-        this.styleLabel = styleLabel;
+    public UnitOfWork getUnitOfWork() {
+        return unitOfWork;
     }
 }

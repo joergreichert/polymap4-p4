@@ -12,7 +12,7 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  */
-package org.polymap.p4.style.ui;
+package org.polymap.p4.style.ui.label;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -36,6 +36,7 @@ import org.polymap.p4.style.label.StyleLabelHaloPanel;
 import org.polymap.p4.style.label.StyleLabelInfo;
 import org.polymap.p4.style.label.StyleLabelLinePlacementPanel;
 import org.polymap.p4.style.label.StyleLabelPointPlacementPanel;
+import org.polymap.p4.style.ui.AbstractStylerFragmentUI;
 import org.polymap.p4.util.PropertyAdapter;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IAppContext;
@@ -164,20 +165,7 @@ public class StyleLabelUI
                 .margins( panelSite.getLayoutPreference().getSpacing() / 2 ).create() );
         HashSet<String> labels = Sets.newHashSet( "", "<Placeholder>" );
         labelTextField = new PicklistFormField( labels );
-        // labelTextField.addModifyListener( new ModifyListener() {
-        //
-        // @Override
-        // public void modifyText( ModifyEvent event ) {
-        // try {
-        // labelTextField.store();
-        // updateEnablementOfFormFields( styleLabel.labelText.get() );
-        // }
-        // catch (Exception e) {
-        // e.printStackTrace();
-        // }
-        // }
-        // } );
-        if(styleLabel == null) {
+        if (styleLabel == null) {
             styleLabel = styleLabelSupplier.get();
         }
         site.newFormField( new PropertyAdapter( styleLabel.labelText ) ).label.put( "Label text" ).field
@@ -240,7 +228,7 @@ public class StyleLabelUI
 
     @Override
     public void submitUI() {
-        if(styleLabelUnitOfWork != null && styleLabelUnitOfWork.isOpen()) {
+        if (styleLabelUnitOfWork != null && styleLabelUnitOfWork.isOpen()) {
             styleLabelUnitOfWork.commit();
         }
     }
@@ -248,7 +236,7 @@ public class StyleLabelUI
 
     @Override
     public void resetUI() {
-        if(styleLabelUnitOfWork != null && styleLabelUnitOfWork.isOpen()) {
+        if (styleLabelUnitOfWork != null && styleLabelUnitOfWork.isOpen()) {
             styleLabelUnitOfWork.close();
         }
     }
@@ -270,23 +258,20 @@ public class StyleLabelUI
                 context.openPanel( panelSite.getPath(), FontPanel.ID );
             }
             else if (ev.getSource() == pointPlacementFormField) {
-                StyleLabelInfo impl = new StyleLabelInfo();
-                impl.setFormField( pointPlacementFormField );
-                impl.setStyleLabel( styleLabel );
+                StyleLabelInfo impl = new StyleLabelInfo( pointPlacementFormField,
+                        styleLabelUnitOfWork.newUnitOfWork(), styleLabel );
                 styleLabelInfo.set( impl );
                 context.openPanel( panelSite.getPath(), StyleLabelPointPlacementPanel.ID );
             }
             else if (ev.getSource() == linePlacementFormField) {
-                StyleLabelInfo impl = new StyleLabelInfo();
-                impl.setFormField( linePlacementFormField );
-                impl.setStyleLabel( styleLabel );
+                StyleLabelInfo impl = new StyleLabelInfo( linePlacementFormField, styleLabelUnitOfWork.newUnitOfWork(),
+                        styleLabel );
                 styleLabelInfo.set( impl );
                 context.openPanel( panelSite.getPath(), StyleLabelLinePlacementPanel.ID );
             }
             else if (ev.getSource() == haloFormField) {
-                StyleLabelInfo impl = new StyleLabelInfo();
-                impl.setFormField( haloFormField );
-                impl.setStyleLabel( styleLabel );
+                StyleLabelInfo impl = new StyleLabelInfo( haloFormField, styleLabelUnitOfWork.newUnitOfWork(),
+                        styleLabel );
                 styleLabelInfo.set( impl );
                 context.openPanel( panelSite.getPath(), StyleLabelHaloPanel.ID );
             }

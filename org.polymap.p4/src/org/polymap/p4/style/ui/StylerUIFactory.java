@@ -29,6 +29,7 @@ import org.polymap.p4.style.font.IFontInfo;
 import org.polymap.p4.style.icon.FigureLibraryInitializer;
 import org.polymap.p4.style.icon.IImageInfo;
 import org.polymap.p4.style.label.IStyleLabelInfo;
+import org.polymap.p4.style.ui.label.StyleLabelUI;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanelSite;

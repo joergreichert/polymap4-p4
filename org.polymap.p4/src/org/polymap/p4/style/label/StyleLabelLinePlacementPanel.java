@@ -29,7 +29,7 @@ import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.model2.Property;
 import org.polymap.p4.P4Plugin;
 import org.polymap.p4.style.entities.StyleLabelLinePlacement;
-import org.polymap.p4.style.ui.StyleLabelLinePlacementUI;
+import org.polymap.p4.style.ui.label.StyleLabelLinePlacementUI;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.DefaultPanel;
 import org.polymap.rhei.batik.PanelIdentifier;

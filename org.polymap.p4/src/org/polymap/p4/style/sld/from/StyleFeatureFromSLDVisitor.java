@@ -15,12 +15,14 @@
 package org.polymap.p4.style.sld.from;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.geotools.styling.FeatureTypeStyle;
 import org.geotools.styling.Rule;
 import org.geotools.styling.Style;
 import org.polymap.p4.style.entities.StyleFeature;
+import org.polymap.p4.style.entities.StyleZoomConfiguration;
 import org.polymap.p4.style.sld.from.helper.StyleCompositeFromSLDHelper;
 import org.polymap.p4.style.sld.from.helper.StyleZoomFromSLDHelper;
 
@@ -54,13 +56,13 @@ public class StyleFeatureFromSLDVisitor
     public void visit( FeatureTypeStyle featureTypeStyle ) {
         List<Rule> zoomedFeatures = featureTypeStyle.rules().stream().filter( rule -> hasZoomAttributes( rule ) )
                 .collect( Collectors.toList() );
-        zoomedFeatures.stream().forEach(
-                rule -> new StyleZoomFromSLDHelper( ( String label ) -> styleFeature.zoomConfigurations
-                        .createElement( zoomConfiguration -> {
-                            zoomConfiguration.zoomLevelName.set( label );
-                            zoomConfiguration.styleComposite.createValue( null );
-                            return zoomConfiguration;
-                        } ) ).visit( rule ) );
+        Function<String,StyleZoomConfiguration> fun = ( String label ) -> styleFeature.zoomConfigurations
+                .createElement( zoomConfiguration -> {
+                    zoomConfiguration.zoomLevelName.set( label );
+                    zoomConfiguration.styleComposite.createValue( null );
+                    return zoomConfiguration;
+                } );
+        zoomedFeatures.stream().forEach( rule -> new StyleZoomFromSLDHelper( fun ).visit( rule ) );
     }
 
 
