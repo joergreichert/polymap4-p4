@@ -14,65 +14,54 @@
  */
 package org.polymap.p4.imports.utils;
 
-import static java.nio.charset.Charset.forName;
-
 import java.nio.charset.Charset;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
+import org.apache.commons.lang3.tuple.Pair;
 import org.polymap.p4.data.imports.ImporterPrompt;
-import org.polymap.p4.data.imports.ImporterPrompt.PromptUIBuilder;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
 public class CharsetPromptBuilder
-        implements PromptUIBuilder {
+        extends AbstractPromptBuilder<Charset,Pair<String,String>> {
 
-    private ICharSetAware charSetProvider;
-
-
-    public CharsetPromptBuilder( ICharSetAware charSetProvider ) {
-        this.charSetProvider = charSetProvider;
+    public CharsetPromptBuilder( CharSetSelection charSetProvider ) {
+        super( charSetProvider );
     }
 
-    /** Allowed charsets. */
-    public static final Charset[] CHARSETS = { forName( "UTF-8" ), forName( "ISO-8859-1" ), forName( "IBM437" ) };
 
-    private Charset               charset  = null;
+    @Override
+    protected boolean getInitialSelection( Pair<String,String> cs ) {
+        boolean selected = false;
+        if (getProvider().getSelected() == null) {
+            selected = cs.getKey() == getProvider().getDefault().getKey();
+        }
+        else {
+            selected = cs.getKey() == getProvider().getSelected().name();
+        }
+        return selected;
+    }
+
+
+    @Override
+    protected Pair<String,String> transformFromDisplayValue( String listEntry ) {
+        return getProvider().getSelectable().stream().filter( selectable -> selectable.getValue().equals( listEntry ) )
+                .findFirst().get();
+    }
+
+
+    @Override
+    protected String transformToDisplayValue( Pair<String,String> value ) {
+        return value.getValue();
+    }
 
 
     @Override
     public void submit( ImporterPrompt prompt ) {
-        charSetProvider.setCharset( charset );
+        Charset charset = Charset.forName( getValue().getKey() );
+        getProvider().setSelected( charset );
         prompt.ok.set( true );
         prompt.value.put( charset.displayName() );
-    }
-
-
-    @Override
-    public void createContents( ImporterPrompt prompt, Composite parent ) {
-        for (Charset cs : CHARSETS) {
-            Button btn = new Button( parent, SWT.RADIO );
-            btn.setText( cs.displayName() );
-            btn.addSelectionListener( new SelectionAdapter() {
-
-                @Override
-                public void widgetSelected( SelectionEvent ev ) {
-                    charset = cs;
-                }
-            } );
-            if (charSetProvider.getCharset() == null) {
-                btn.setSelection( cs == CHARSETS[0] );
-            }
-            else {
-                btn.setSelection( cs == charSetProvider.getCharset() );
-            }
-        }
-        charset = CHARSETS[0];
     }
 }

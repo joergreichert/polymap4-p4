@@ -14,15 +14,23 @@
  */
 package org.polymap.p4.imports.utils;
 
-import java.nio.charset.Charset;
+import java.util.List;
 
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public interface ICharSetAware {
+public interface ISelectionAware<T, U> {
 
-    Charset getCharset();
-    void setCharset(Charset charset);
+    List<U> getSelectable();
+
+
+    U getDefault();
+
+
+    T getSelected();
+
+
+    void setSelected( T selected );
 }
