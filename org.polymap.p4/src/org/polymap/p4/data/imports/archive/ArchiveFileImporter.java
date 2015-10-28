@@ -14,34 +14,27 @@
  */
 package org.polymap.p4.data.imports.archive;
 
-import static java.nio.charset.Charset.forName;
 import static org.polymap.rhei.batik.app.SvgImageRegistryHelper.NORMAL24;
-
-import java.util.List;
 
 import java.io.File;
 import java.nio.charset.Charset;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.core.runtime.IProgressMonitor;
-
-import org.polymap.rhei.batik.toolkit.IPanelToolkit;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Composite;
 import org.polymap.p4.P4Plugin;
 import org.polymap.p4.data.imports.ContextIn;
 import org.polymap.p4.data.imports.ContextOut;
 import org.polymap.p4.data.imports.ImportTempDir;
-import org.polymap.p4.data.imports.ImporterPrompt;
-import org.polymap.p4.data.imports.ImporterPrompt.PromptUIBuilder;
-import org.polymap.p4.data.imports.ImporterPrompt.Severity;
 import org.polymap.p4.data.imports.Importer;
+import org.polymap.p4.data.imports.ImporterPrompt.Severity;
 import org.polymap.p4.data.imports.ImporterSite;
+import org.polymap.p4.data.imports.shapefile.CharsetPromptBuilder;
+import org.polymap.p4.data.imports.shapefile.ICharSetAware;
+import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 
 /**
  * 
@@ -49,25 +42,22 @@ import org.polymap.p4.data.imports.ImporterSite;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class ArchiveFileImporter
-        implements Importer {
+        implements Importer, ICharSetAware {
 
-    private static Log log = LogFactory.getLog( ArchiveFileImporter.class );
+    private static Log     log             = LogFactory.getLog( ArchiveFileImporter.class );
 
-    /** Allowed charsets. */
-    public static final Charset[]   CHARSETS = {forName( "UTF-8" ), forName( "ISO-8859-1" ), forName( "IBM437" )};
-    
-    protected ImporterSite          site;
-    
+    protected ImporterSite site;
+
     @ContextIn
-    protected File                  file;
-    
+    protected File         file;
+
     @ContextOut
-    protected List<File>            result;
-    
-    protected Charset               filenameCharset = CHARSETS[0];
-    
-    protected Exception             exception;
-    
+    protected List<File>   result;
+
+    protected Charset      filenameCharset = null;
+
+    protected Exception    exception;
+
 
     @Override
     public ImporterSite site() {
@@ -85,68 +75,41 @@ public class ArchiveFileImporter
         site.terminal.set( false );
     }
 
-    
+
     @Override
     public void createPrompts( IProgressMonitor monitor ) throws Exception {
         // charset prompt
-        site.newPrompt( "charset" )
-                .summary.put( "Filename encoding" )
-                .description.put( "The encoding of the filenames. If unsure use UTF8." )
-                .value.put( "UTF8" )
-                .severity.put( Severity.VERIFY )
-                .extendedUI.put( new PromptUIBuilder() {
-                    private Charset charset = null;
-                    @Override
-                    public void submit( ImporterPrompt prompt ) {
-                        filenameCharset = charset;
-                        prompt.ok.set( true );
-                        prompt.value.put( charset.displayName() );                        
-                    }
-                    @Override
-                    public void createContents( ImporterPrompt prompt, Composite parent ) {
-                        for (Charset cs : CHARSETS) {
-                            Button btn = new Button( parent, SWT.RADIO );
-                            btn.setText( cs.displayName() );
-                            btn.setSelection( cs == filenameCharset );
-                            btn.addSelectionListener( new SelectionAdapter() {
-                                @Override
-                                public void widgetSelected( SelectionEvent ev ) {
-                                    charset = cs;
-                                }
-                            });
-                        }
-                    }
-                });
+        site.newPrompt( "charset" ).summary.put( "Filename encoding" ).description
+                .put( "The encoding of the filenames. If unsure use UTF8." ).value.put( "UTF8" ).severity
+                .put( Severity.VERIFY ).extendedUI.put( new CharsetPromptBuilder( this ) );
     }
-    
-    
+
+
     @Override
     public void verify( IProgressMonitor monitor ) {
         try {
             // testing long running operation :)
             Thread.sleep( 0 );
-            
-            result = new ArchiveReader()
-                    .targetDir.put( ImportTempDir.create() )
-                    .charset.put( filenameCharset )
-                    .run( file, monitor );
-            
-            exception = null;;
+
+            result = new ArchiveReader().targetDir.put( ImportTempDir.create() ).charset.put( filenameCharset ).run(
+                    file, monitor );
+
+            exception = null;
+            ;
             site.ok.set( true );
         }
         catch (Exception e) {
             exception = e;
             site.ok.set( false );
         }
-    }    
+    }
 
-    
+
     @Override
     public void createResultViewer( Composite parent, IPanelToolkit tk ) {
         if (result == null) {
             tk.createFlowText( parent,
-                    "\nUnable to read the data.\n\n" +
-                    "**Reason**: " + exception.getLocalizedMessage() );            
+                    "\nUnable to read the data.\n\n" + "**Reason**: " + exception.getLocalizedMessage() );
         }
         else {
             org.eclipse.swt.widgets.List list = tk.createList( parent, SWT.V_SCROLL, SWT.H_SCROLL );
@@ -159,5 +122,16 @@ public class ArchiveFileImporter
     public void execute( IProgressMonitor monitor ) throws Exception {
         // everything is done by verify()
     }
-    
+
+
+    @Override
+    public Charset getCharset() {
+        return filenameCharset;
+    }
+
+
+    @Override
+    public void setCharset( Charset charset ) {
+        this.filenameCharset = charset;
+    }
 }
