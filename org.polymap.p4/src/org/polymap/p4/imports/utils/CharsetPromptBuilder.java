@@ -12,7 +12,7 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  */
-package org.polymap.p4.data.imports.shapefile;
+package org.polymap.p4.imports.utils;
 
 import static java.nio.charset.Charset.forName;
 
