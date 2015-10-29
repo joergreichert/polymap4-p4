@@ -12,7 +12,7 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  */
-package org.polymap.p4.imports.utils;
+package org.polymap.p4.imports.utils.prompt;
 
 import java.util.List;
 import java.util.Set;
@@ -22,6 +22,7 @@ import org.geotools.referencing.ReferencingFactoryFinder;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CRSAuthorityFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.polymap.p4.imports.utils.ISelectionAware;
 
 import com.google.common.collect.Sets;
 

@@ -12,13 +12,14 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  */
-package org.polymap.p4.imports.utils;
+package org.polymap.p4.imports.utils.prompt;
 
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.polymap.p4.imports.utils.ISelectionAware;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>

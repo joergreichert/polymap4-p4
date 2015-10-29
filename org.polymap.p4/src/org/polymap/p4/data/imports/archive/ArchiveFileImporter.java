@@ -32,8 +32,8 @@ import org.polymap.p4.data.imports.ImportTempDir;
 import org.polymap.p4.data.imports.ImporterPrompt.Severity;
 import org.polymap.p4.data.imports.Importer;
 import org.polymap.p4.data.imports.ImporterSite;
-import org.polymap.p4.imports.utils.CharSetSelection;
-import org.polymap.p4.imports.utils.CharsetPromptBuilder;
+import org.polymap.p4.imports.utils.prompt.CharSetSelection;
+import org.polymap.p4.imports.utils.prompt.CharsetPromptBuilder;
 
 
 /**

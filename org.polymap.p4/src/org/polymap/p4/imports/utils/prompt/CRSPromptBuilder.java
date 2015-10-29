@@ -12,7 +12,7 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  */
-package org.polymap.p4.imports.utils;
+package org.polymap.p4.imports.utils.prompt;
 
 import org.geotools.referencing.CRS;
 import org.opengis.referencing.FactoryException;

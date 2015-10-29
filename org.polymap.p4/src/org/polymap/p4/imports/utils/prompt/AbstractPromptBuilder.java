@@ -1,7 +1,7 @@
 /*
- * polymap.org 
- * Copyright (C) 2015 individual contributors as indicated by the @authors tag. 
- * All rights reserved.
+ * polymap.org Copyright (C) 2015 individual contributors as indicated by the
+ * 
+ * @authors tag. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -12,7 +12,7 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  */
-package org.polymap.p4.imports.utils;
+package org.polymap.p4.imports.utils.prompt;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.polymap.p4.data.imports.ImporterPrompt;
 import org.polymap.p4.data.imports.ImporterPrompt.PromptUIBuilder;
+import org.polymap.p4.imports.utils.ISelectionAware;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -37,6 +38,11 @@ import org.polymap.p4.data.imports.ImporterPrompt.PromptUIBuilder;
  */
 public abstract class AbstractPromptBuilder<T, U>
         implements PromptUIBuilder {
+
+    /**
+     * 
+     */
+    private static final int     MAX_LIST_SIZE = 100;
 
     private ISelectionAware<T,U> selectionAware;
 
@@ -113,14 +119,9 @@ public abstract class AbstractPromptBuilder<T, U>
         hintLabel.setForeground( parent.getDisplay().getSystemColor( SWT.COLOR_RED ) );
 
         org.eclipse.swt.widgets.List list = new org.eclipse.swt.widgets.List( parent, SWT.V_SCROLL );
-        List<U> all = selectionAware.getSelectable();
-        String hint = setListContent( list, all );
+        String defaultDisplayValue = transformToDisplayValue( selectionAware.getDefault() );
+        adjustListToMakeDefaultValueVisible( list, filterText, 0, defaultDisplayValue );
         list.setLayoutData( createHorizontalFillWithHeightHint( 200 ) );
-
-        list.setSelection( new String[] { transformToDisplayValue( selectionAware.getDefault() ) } );
-        list.setTopIndex( list.getSelectionIndex() );
-        list.showSelection();
-        hintLabel.setText( hint );
         list.addSelectionListener( new SelectionAdapter() {
 
             @Override
@@ -133,24 +134,49 @@ public abstract class AbstractPromptBuilder<T, U>
 
             @Override
             public void modifyText( ModifyEvent event ) {
-                list.setItems( new String[] {} );
-                List<U> filteredAll = selectionAware.getSelectable().stream().filter( selectable -> {
-                    String name = transformToDisplayValue( selectable );
-                    String text = filterText.getText();
-                    if (text.startsWith( "*" )) {
-                        return name != null && name.contains( text.substring( 1 ) );
-                    }
-                    else {
-                        return name != null && name.startsWith( text );
-                    }
-                } ).collect( Collectors.toList() );
-                String hint = setListContent( list, filteredAll );
+                List<U> filteredAll = filterSelectable( filterText.getText() );
+                String hint = setListContent( list, filteredAll, MAX_LIST_SIZE );
                 if (list.getItems().length > 0) {
                     list.select( 0 );
                 }
                 updateHint( hint );
             }
         } );
+    }
+
+
+    private List<U> filterSelectable( String text ) {
+        List<U> filteredAll = selectionAware.getSelectable().stream().filter( selectable -> {
+            String name = transformToDisplayValue( selectable );
+            if (text.startsWith( "*" )) {
+                return name != null && name.contains( text.substring( 1 ) );
+            }
+                else {
+                    return name != null && name.startsWith( text );
+                }
+            } ).collect( Collectors.toList() );
+        return filteredAll;
+    }
+
+
+    private void adjustListToMakeDefaultValueVisible( org.eclipse.swt.widgets.List list, 
+            Text filterText, int subIndex, String defaultDisplayValue ) {
+        if (subIndex < defaultDisplayValue.length()) {
+            String filterStr = defaultDisplayValue.substring( 0, subIndex );
+            List<U> filtered = filterSelectable( filterStr );
+            String hint = setListContent( list, filtered, MAX_LIST_SIZE );
+            list.setSelection( new String[] { defaultDisplayValue } );
+            int index = list.getSelectionIndex();
+            if (index == -1) {
+                adjustListToMakeDefaultValueVisible( list, filterText, subIndex + 1, defaultDisplayValue );
+            }
+            else {
+                filterText.setText( filterStr );
+                list.setTopIndex( list.getSelectionIndex() );
+                list.showSelection();
+                hintLabel.setText( hint );
+            }
+        }
     }
 
 
@@ -169,17 +195,18 @@ public abstract class AbstractPromptBuilder<T, U>
     }
 
 
-    private String setListContent( org.eclipse.swt.widgets.List list, List<U> all ) {
+    private String setListContent( org.eclipse.swt.widgets.List list, List<U> all, int max ) {
         List<U> subList = null;
         String hint = "";
-        if (all.size() > 100) {
-            subList = all.subList( 0, 99 );
-            hint = "Attention: Only first 100 elements of " + all.size()
+        if (all.size() >= max) {
+            subList = all.subList( 0, max );
+            hint = "Attention: Only first " + max + " elements of " + all.size()
                     + " elements \nare shown, use filter to reduce result count.";
         }
         else {
             subList = all;
         }
+        list.setItems( new String[] {} );
         subList.stream().forEach( selectable -> list.add( transformToDisplayValue( selectable ) ) );
         return hint;
     }
