@@ -58,6 +58,12 @@ public class CharsetPromptBuilder
 
 
     @Override
+    protected Pair<String,String> transformToValueObject( Charset selected ) {
+        return Pair.of( selected.name(), selected.displayName() );
+    }
+
+
+    @Override
     public void submit( ImporterPrompt prompt ) {
         Charset charset = Charset.forName( getValue().getKey() );
         getProvider().setSelected( charset );

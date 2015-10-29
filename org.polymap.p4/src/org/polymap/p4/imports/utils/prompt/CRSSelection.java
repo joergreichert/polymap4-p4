@@ -1,7 +1,6 @@
 /*
- * polymap.org 
- * Copyright (C) 2015 individual contributors as indicated by the @authors tag. 
- * All rights reserved.
+ * polymap.org Copyright (C) 2015 individual contributors as indicated by the
+ * @authors tag. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -40,9 +39,10 @@ public class CRSSelection
 
     public CRSSelection() {
         selectable = ReferencingFactoryFinder.getCRSAuthorityFactories( null ).stream()
-                .flatMap( factory -> getAuthorityCodes( factory ).stream() ).map( code -> (String)code )
+                .flatMap( factory -> getAuthorityCodes( factory ).stream() )
                 .collect( Collectors.toSet() ).stream().sorted( ( s1, s2 ) -> s1.compareTo( s2 ) )
                 .collect( Collectors.toList() );
+         
     }
 
 

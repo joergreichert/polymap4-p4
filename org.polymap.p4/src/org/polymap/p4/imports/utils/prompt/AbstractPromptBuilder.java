@@ -58,14 +58,21 @@ public abstract class AbstractPromptBuilder<T, U>
 
     @Override
     public void createContents( ImporterPrompt prompt, Composite parent ) {
+        if(selectionAware.getSelected() != null) {
+            setValue(transformToValueObject( selectionAware.getSelected() ));
+        } else {
+            setValue(selectionAware.getDefault());
+        }
         if (selectionAware.getSelectable().size() < 5) {
             createAsRadioButtonList( parent );
         }
         else {
             createAsList( parent );
         }
-        setValue( selectionAware.getDefault() );
     }
+
+
+    protected abstract U transformToValueObject( T selected );
 
 
     protected void setValue( U value ) {
@@ -119,8 +126,13 @@ public abstract class AbstractPromptBuilder<T, U>
         hintLabel.setForeground( parent.getDisplay().getSystemColor( SWT.COLOR_RED ) );
 
         org.eclipse.swt.widgets.List list = new org.eclipse.swt.widgets.List( parent, SWT.V_SCROLL );
-        String defaultDisplayValue = transformToDisplayValue( selectionAware.getDefault() );
-        adjustListToMakeDefaultValueVisible( list, filterText, 0, defaultDisplayValue );
+        String selectedDisplayValue = null;
+        if(selectionAware.getSelected() == null) {
+            selectedDisplayValue = transformToDisplayValue( selectionAware.getDefault() );  
+        } else if (getValue() != null) {
+            selectedDisplayValue = transformToDisplayValue( getValue() );  
+        }
+        adjustListToMakeSelectedValueVisible( list, filterText, 0, selectedDisplayValue );
         list.setLayoutData( createHorizontalFillWithHeightHint( 200 ) );
         list.addSelectionListener( new SelectionAdapter() {
 
@@ -138,12 +150,19 @@ public abstract class AbstractPromptBuilder<T, U>
                 String hint = setListContent( list, filteredAll, MAX_LIST_SIZE );
                 if (list.getItems().length > 0) {
                     list.select( 0 );
+                    handleSelection( list );
                 }
                 updateHint( hint );
             }
+
         } );
     }
 
+    private void handleSelection( org.eclipse.swt.widgets.List list ) {
+        list.setTopIndex( list.getSelectionIndex() );
+        setValue( transformFromDisplayValue( list.getItem( list.getSelectionIndex() ) ) );
+        list.showSelection();
+    }
 
     private List<U> filterSelectable( String text ) {
         List<U> filteredAll = selectionAware.getSelectable().stream().filter( selectable -> {
@@ -159,7 +178,7 @@ public abstract class AbstractPromptBuilder<T, U>
     }
 
 
-    private void adjustListToMakeDefaultValueVisible( org.eclipse.swt.widgets.List list, 
+    private void adjustListToMakeSelectedValueVisible( org.eclipse.swt.widgets.List list, 
             Text filterText, int subIndex, String defaultDisplayValue ) {
         if (subIndex < defaultDisplayValue.length()) {
             String filterStr = defaultDisplayValue.substring( 0, subIndex );
@@ -168,13 +187,12 @@ public abstract class AbstractPromptBuilder<T, U>
             list.setSelection( new String[] { defaultDisplayValue } );
             int index = list.getSelectionIndex();
             if (index == -1) {
-                adjustListToMakeDefaultValueVisible( list, filterText, subIndex + 1, defaultDisplayValue );
+                adjustListToMakeSelectedValueVisible( list, filterText, subIndex + 1, defaultDisplayValue );
             }
             else {
                 filterText.setText( filterStr );
-                list.setTopIndex( list.getSelectionIndex() );
-                list.showSelection();
-                hintLabel.setText( hint );
+                handleSelection( list );
+                updateHint( hint );
             }
         }
     }

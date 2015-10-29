@@ -1,7 +1,7 @@
 /*
- * polymap.org 
- * Copyright (C) 2015 individual contributors as indicated by the @authors tag. 
- * All rights reserved.
+ * polymap.org Copyright (C) 2015 individual contributors as indicated by the
+ * 
+ * @authors tag. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -13,6 +13,8 @@
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  */
 package org.polymap.p4.imports.utils.prompt;
+
+import java.util.Optional;
 
 import org.geotools.referencing.CRS;
 import org.opengis.referencing.FactoryException;
@@ -37,7 +39,7 @@ public class CRSPromptBuilder
         try {
             crs = CRS.decode( getValue() );
             getProvider().setSelected( crs );
-            prompt.value.put( crs.getName().getCode() );
+            prompt.value.put( getValue() );
             prompt.ok.set( true );
         }
         catch (FactoryException e) {
@@ -54,7 +56,7 @@ public class CRSPromptBuilder
             selected = cs == getProvider().getDefault();
         }
         else {
-            selected = cs == getProvider().getSelected().getName().getCode();
+            selected = cs == transformToValueObject( getProvider().getSelected() );
         }
         return selected;
     }
@@ -69,5 +71,19 @@ public class CRSPromptBuilder
     @Override
     protected String transformToDisplayValue( String value ) {
         return value;
+    }
+
+
+    @Override
+    protected String transformToValueObject( CoordinateReferenceSystem selected ) {
+        String code = selected.getName().getCode();
+        if (!code.contains( ":" )) {
+            Optional<String> opt = selected.getIdentifiers().stream().map( ident -> ident.toString() )
+                    .filter( cd -> cd.contains( ":" ) ).findFirst();
+            if (opt.isPresent()) {
+                return opt.get();
+            }
+        }
+        return selected.getName().getCode();
     }
 }

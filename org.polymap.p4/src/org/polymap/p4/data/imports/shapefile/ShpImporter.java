@@ -26,6 +26,7 @@ import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -77,7 +78,13 @@ public class ShpImporter
 
     private ShapefileDataStore                     ds;
 
-    private CharSetSelection                       charSetSelection = new CharSetSelection();
+    private CharSetSelection                       charSetSelection = new CharSetSelection() {
+        
+        public org.apache.commons.lang3.tuple.Pair<String,String> getDefault() {
+            // this is the default encoding for a data store
+            return Pair.of( "ISO-8859-1", "ISO-8859-1" );
+        }
+    };
 
     private CRSSelection                           crsSelection     = new CRSSelection();
 
@@ -126,7 +133,8 @@ public class ShpImporter
         if (charSetSelection.getSelected() == null) {
             // charset prompt
             site.newPrompt( "charset" ).summary.put( "Feature content encoding" ).description
-                    .put( "The encoding of the feature content. If unsure use UTF8." ).value.put( "UTF8" ).severity
+                    .put( "The encoding of the feature content. If unsure use ISO-8859-1." ).value
+                    .put( "ISO-8859-1" ).severity
                     .put( Severity.VERIFY ).extendedUI.put( new CharsetPromptBuilder( charSetSelection ) );
         }
     }
@@ -157,7 +165,7 @@ public class ShpImporter
         if (crsSelection.getSelected() == null) {
             // charset prompt
             site.newPrompt( "crs" ).summary.put( "Coordinate reference system" ).description
-                    .put( "The coordinate reference system for projecting the feature content. If unsure use EPSG:4326." ).value
+                    .put( "The coordinate reference system for projecting the feature content. If unsure use EPSG:4326 (= WGS 84)." ).value
                     .put( "EPSG:4326" ).severity.put( Severity.VERIFY ).extendedUI.put( new CRSPromptBuilder(
                     crsSelection ) );
         }
