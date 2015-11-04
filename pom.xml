@@ -25,9 +25,10 @@
 			</modules>
 		</profile>
 		<profile>
-			<id>feature</id>
+			<id>p4-features</id>
 			<modules>
 				<module>org.polymap.p4.feature</module>
+				<module>org.polymap.p4.product</module>
 			</modules>
 		</profile>
 	</profiles>
