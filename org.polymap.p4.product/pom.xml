@@ -124,12 +124,4 @@
 			</build>
 		</profile>
 	</profiles>
-	
-	<repositories>
-		<repository>
-			<id>p2</id>
-			<layout>p2</layout>
-			<url>http://download.eclipse.org/releases/luna</url>
-		</repository>
-	</repositories>
 </project>

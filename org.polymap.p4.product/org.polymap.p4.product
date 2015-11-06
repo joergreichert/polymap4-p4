@@ -28,6 +28,7 @@
    <features>
       <feature id="org.polymap.p4.feature" version="1.0.0.qualifier"/>
       <feature id="org.polymap.p4.platform.feature" version="1.0.0.qualifier"/>
+      <feature id="org.eclipse.equinox.executable" version="0.0.0"/>
    </features>
 
    <configurations>
