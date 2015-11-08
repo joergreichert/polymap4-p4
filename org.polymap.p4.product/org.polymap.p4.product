@@ -7,7 +7,8 @@
    </configIni>
 
    <launcherArgs>
-      <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
+      <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts
+      </vmArgsMac>
    </launcherArgs>
 
    <windowImages/>
@@ -26,18 +27,18 @@
    </plugins>
 
    <features>
-      <feature id="org.polymap.p4.feature" version="1.0.0.qualifier"/>
-      <feature id="org.polymap.p4.platform.feature" version="1.0.0.qualifier"/>
-      <feature id="org.eclipse.equinox.executable" version="0.0.0"/>
+      <feature id="org.polymap.p4.feature"/>
+      <feature id="org.polymap.p4.platform.feature"/>
+      <feature id="org.eclipse.equinox.executable"/>
    </features>
 
    <configurations>
       <plugin id="org.eclipse.equinox.common" autoStart="true" startLevel="2" />
-      <plugin id="org.eclipse.update.configurator" autoStart="true" startLevel="3" />
       <plugin id="org.eclipse.equinox.ds" autoStart="true" startLevel="5" />
       <plugin id="org.eclipse.equinox.http.jetty" autoStart="true" startLevel="4" />
       <plugin id="org.eclipse.equinox.http.registry" autoStart="true" startLevel="4" />
       <plugin id="org.eclipse.rap.rwt.osgi" autoStart="true" startLevel="5" />
+      <plugin id="org.eclipse.update.configurator" autoStart="true" startLevel="3" />
       <property name="eclipse.ignoreApp" value="true" />
       <property name="org.eclipse.equinox.http.jetty.context.sessioninactiveinterval" value="7200" />
       <property name="org.osgi.service.http.port" value="8080" />
