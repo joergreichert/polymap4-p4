@@ -18,25 +18,22 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.eclipse.core.runtime.IProgressMonitor;
-
 import org.eclipse.swt.widgets.Composite;
-
 import org.geotools.data.Query;
 import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.shapefile.ShapefileDataStoreFactory;
 import org.geotools.feature.FeatureCollection;
+import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.opengis.feature.simple.SimpleFeatureType;
-
 import org.polymap.p4.P4Plugin;
 import org.polymap.p4.data.imports.ContextIn;
 import org.polymap.p4.data.imports.ContextOut;
 import org.polymap.p4.data.imports.Importer;
 import org.polymap.p4.data.imports.ImporterSite;
-
 import org.polymap.rhei.batik.app.SvgImageRegistryHelper;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 
@@ -68,6 +65,8 @@ public class ShpImporter
     private ShapefileDataStore      ds;
 
     private CharsetPrompt           charsetPrompt;
+    
+    private CrsPrompt               crsPrompt;
 
 
     @Override
@@ -89,6 +88,7 @@ public class ShpImporter
     @Override
     public void createPrompts( IProgressMonitor monitor ) throws Exception {
         charsetPrompt = new CharsetPrompt( site, files );
+        crsPrompt = new CrsPrompt( site, files );
     }
 
 
@@ -104,6 +104,9 @@ public class ShpImporter
 
             ds = (ShapefileDataStore)dsFactory.createNewDataStore( params );
             ds.setCharset( charsetPrompt.selection() );
+            
+            SimpleFeatureType featureType = SimpleFeatureTypeBuilder.retype(ds.getSchema(), crsPrompt.selection());
+            ds.createSchema(featureType);
             
             Query query = new Query();
             query.setMaxFeatures( 100 );
