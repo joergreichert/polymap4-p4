@@ -93,6 +93,10 @@ public class CrsPrompt {
                         return selection.getName().toString();
                     }
 
+                    @Override
+                    protected String getTooltipText() {
+                        return "EPSG Code or part thereof";
+                    }
 
                     @Override
                     protected void handleSelection( String selectedCrs ) {
