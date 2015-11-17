@@ -18,6 +18,7 @@ import static org.polymap.rhei.batik.toolkit.md.dp.dp;
 
 import java.util.EventObject;
 
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -103,7 +104,7 @@ public class StyleLabelPointPlacementPanel
             @Override
             public void widgetSelected( SelectionEvent e ) {
                 try {
-                    pointPlacementPageContainer.submit();
+                    pointPlacementPageContainer.submit(new NullProgressMonitor());
                     IStyleLabelInfo info = styleLabelInfo.get();
                     if (info.getUnitOfWork() != null && info.getUnitOfWork().isOpen()) {
                         info.getUnitOfWork().commit();

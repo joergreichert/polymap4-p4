@@ -19,6 +19,7 @@ import static org.polymap.rhei.batik.toolkit.md.dp.dp;
 import java.util.EventObject;
 import java.util.function.Consumer;
 
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -130,7 +131,7 @@ public class FontPanel
 
     private void updatePreview( FontDAO fontDao ) {
         try {
-            fontPageContainer.submit();
+            fontPageContainer.submit(new NullProgressMonitor());
             if (lblPreview != null) {
                 Display display = lblPreview.getDisplay();
                 Font font = new Font( display, fontDao.getFontData() );
@@ -153,7 +154,7 @@ public class FontPanel
             @Override
             public void widgetSelected( SelectionEvent e ) {
                 try {
-                    fontPageContainer.submit();
+                    fontPageContainer.submit(new NullProgressMonitor());
                     fontInfo.get().setColor( fontDao.getFontColor() );
                     fontInfo.get().setFontData( new FontData[] { fontDao.getFontData() } );
                     PanelPath path = getSite().getPath();

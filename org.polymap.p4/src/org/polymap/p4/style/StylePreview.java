@@ -1,7 +1,6 @@
 /*
- * polymap.org 
- * Copyright (C) 2015 individual contributors as indicated by the @authors tag. 
- * All rights reserved.
+ * polymap.org Copyright (C) 2015 individual contributors as indicated by the
+ * @authors tag. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -18,22 +17,21 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import javax.imageio.ImageIO;
-
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Label;
 import org.geotools.data.FeatureReader;
 import org.geotools.data.Query;
 import org.geotools.data.store.ContentDataStore;
@@ -43,14 +41,18 @@ import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.geotools.styling.PointSymbolizer;
 import org.geotools.styling.StyleBuilder;
 import org.geotools.styling.StyleFactory;
+import org.geotools.styling.StyledLayerDescriptor;
+import org.geotools.styling.Symbolizer;
+import org.geotools.styling.builder.StyledLayerDescriptorBuilder;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.parameter.GeneralParameterValue;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.polymap.core.data.feature.FeatureRenderProcessor2;
 import org.polymap.core.data.image.GetMapRequest;
 import org.polymap.core.data.image.ImageResponse;
@@ -61,10 +63,6 @@ import org.polymap.core.data.pipeline.PipelineProcessorConfiguration;
 import org.polymap.core.data.pipeline.ProcessorResponse;
 import org.polymap.core.data.pipeline.ResponseHandler;
 import org.polymap.p4.data.P4PipelineIncubator;
-import org.polymap.rap.openlayers.style.FillStyle;
-import org.polymap.rap.openlayers.style.StrokeStyle;
-import org.polymap.rap.openlayers.style.Style;
-import org.polymap.rap.openlayers.types.Color;
 
 import com.google.common.collect.Lists;
 import com.vividsolutions.jts.geom.LineString;
@@ -77,11 +75,8 @@ import com.vividsolutions.jts.geom.Polygon;
  */
 public class StylePreview {
 
-    public void createPreviewMap( Composite parent, SimpleStyler simpleStyler ) throws Exception {
-        Label comp = new Label( parent, SWT.NONE );
-        // comp.setBackground( Display.getDefault().getSystemColor( SWT.COLOR_CYAN )
-        // );
-        comp.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, true ) );
+    public void createPreviewMap( Composite parent, SimpleStyler simpleStyler )
+            throws Exception {
         String typeName = "stylerExample";
         ContentDataStore dataStore = null;
         switch (simpleStyler.styleIdent.get().featureType.get()) {
@@ -101,37 +96,34 @@ public class StylePreview {
                 dataStore = null;
                 break;
         }
+        CoordinateReferenceSystem crs = CRS.decode( "EPSG:3857" );
+        Canvas comp = new Canvas( parent, SWT.NONE );
+        comp.setLayoutData( new GridData( SWT.FILL, SWT.FILL, true, true ) );
         ReferencedEnvelope bounds = dataStore.getFeatureSource( typeName ).getBounds()
-                .transform( org.polymap.core.data.util.Geometries.crs( "EPSG:3857" ), false );
+                .transform( crs, false );
         P4PipelineIncubator inc = P4PipelineIncubator.forLayer( null );
         DataSourceDescription dsd = new DataSourceDescription();
         dsd.service.set( dataStore );
         dsd.resourceName.set( typeName );
         Pipeline pipeline = inc.newPipeline( FeatureRenderProcessor2.class, dsd, new PipelineProcessorConfiguration[0] );
         List<String> layers = new ArrayList<String>();
-        String layerName = "stylerLayer";
-        layers.add( layerName );
+        layers.add( typeName );
+        
+        StyledLayerDescriptorBuilder wrappedBuilder = new StyledLayerDescriptorBuilder();
+        SLDBuilder builder = new SLDBuilder(wrappedBuilder);
+        simpleStyler.fillSLD( builder, new ArrayList<AbstractStyler>() );
+        StyledLayerDescriptor style = wrappedBuilder.build();
+        
 
-        StyleFactory styleFactory = CommonFactoryFinder.getStyleFactory( null );
-        StyleBuilder styleBuilder = new StyleBuilder();
-        PointSymbolizer pointSymbolizer = styleFactory.createPointSymbolizer();
-        styleBuilder.createFeatureTypeStyle( pointSymbolizer );
+        processRequest( crs, parent, comp, bounds, pipeline, layers );
+    }
 
-        // NamedLayer layer = styleFactory.createNamedLayer();
-        // layer.setName(layerName);
-        // sld.addStyledLayer(layer);
 
-        org.geotools.styling.Style style = null;// new org.geotools.styling.Style();
-        GetMapRequest getMapRequest = new GetMapRequest( layers, "EPSG:3857", bounds, "image/png", 100, 100, -1 );
-        DepthFirstStackExecutor executer = new DepthFirstStackExecutor() {
-
-            protected DepthFirstContext createDepthFirstContext(
-                    org.polymap.core.data.pipeline.ProcessorDescription desc, int i ) {
-                DepthFirstContext depthFirstContext = super.createDepthFirstContext( desc, i );
-                depthFirstContext.put( FeatureRenderProcessor2.PROVIDED_STYLE, style );
-                return depthFirstContext;
-            }
-        };
+    private void processRequest( CoordinateReferenceSystem crs, Composite parent, Canvas comp,
+            ReferencedEnvelope bounds, Pipeline pipeline, List<String> layers ) throws Exception {
+        GetMapRequest getMapRequest = new GetMapRequest( layers, crs.getName().toString(), bounds, "image/png", 500,
+                400, -1 );
+        DepthFirstStackExecutor executer = new DepthFirstStackExecutor();
         executer.execute( pipeline, getMapRequest, new ResponseHandler() {
 
             @Override
@@ -156,22 +148,21 @@ public class StylePreview {
                     imageData.setPixels( 0, 0, data.length, data, 0 );
                 }
                 final Image swtImage = new Image( Display.getDefault(), imageData );
-                comp.setBackgroundImage( swtImage );
+                comp.addPaintListener( new PaintListener() {
+
+                    public void paintControl( PaintEvent e ) {
+                        e.gc.drawImage( swtImage, 0, 0 );
+                    }
+                } );
+
                 parent.layout();
                 BufferedImage bi2 = new BufferedImage( awtImage.getWidth( null ), awtImage.getHeight( null ),
                         BufferedImage.TYPE_INT_ARGB );
                 java.awt.Graphics g2 = bi2.getGraphics();
                 g2.drawImage( awtImage, 0, 0, null );
                 g2.dispose();
-                ImageIO.write( bi2, "png", new File( "out.png" ) );
             }
         } );
-    }
-
-
-    private Style getStyle() {
-        return new Style().fill.put( new FillStyle().color.put( new Color( 0, 0, 255, 0.1f ) ) ).stroke
-                .put( new StrokeStyle().color.put( new Color( "red" ) ).width.put( 1f ) );
     }
 
 

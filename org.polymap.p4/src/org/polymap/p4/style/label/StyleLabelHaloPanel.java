@@ -18,6 +18,7 @@ import static org.polymap.rhei.batik.toolkit.md.dp.dp;
 
 import java.util.EventObject;
 
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -96,7 +97,7 @@ public class StyleLabelHaloPanel
             @Override
             public void widgetSelected( SelectionEvent e ) {
                 try {
-                    haloPageContainer.submit();
+                    haloPageContainer.submit(new NullProgressMonitor());
                     PanelPath path = getSite().getPath();
                     getContext().closePanel( path );
                     EventManager.instance().publish( new EventObject( styleLabelInfo.get() ) );
