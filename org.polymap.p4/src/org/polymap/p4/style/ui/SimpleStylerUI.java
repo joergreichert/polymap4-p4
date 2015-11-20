@@ -133,18 +133,27 @@ public class SimpleStylerUI
 
 
     private void addIdentCallback( MdTabFolder tabFolder ) {
-        Callback<FeatureType> identCallback = ( ft ) -> {
-            if (ft == FeatureType.TEXT) {
-                tabFolder.setTabVisibility( StylerUIConstants.STYLE_STR, false );
+        Callback<FeatureType> identCallback = new Callback<FeatureType>() {
+            
+            @Override
+            public void handle(FeatureType ft) {
+                if(ft.name().equals( currentFeatureTypeProvider.get().name())) {
+                    // already handled
+                    return;
+                }
+                currentFeatureTypeProvider.set( ft );
+                if (ft == FeatureType.TEXT) {
+                    tabFolder.setTabVisibility( StylerUIConstants.STYLE_STR, false );
+                }
+                else {
+                    tabFolder.setTabVisibility( StylerUIConstants.STYLE_STR, true );
+                    tabFolder.replaceTabContent( StylerUIConstants.STYLE_STR, stylerContainerFactory
+                            .getOrCreateGeometryContainer( simpleStyler, newSimpleStylerUnitOfWork, ft ) );
+                }
+                updateUI( ft );
+                tabFolder.replaceTabContent( StylerUIConstants.LABEL_STR,
+                        stylerContainerFactory.getStyleContainers().get( StylerUIConstants.LABEL_STR ) );
             }
-            else {
-                tabFolder.setTabVisibility( StylerUIConstants.STYLE_STR, true );
-                tabFolder.replaceTabContent( StylerUIConstants.STYLE_STR, stylerContainerFactory
-                        .getOrCreateGeometryContainer( simpleStyler, newSimpleStylerUnitOfWork, ft ) );
-            }
-            updateUI( ft );
-            tabFolder.replaceTabContent( StylerUIConstants.LABEL_STR,
-                    stylerContainerFactory.getStyleContainers().get( StylerUIConstants.LABEL_STR ) );
         };
         stylerUIFactory.getIdentUI().addCallback( identCallback );
     }

@@ -57,7 +57,7 @@ public class StylerUIFactory {
             Context<IImageInfo> imageInfoInContext, Context<IColorInfo> colorInfoInContext,
             Context<IFontInfo> fontInfoInContext, Context<IStyleLabelInfo> styleLabelInfo ) {
         identUI = new StyleIdentUI( context, panelSite );
-        labelUI = new StyleLabelUI( context, panelSite, fontInfoInContext, styleLabelInfo );
+        labelUI = new StyleLabelUI( context, panelSite, fontInfoInContext, colorInfoInContext, styleLabelInfo );
         FigureLibraryInitializer figureLibraryInitializer = new FigureLibraryInitializer();
         pointUI = new StylePointUI( context, panelSite, imageInfoInContext, colorInfoInContext,
                 figureLibraryInitializer );

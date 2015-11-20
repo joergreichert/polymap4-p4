@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.runtime.event.EventManager;
 import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.model2.runtime.UnitOfWork;
+import org.polymap.p4.style.color.IColorInfo;
 import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.entities.StyleLabel;
 import org.polymap.p4.style.font.FontInfo;
@@ -81,6 +82,8 @@ public class StyleLabelUI
 
     private final Context<IFontInfo>                fontInfoInContext;
 
+    private final Context<IColorInfo>               colorInfoInContext;
+    
     private final Context<IStyleLabelInfo>          styleLabelInfo;
 
     private Supplier<StyleLabel>                    styleLabelSupplier   = null;
@@ -129,10 +132,11 @@ public class StyleLabelUI
 
 
     public StyleLabelUI( IAppContext context, IPanelSite panelSite, Context<IFontInfo> fontInfoInContext,
-            Context<IStyleLabelInfo> styleLabelInfo ) {
+            Context<IColorInfo> colorInfoInContext, Context<IStyleLabelInfo> styleLabelInfo ) {
         this.context = context;
         this.panelSite = panelSite;
         this.fontInfoInContext = fontInfoInContext;
+        this.colorInfoInContext = colorInfoInContext;
         this.styleLabelInfo = styleLabelInfo;
 
         FontInfo fontInfo = new FontInfo();

@@ -29,6 +29,7 @@ import org.polymap.recordstore.lucene.LuceneRecordStore;
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
+@SuppressWarnings("unchecked")
 public class StyleRepository {
 
     private static EntityRepository repo;

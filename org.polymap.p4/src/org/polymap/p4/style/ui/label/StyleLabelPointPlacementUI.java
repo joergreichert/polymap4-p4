@@ -1,7 +1,6 @@
 /*
- * polymap.org 
- * Copyright (C) 2015 individual contributors as indicated by the @authors tag. 
- * All rights reserved.
+ * polymap.org Copyright (C) 2015 individual contributors as indicated by the
+ * @authors tag. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -16,6 +15,7 @@ package org.polymap.p4.style.ui.label;
 
 import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.ui.ColumnLayoutFactory;
+import org.polymap.p4.style.entities.StyleCoord;
 import org.polymap.p4.style.entities.StyleLabelPointPlacement;
 import org.polymap.p4.style.ui.AbstractStylerFragmentUI;
 import org.polymap.p4.util.PropertyAdapter;
@@ -73,36 +73,71 @@ public class StyleLabelPointPlacementUI
         labelAnchorFormField = new CoordFormField( new SpinnerFormField( 0, 1, 0.1, 0.0, 1 ), new SpinnerFormField( 0,
                 1, 0.1, 0.5, 1 ) ) {
 
+            protected boolean isExpectedFieldValueType() throws Exception {
+                return site.getFieldValue() instanceof StyleCoord;
+            }
+
+            
+            protected void handleExpectedFieldValueType() throws Exception {
+                loadedValue = new Object [2];
+                loadedValue[0] = ((StyleCoord) site.getFieldValue()).x.get();
+                loadedValue[1] = ((StyleCoord) site.getFieldValue()).y.get();
+                field1.load();
+                field2.load();
+            }
+            
             @Override
             public void store() throws Exception {
-                site.setFieldValue( styleLabelPointPlacement.anchor.createValue( a -> {
-                    a.x.set( (Double) super.newValue1 );
-                    a.y.set( (Double) super.newValue2 );
-                    return a;
-                } ) );
+                field1.store();
+                field2.store();
+                StyleCoord anchor = styleLabelPointPlacement.anchor.get();
+                if(anchor == null) {
+                    anchor = styleLabelPointPlacement.anchor.createValue( null );
+                }
+                anchor.x.set( (Double) super.newValue1 );
+                anchor.y.set( (Double) super.newValue2 );
+                site.setFieldValue(anchor);
             }
         };
         site.newFormField( new PropertyAdapter( styleLabelPointPlacement.anchor ) ).label.put( "Label anchor" ).field
                 .put( labelAnchorFormField ).tooltip.put( "" ).create();
-        labelOffsetFormField = new CoordFormField( new SpinnerFormField( -128, 128, 0 ), new SpinnerFormField( -128,
-                128, 0 ) ) {
+        labelOffsetFormField = new CoordFormField( new SpinnerFormField( -128, 128, 0.1, 0, 1 ), new SpinnerFormField(
+                -128,
+                128, 0.1, 0, 1 ) ) {
 
+            protected boolean isExpectedFieldValueType() throws Exception {
+                return site.getFieldValue() instanceof StyleCoord;
+            }
+
+            
+            protected void handleExpectedFieldValueType() throws Exception {
+                loadedValue = new Object [2];
+                loadedValue[0] = ((StyleCoord) site.getFieldValue()).x.get();
+                loadedValue[1] = ((StyleCoord) site.getFieldValue()).y.get();
+                field1.load();
+                field2.load();
+            }
+            
             @Override
             public void store() throws Exception {
-                site.setFieldValue( styleLabelPointPlacement.anchor.createValue( a -> {
-                    a.x.set( (Double) super.newValue1 );
-                    a.y.set( (Double) super.newValue2 );
-                    return a;
-                } ) );
+                field1.store();
+                field2.store();
+                StyleCoord offset = styleLabelPointPlacement.offset.get();
+                if(offset == null) {
+                    offset = styleLabelPointPlacement.offset.createValue( null );
+                }
+                offset.x.set( (Double) super.newValue1 );
+                offset.y.set( (Double) super.newValue2 );
+                site.setFieldValue(offset);
             }
         };
 
         site.newFormField( new PropertyAdapter( styleLabelPointPlacement.offset ) ).label.put( "Label offset" ).field
                 .put( labelOffsetFormField ).tooltip.put( "" ).create();
-        labelRotationFormField = new SpinnerFormField( -360, 360, 0 );
+        labelRotationFormField = new SpinnerFormField( -360, 360, 0.1, 0, 1 );
         site.newFormField( new PropertyAdapter( styleLabelPointPlacement.rotation ) ).label.put( "Label rotation" ).field
                 .put( labelRotationFormField ).tooltip.put( "" ).create();
-        labelMaxDisplacementFormField = new SpinnerFormField( 0, 30, 0 );
+        labelMaxDisplacementFormField = new SpinnerFormField( 0, 30, 0.1, 0, 1 );
         site.newFormField( new PropertyAdapter( styleLabelPointPlacement.maxDisplacement ) ).label
                 .put( "Label max displacement" ).field.put( labelMaxDisplacementFormField ).tooltip.put(
                 "The allowed maximum displacement of the label from "

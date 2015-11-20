@@ -1,7 +1,7 @@
 /*
- * polymap.org 
- * Copyright (C) 2015 individual contributors as indicated by the @authors tag. 
- * All rights reserved.
+ * polymap.org Copyright (C) 2015 individual contributors as indicated by the
+ * 
+ * @authors tag. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -20,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -46,6 +47,9 @@ import org.geotools.util.Version;
 import org.polymap.core.runtime.Callback;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
+import org.polymap.model2.query.Expressions;
+import org.polymap.model2.runtime.UnitOfWork;
+import org.polymap.p4.style.entities.StyleIdent;
 import org.polymap.rhei.batik.toolkit.md.MdListViewer;
 import org.polymap.rhei.batik.toolkit.md.MdToolkit;
 
@@ -56,25 +60,25 @@ import org.polymap.rhei.batik.toolkit.md.MdToolkit;
 public class StylerList
         extends Composite {
 
-    private Button                               newButton, loadButton, saveButton, deleteButton;
+    private Button                                  newButton, loadButton, saveButton, deleteButton;
 
-    private List<SimpleStyler>                   styles = new ArrayList<SimpleStyler>();
+    private List<SimpleStyler>                      styles = new ArrayList<SimpleStyler>();
 
-    private MdListViewer                         styleList;
+    private MdListViewer                            styleList;
 
-    private Text                                 styleListFilter;
+    private Text                                    styleListFilter;
 
-    private final Function<Boolean,SimpleStyler> newCallback;
+    private final Function<UnitOfWork,SimpleStyler> newCallback;
 
-    private final Supplier<SimpleStyler>         saveSupplier;
+    private final Supplier<SimpleStyler>            saveSupplier;
 
-    private final Callback<SimpleStyler>         loadCallback;
+    private final Callback<SimpleStyler>            loadCallback;
 
-    private final Supplier<Boolean>              deleteCallback;
+    private final Supplier<Boolean>                 deleteCallback;
 
 
     public StylerList( Composite parent, MdToolkit tk, int style,
-            Function<Boolean,SimpleStyler> createNewSimpleStylerCallback, Supplier<SimpleStyler> saveSupplier,
+            Function<UnitOfWork,SimpleStyler> createNewSimpleStylerCallback, Supplier<SimpleStyler> saveSupplier,
             Callback<SimpleStyler> loadCallback, Supplier<Boolean> deleteCallback ) {
         super( parent, style );
         setLayout( FormLayoutFactory.defaults().spacing( dp( 16 ).pix() ).create() );
@@ -118,10 +122,10 @@ public class StylerList
                             return name != null && name.startsWith( filterText );
                         }
                     }
-                    else {
-                        return false;
-                    }
-                } ).collect( Collectors.toList() );
+                        else {
+                            return false;
+                        }
+                    } ).collect( Collectors.toList() );
                 styleList.setInput( newInput );
             }
 
@@ -201,20 +205,39 @@ public class StylerList
                 .getResourceAsStream( "resources/slds/sld.list" ) ) )) {
             String line;
             Version styleVersion = new Version( "1.0.0" );
-            // TODO: SLDHandler cannot be resolved on classpath! 
-//            SLDHandler sldHandler = new SLDHandler();
-//            while ((line = br.readLine()) != null) {
-//                try (InputStreamReader reader = new InputStreamReader( getClass().getClassLoader().getResourceAsStream(
-//                        "resources/" + line ) )) {
-//                    StyledLayerDescriptor sld = sldHandler.parse( reader, styleVersion, null, null );
-//                    SimpleStyler styler = newCallback.apply(false);
-//                    styler.fromSLD( sld );
-//                    styles.add( styler );
-//                }
-//                catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
+            SLDHandler sldHandler = new SLDHandler();
+            UnitOfWork unitOfWork = null;
+            while ((line = br.readLine()) != null) {
+                try (InputStreamReader reader = new InputStreamReader( getClass().getClassLoader().getResourceAsStream(
+                        "resources/" + line ) )) {
+                    StyledLayerDescriptor sld = sldHandler.parse( reader, styleVersion, null, null );
+                    unitOfWork = StyleRepository.newUnitOfWork();
+                    String name = sld.getName();
+                    if(name == null && sld.getStyledLayers().length > 0) {
+                        name = sld.getStyledLayers()[0].getName();    
+                    }
+                    SimpleStyler styler = null;
+                    if(name != null) {
+                        Iterator<SimpleStyler> resultIter = unitOfWork
+                                .query( SimpleStyler.class )
+                                .where( Expressions.the( SimpleStyler.TYPE.styleIdent,
+                                        Expressions.eq( StyleIdent.TYPE.name, name ))).execute().iterator();
+                        if (resultIter.hasNext()) {
+                            styler = resultIter.next();
+                        }
+                    }
+                    if(styler == null) {
+                        styler = newCallback.apply( unitOfWork );
+                        styler.fromSLD( sld );
+                        unitOfWork.commit();
+                        unitOfWork.close();
+                    }
+                    styles.add( styler );
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -276,7 +299,7 @@ public class StylerList
         newButton.addSelectionListener( new SelectionAdapter() {
 
             public void widgetSelected( SelectionEvent e ) {
-                newCallback.apply(true);
+                newCallback.apply( null );
             }
         } );
     }

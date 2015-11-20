@@ -19,6 +19,7 @@ import org.polymap.model2.DefaultValue;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
 import org.polymap.p4.style.SLDBuilder;
+import org.polymap.p4.style.SimpleStyler;
 import org.polymap.p4.style.sld.from.StyleIdentFromSLDVisitor;
 import org.polymap.p4.style.sld.to.StyleIdentToSLDVisitor;
 
@@ -33,6 +34,9 @@ import org.polymap.p4.style.sld.to.StyleIdentToSLDVisitor;
  */
 public class StyleIdent
         extends AbstractSLDModel {
+
+    public static StyleIdent TYPE;
+
 
     @DefaultValue("MyStyle")
     public Property<String>      name;

@@ -24,7 +24,9 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
+import org.polymap.core.runtime.event.EventManager;
 import org.polymap.core.ui.ColumnLayoutFactory;
+import org.polymap.p4.style.color.ColorInfo;
 import org.polymap.p4.style.color.ColorPanel;
 import org.polymap.p4.style.color.IColorInfo;
 import org.polymap.rhei.batik.Context;
@@ -74,6 +76,11 @@ public class FontPage
         this.fontDAO = fontDAO;
         this.colorInfoInContext = colorInfoInContext;
         this.callback = callback;
+        
+        ColorInfo colorInfo = new ColorInfo();
+        colorInfoInContext.set( colorInfo );
+        
+        EventManager.instance().subscribe( colorInfo, ev -> ev.getSource() instanceof IColorInfo );
     }
 
 
@@ -136,6 +143,8 @@ public class FontPage
         };
         if (colorInfoInContext.get().getColor() != null) {
             fontColorField.setValue( colorInfoInContext.get().getColor() );
+        } else if(getFontDao().getFontColor() != null) {
+            fontColorField.setValue( getFontDao().getFontColor() );
         }
         site.newFormField( new BeanPropertyAdapter( getFontDao(), FontDAO.FONT_COLOR ) ).label.put( "Font color" ).field
                 .put( fontColorField ).tooltip.put( "" ).create();

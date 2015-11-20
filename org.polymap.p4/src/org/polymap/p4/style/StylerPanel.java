@@ -1,7 +1,6 @@
 /*
- * polymap.org 
- * Copyright (C) 2015 individual contributors as indicated by the @authors tag. 
- * All rights reserved.
+ * polymap.org Copyright (C) 2015 individual contributors as indicated by the
+ * @authors tag. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -31,7 +30,6 @@ import org.polymap.p4.P4Plugin;
 import org.polymap.p4.map.ProjectMapPanel;
 import org.polymap.p4.style.color.IColorInfo;
 import org.polymap.p4.style.entities.FeatureType;
-import org.polymap.p4.style.entities.StyleComposite;
 import org.polymap.p4.style.entities.StyleFeature;
 import org.polymap.p4.style.font.IFontInfo;
 import org.polymap.p4.style.icon.IImageInfo;
@@ -66,9 +64,9 @@ public class StylerPanel
     @Scope(P4Plugin.Scope)
     private Context<IStyleLabelInfo>    styleLabelInfo;
 
-    private UnitOfWork newSimpleStylerUnitOfWork;
+    private UnitOfWork                  newSimpleStylerUnitOfWork;
 
-    private SimpleStyler simpleStyler;
+    private SimpleStyler                simpleStyler;
 
 
     @Override
@@ -114,12 +112,7 @@ public class StylerPanel
             feature.styleComposite.createValue( null );
             return feature;
         } );
-        StyleComposite styleComposite = styleFeature.styleComposite.createValue( null );
-        // styleComposite.styleLabels.createElement( null );
-        // styleComposite.stylePoints.createElement( null );
-        // styleComposite.styleLines.createElement( null );
-        // styleComposite.stylePolygons.createElement( null );
-
+        styleFeature.styleComposite.createValue( null );
         return simpleStyler;
     }
 
@@ -132,23 +125,33 @@ public class StylerPanel
         Composite stylerComposite = simpleStylerUI.createContents( parent );
         FormDataFactory.on( stylerComposite ).left( 0 ).right( 100 );
 
-        Function<Boolean,SimpleStyler> createNewSimpleStylerCallback = ( Boolean resetUI ) -> {
-            simpleStylerUI.resetUI();
-            if (newSimpleStylerUnitOfWork != null) {
-                if (newSimpleStylerUnitOfWork.isOpen()) {
-                    // TODO ask for save current styler, if dirty, before closing
-                    // unit (= transaction)
-                    newSimpleStylerUnitOfWork.close();
-                }
-                SimpleStyler newSimpleStyler = null;
-                try {
+        // resetUI is used to distinguish between loading the list of predefined styles (resetUI == false)
+        // and triggered by new button (resetUI == true), i.e. the current formula is cleared
+        Function<UnitOfWork,SimpleStyler> createNewSimpleStylerCallback = ( UnitOfWork unitOfWork ) -> {
+            // units of work
+            if (unitOfWork == null) {
+                // TODO: have reload complete UI, so that all sub panel get new nested
+                simpleStylerUI.resetUI();
+                if (newSimpleStylerUnitOfWork != null) {
+                    if (newSimpleStylerUnitOfWork.isOpen()) {
+                        // TODO ask for save current styler, if dirty, before closing
+                        // unit (= transaction)
+                        newSimpleStylerUnitOfWork.close();
+                    }
                     newSimpleStylerUnitOfWork = StyleRepository.newUnitOfWork();
-                    newSimpleStyler = createEmptySimpleStyler( newSimpleStylerUnitOfWork );
-                    simpleStyler = newSimpleStyler;
+                    unitOfWork = newSimpleStylerUnitOfWork;
                 }
-                catch (IOException e) {
-                    e.printStackTrace();
-                }
+            }
+
+            SimpleStyler newSimpleStyler = null;
+            try {
+                newSimpleStyler = createEmptySimpleStyler( unitOfWork );
+                unitOfWork.commit();
+                simpleStyler = newSimpleStyler;
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+                unitOfWork.rollback();
             }
             return simpleStyler;
         };
@@ -167,11 +170,14 @@ public class StylerPanel
             return null;
         };
         Callback<SimpleStyler> loadCallback = ( SimpleStyler newStyler ) -> {
+            // TODO: have reload complete UI, so that all sub panel get new nested
+            // units of work
             if (newSimpleStylerUnitOfWork != null) {
                 if (newSimpleStylerUnitOfWork.isOpen()) {
                     // TODO ask for save current styler, if dirty, before closing
                     // unit (= transaction)
                     newSimpleStylerUnitOfWork.close();
+                    newSimpleStylerUnitOfWork = StyleRepository.newUnitOfWork();
                 }
                 newSimpleStylerUnitOfWork.entity( newStyler );
             }

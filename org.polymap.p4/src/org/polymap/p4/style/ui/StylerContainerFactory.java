@@ -1,7 +1,7 @@
 /*
- * polymap.org 
- * Copyright (C) 2015 individual contributors as indicated by the @authors tag. 
- * All rights reserved.
+ * polymap.org Copyright (C) 2015 individual contributors as indicated by the
+ * 
+ * @authors tag. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -56,9 +56,10 @@ public class StylerContainerFactory {
     private UnitOfWork                                     newGeometryUnitOfWork = null;
 
     private final StylerUIFactory                          stylerUIFactory;
-    
+
+
     public StylerContainerFactory( SimpleStyler simpleStyler, MdToolkit mdToolkit, StylerPageFactory stylerPageFactory,
-            CurrentFeatureTypeProvider currentFeatureTypeProvider, StylerUIFactory stylerUIFactory) {
+            CurrentFeatureTypeProvider currentFeatureTypeProvider, StylerUIFactory stylerUIFactory ) {
         this.mdToolkit = mdToolkit;
         this.stylerPageFactory = stylerPageFactory;
         this.currentFeatureTypeProvider = currentFeatureTypeProvider;
@@ -74,10 +75,12 @@ public class StylerContainerFactory {
     }
 
 
-    public void createStyleLabelUI(SimpleStyler simpleStyler) {
+    public void createStyleLabelUI( SimpleStyler simpleStyler ) {
         StyleFeature styleFeature = simpleStyler.styleFeatures.iterator().next();
         StyleComposite styleComposite = styleFeature.styleComposite.get();
-        Supplier<StyleLabel> styleLabelFunction = ( ) -> styleComposite.styleLabels.createElement( null );
+        Supplier<StyleLabel> styleLabelFunction = ( ) -> styleComposite.styleLabels.isEmpty() ? styleComposite.styleLabels
+                .createElement( null )
+                : styleComposite.styleLabels.iterator().next();
         createStyleLabelUI( styleLabelFunction );
     }
 
@@ -99,7 +102,9 @@ public class StylerContainerFactory {
     public void createStylePointUI( SimpleStyler simpleStyler, UnitOfWork unitOfWork ) {
         StyleFeature styleFeature = simpleStyler.styleFeatures.iterator().next();
         StyleComposite styleComposite = styleFeature.styleComposite.get();
-        Supplier<StylePoint> stylePointFunction = ( ) -> styleComposite.stylePoints.createElement( null );
+        Supplier<StylePoint> stylePointFunction = ( ) -> styleComposite.stylePoints.isEmpty() ? styleComposite.stylePoints
+                .createElement( null )
+                : styleComposite.stylePoints.iterator().next();
         String label = StylerUIConstants.STYLE_STR;
         DefaultFormPage page = stylerPageFactory.createStylePointPage( stylePointFunction );
         registerBatikContainer( page, label, currentFeatureTypeProvider.get() );
@@ -110,7 +115,9 @@ public class StylerContainerFactory {
     public void createStyleLineUI( SimpleStyler simpleStyler, UnitOfWork unitOfWork ) {
         StyleFeature styleFeature = simpleStyler.styleFeatures.iterator().next();
         StyleComposite styleComposite = styleFeature.styleComposite.get();
-        Supplier<StyleLine> styleLineFunction = ( ) -> styleComposite.styleLines.createElement( null );
+        Supplier<StyleLine> styleLineFunction = ( ) ->
+            styleComposite.styleLines.isEmpty() ? styleComposite.styleLines
+                        .createElement( null ) : styleComposite.styleLines.iterator().next();
         String label = StylerUIConstants.STYLE_STR;
         DefaultFormPage page = stylerPageFactory.createStyleLinePage( styleLineFunction );
         registerBatikContainer( page, label, currentFeatureTypeProvider.get() );
@@ -121,7 +128,9 @@ public class StylerContainerFactory {
     public void createStylePolygonUI( SimpleStyler simpleStyler, UnitOfWork unitOfWork ) {
         StyleFeature styleFeature = simpleStyler.styleFeatures.iterator().next();
         StyleComposite styleComposite = styleFeature.styleComposite.get();
-        Supplier<StylePolygon> stylePolygonFunction = ( ) -> styleComposite.stylePolygons.createElement( null );
+        Supplier<StylePolygon> stylePolygonFunction = ( ) -> styleComposite.stylePolygons.isEmpty() ? styleComposite.stylePolygons
+                .createElement( null )
+                : styleComposite.stylePolygons.iterator().next();
         String label = StylerUIConstants.STYLE_STR;
         DefaultFormPage page = stylerPageFactory.createStylePolygonPage( stylePolygonFunction );
         registerBatikContainer( page, label, currentFeatureTypeProvider.get() );
@@ -153,7 +162,8 @@ public class StylerContainerFactory {
     }
 
 
-    public Function<Composite,Composite> getOrCreateGeometryContainer( SimpleStyler simpleStyler, UnitOfWork newSimpleStylerUnitOfWork,
+    public Function<Composite,Composite> getOrCreateGeometryContainer( SimpleStyler simpleStyler,
+            UnitOfWork newSimpleStylerUnitOfWork,
             FeatureType featureType ) {
         Function<Composite,Composite> containerFunction = geometryContainers.get( featureType );
         if (containerFunction == null) {

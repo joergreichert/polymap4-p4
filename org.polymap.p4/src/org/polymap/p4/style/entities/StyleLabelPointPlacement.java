@@ -46,4 +46,52 @@ public class StyleLabelPointPlacement
 
     @Nullable
     public Property<Double>     maxDisplacement;
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((anchor == null) ? 0 : anchor.hashCode());
+        result = prime * result + ((maxDisplacement == null) ? 0 : maxDisplacement.hashCode());
+        result = prime * result + ((offset == null) ? 0 : offset.hashCode());
+        result = prime * result + ((rotation == null) ? 0 : rotation.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if(obj == null) {
+            return false;
+        }
+        if (this == obj)
+            return true;
+        if (getClass() != obj.getClass())
+            return false;
+        StyleLabelPointPlacement other = (StyleLabelPointPlacement)obj;
+        if (anchor == null) {
+            if (other.anchor != null)
+                return false;
+        }
+        else if (!anchor.equals( other.anchor ))
+            return false;
+        if (maxDisplacement == null) {
+            if (other.maxDisplacement != null)
+                return false;
+        }
+        else if (!maxDisplacement.equals( other.maxDisplacement ))
+            return false;
+        if (offset == null) {
+            if (other.offset != null)
+                return false;
+        }
+        else if (!offset.equals( other.offset ))
+            return false;
+        if (rotation == null) {
+            if (other.rotation != null)
+                return false;
+        }
+        else if (!rotation.equals( other.rotation ))
+            return false;
+        return true;
+    }
 }

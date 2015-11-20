@@ -80,6 +80,8 @@ public class StyleLabelPointPlacementPanel
                 StyleLabelPointPlacement pointPlacement = null;
                 if (pointPlacementProp.get() == null) {
                     pointPlacement = pointPlacementProp.createValue( null );
+                } else {
+                    pointPlacement = pointPlacementProp.get();
                 }
                 ui.setModel( pointPlacement );
                 ui.createContents( formSite );

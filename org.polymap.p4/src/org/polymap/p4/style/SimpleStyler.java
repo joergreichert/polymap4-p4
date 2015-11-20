@@ -33,6 +33,8 @@ import org.polymap.p4.style.entities.StyleIdent;
 public class SimpleStyler
         extends AbstractStyler {
 
+    public static SimpleStyler TYPE;
+
     public Property<StyleIdent>             styleIdent;
 
     public CollectionProperty<StyleFeature> styleFeatures;

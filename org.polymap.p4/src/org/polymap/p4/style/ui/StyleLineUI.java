@@ -138,7 +138,7 @@ public class StyleLineUI
             StyleLineUI borderUI = new StyleLineUI( context, panelSite, imageInfoInContext, colorInfoInContext );
             borderUI.setBorder( true );
             borderUI.setUnitOfWork( styleLineUnitOfWork.newUnitOfWork() );
-            borderUI.setModelFunction( () -> styleLine.border.get() );
+            borderUI.setModelFunction( () -> styleLine.border.get() == null ? styleLine.border.createValue( null ) : styleLine.border.get() );
             borderUI.createContents( site );
         }
         return site.getPageBody();
