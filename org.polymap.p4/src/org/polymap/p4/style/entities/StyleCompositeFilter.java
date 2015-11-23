@@ -1,5 +1,6 @@
 /*
  * polymap.org Copyright (C) 2015 individual contributors as indicated by the
+ * 
  * @authors tag. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
@@ -13,35 +14,19 @@
  */
 package org.polymap.p4.style.entities;
 
-import org.geotools.styling.StyledLayerDescriptor;
 import org.polymap.model2.CollectionProperty;
 import org.polymap.model2.Property;
-import org.polymap.p4.style.SLDBuilder;
-import org.polymap.p4.style.sld.from.StyleFeatureFromSLDVisitor;
-import org.polymap.p4.style.sld.to.StyleFeatureToSLDVisitor;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public class StyleFeature
-        extends AbstractStyleSymbolizer {
+public class StyleCompositeFilter
+        extends AbstractStyleFilter {
 
-    public CollectionProperty<StyleZoomConfiguration>   zoomConfigurations;
+    public Property<String>                         predicate;
 
-    public CollectionProperty<StyleFilterConfiguration> filterConfigurations;
+    public CollectionProperty<StyleFilter>          simpleFilters;
 
-    public Property<StyleComposite>                     styleComposite;
-
-
-    @Override
-    public void fromSLD( StyledLayerDescriptor style ) {
-        new StyleFeatureFromSLDVisitor( this ).visit( style );
-    }
-
-
-    @Override
-    public void fillSLD( SLDBuilder builder ) {
-        new StyleFeatureToSLDVisitor( this ).fillSLD( builder );
-    }
+    public CollectionProperty<StyleCompositeFilter> complexFilters;
 }

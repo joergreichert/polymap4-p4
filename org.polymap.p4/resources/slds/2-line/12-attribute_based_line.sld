@@ -21,7 +21,7 @@
           <LineSymbolizer>
             <Stroke>
               <CssParameter name="stroke">#009933</CssParameter>
-              <CssParameter name="stroke-width">2</CssParameter>
+              <CssParameter name="stroke-width">2.0</CssParameter>
             </Stroke>
           </LineSymbolizer>
         </Rule>
@@ -38,7 +38,7 @@
           <LineSymbolizer>
             <Stroke>
               <CssParameter name="stroke">#0055CC</CssParameter>
-              <CssParameter name="stroke-width">3</CssParameter>
+              <CssParameter name="stroke-width">3.0</CssParameter>
             </Stroke>
           </LineSymbolizer>
         </Rule>
@@ -55,7 +55,7 @@
           <LineSymbolizer>
             <Stroke>
               <CssParameter name="stroke">#FF0000</CssParameter>
-              <CssParameter name="stroke-width">6</CssParameter>
+              <CssParameter name="stroke-width">6.0</CssParameter>
             </Stroke>
           </LineSymbolizer>
         </Rule>

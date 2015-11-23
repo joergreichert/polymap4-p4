@@ -1,7 +1,6 @@
 /*
- * polymap.org 
- * Copyright (C) 2015 individual contributors as indicated by the @authors tag. 
- * All rights reserved.
+ * polymap.org Copyright (C) 2015 individual contributors as indicated by the
+ * @authors tag. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -15,11 +14,10 @@
 package org.polymap.p4.style.sld.to;
 
 import org.geotools.styling.builder.FeatureTypeStyleBuilder;
-import org.geotools.styling.builder.RuleBuilder;
 import org.polymap.p4.style.SLDBuilder;
 import org.polymap.p4.style.entities.StyleFeature;
-import org.polymap.p4.style.entities.StyleZoomConfiguration;
 import org.polymap.p4.style.sld.to.helper.StyleCompositeToSLDHelper;
+import org.polymap.p4.style.sld.to.helper.StyleFilterToSLDHelper;
 import org.polymap.p4.style.sld.to.helper.StyleZoomToSLDHelper;
 
 /**
@@ -42,7 +40,9 @@ public class StyleFeatureToSLDVisitor
         FeatureTypeStyleBuilder featureTypeStyleBuilder = singletonFeatureTypeStyle( builder );
         styleFeature.zoomConfigurations.forEach( zoomConfiguration -> new StyleZoomToSLDHelper()
                 .handleZoomConfiguration( zoomConfiguration, builder, featureTypeStyleBuilder ) );
+        styleFeature.filterConfigurations.forEach( filterConfiguration -> new StyleFilterToSLDHelper()
+                .handleFilterConfiguration( filterConfiguration, builder, featureTypeStyleBuilder ) );
         new StyleCompositeToSLDHelper( styleFeature.styleComposite.get() ).fillSLD( builder,
-                () -> featureTypeStyleBuilder.rule() );
+                ( ) -> featureTypeStyleBuilder.rule() );
     }
 }

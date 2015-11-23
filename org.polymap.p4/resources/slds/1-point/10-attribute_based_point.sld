@@ -27,7 +27,7 @@
                   <CssParameter name="fill">#0033CC</CssParameter>
                 </Fill>
               </Mark>
-              <Size>8</Size>
+              <Size>8.0</Size>
             </Graphic>
           </PointSymbolizer>
         </Rule>
@@ -54,7 +54,7 @@
                   <CssParameter name="fill">#0033CC</CssParameter>
                 </Fill>
               </Mark>
-              <Size>12</Size>
+              <Size>12.0</Size>
             </Graphic>
           </PointSymbolizer>
         </Rule>
@@ -75,7 +75,7 @@
                   <CssParameter name="fill">#0033CC</CssParameter>
                 </Fill>
               </Mark>
-              <Size>16</Size>
+              <Size>16.0</Size>
             </Graphic>
           </PointSymbolizer>
         </Rule>
