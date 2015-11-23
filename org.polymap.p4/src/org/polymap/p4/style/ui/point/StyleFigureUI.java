@@ -1,7 +1,7 @@
 /*
- * polymap.org 
- * Copyright (C) 2015 individual contributors as indicated by the @authors tag. 
- * All rights reserved.
+ * polymap.org Copyright (C) 2015 individual contributors as indicated by the
+ * 
+ * @authors tag. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -12,7 +12,7 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  */
-package org.polymap.p4.style.ui;
+package org.polymap.p4.style.ui.point;
 
 import org.eclipse.rap.rwt.service.ServerPushSession;
 import org.eclipse.swt.graphics.RGB;
@@ -22,12 +22,14 @@ import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.p4.style.color.ColorInfo;
 import org.polymap.p4.style.color.ColorPanel;
 import org.polymap.p4.style.color.IColorInfo;
+import org.polymap.p4.style.entities.StyleColor;
 import org.polymap.p4.style.entities.StyleFigure;
 import org.polymap.p4.style.icon.AbstractImageLibraryInitializer;
 import org.polymap.p4.style.icon.IImageInfo;
 import org.polymap.p4.style.icon.ImageHelper;
 import org.polymap.p4.style.icon.ImageInfo;
 import org.polymap.p4.style.icon.ImagePanel;
+import org.polymap.p4.style.ui.AbstractStylerFragmentUI;
 import org.polymap.p4.util.PropertyAdapter;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IAppContext;
@@ -121,13 +123,30 @@ public class StyleFigureUI
         if (colorInfoInContext.get().getColor() != null) {
             backgroundFormField.setValue( colorInfoInContext.get().getColor() );
         }
-        backgroundFormEnabledField = new EnablableFormField( new CheckboxFormField(), backgroundFormField );
+        backgroundFormEnabledField = new EnablableFormField( new CheckboxFormField(), backgroundFormField ) {
+
+            public void store() throws Exception {
+                if (checkboxValue instanceof Boolean && (Boolean)checkboxValue) {
+                    StyleColor styleColor = styleFigure.markerFill.get();
+                    RGB rgb = (RGB) actualValue;
+                    if (styleColor == null) {
+                        styleColor = styleFigure.markerFill.createValue( sc -> {
+                            sc.red.set( rgb.red );
+                            sc.green.set( rgb.green );
+                            sc.blue.set( rgb.blue );
+                            return sc;
+                        } );
+                    }
+                    this.site.setFieldValue( styleColor );
+                }
+            }
+        };
         site.newFormField( new PropertyAdapter( styleFigure.markerFill ) ).label.put( "Marker fill" ).field
                 .put( backgroundFormEnabledField ).tooltip.put( "" ).create();
         markerTransparencyField = new SpinnerFormField( 0, 1, 0.1, 1, 1 );
         site.newFormField( new PropertyAdapter( styleFigure.markerTransparency ) ).label.put( "Marker transparency" ).field
                 .put( markerTransparencyField ).tooltip.put( "" ).create();
-        markerStrokeSizeField = new SpinnerFormField( 0, 32, 1 );
+        markerStrokeSizeField = new SpinnerFormField( 0, 32, 0.1, 1, 1 );
         site.newFormField( new PropertyAdapter( styleFigure.markerStrokeSize ) ).label.put( "Marker border size" ).field
                 .put( markerStrokeSizeField ).tooltip.put( "" ).create();
         markerStrokeColorField = new ColorFormField();
@@ -191,20 +210,20 @@ public class StyleFigureUI
                 }
             }
             else if (ev.getSource() == markerTransparencyField) {
-                boolean markerIsVisible = ev.getNewFieldValue() instanceof Integer
-                        && ((Integer)ev.getNewFieldValue()).intValue() > 0;
+                boolean markerIsVisible = ev.getNewFieldValue() instanceof Double
+                        && ((Double)ev.getNewFieldValue()).intValue() > 0;
                 // iconFormField.setEnabled( markerIsVisible );
                 backgroundFormEnabledField.setEnabled( markerIsVisible );
             }
             else if (ev.getSource() == markerStrokeSizeField) {
-                boolean strokeIsVisible = ev.getNewFieldValue() instanceof Integer
-                        && ((Integer)ev.getNewFieldValue()).intValue() > 0;
+                boolean strokeIsVisible = ev.getNewFieldValue() instanceof Double
+                        && ((Double)ev.getNewFieldValue()).intValue() > 0;
                 markerStrokeColorField.setEnabled( strokeIsVisible );
                 markerStrokeTransparencyField.setEnabled( strokeIsVisible );
             }
             else if (ev.getSource() == markerStrokeTransparencyField) {
-                boolean strokeIsVisible = ev.getNewFieldValue() instanceof Integer
-                        && ((Integer)ev.getNewFieldValue()).intValue() > 0;
+                boolean strokeIsVisible = ev.getNewFieldValue() instanceof Double
+                        && ((Double)ev.getNewFieldValue()).intValue() > 0;
                 markerStrokeSizeField.setEnabled( strokeIsVisible );
                 markerStrokeColorField.setEnabled( strokeIsVisible );
             }

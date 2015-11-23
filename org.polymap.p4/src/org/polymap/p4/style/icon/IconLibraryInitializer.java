@@ -32,17 +32,17 @@ public class IconLibraryInitializer
 
     protected void fillPaths( List<String> names, List<String> paths ) {
         addToImageLibrary(
-                names.get( 1 ),
+                names.get( 0 ),
                 "simple-icon-places.lst",
                 "<a href=\"http://www.flaticon.com/packs/simpleicon-places/\">SimpleIcons Places</a>, designed by <a href=\"http://freepik.com\">freepik</a>",
                 paths );
         addToImageLibrary(
-                names.get( 2 ),
+                names.get( 1 ),
                 "pin-of-maps.lst",
                 "<a href=\"http://www.flaticon.com/packs/pins-of-maps/\">Pin of maps</a>, designed by <a href=\"http://freepik.com\">freepik</a>",
                 paths );
         addToImageLibrary(
-                names.get( 3 ),
+                names.get( 2 ),
                 "mapzone_maki.lst",
                 "<a href=\"https://github.com/mapbox/maki\">Maki icons</a>, designed by <a href=\"http://mapbox.com/\">Mapbox</a>",
                 paths );

@@ -1,7 +1,7 @@
 /*
- * polymap.org 
- * Copyright (C) 2015 individual contributors as indicated by the @authors tag. 
- * All rights reserved.
+ * polymap.org Copyright (C) 2015 individual contributors as indicated by the
+ * 
+ * @authors tag. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -12,7 +12,7 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  */
-package org.polymap.p4.style.label;
+package org.polymap.p4.style.point;
 
 import static org.polymap.rhei.batik.toolkit.md.dp.dp;
 
@@ -29,8 +29,11 @@ import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.model2.Property;
 import org.polymap.p4.P4Plugin;
-import org.polymap.p4.style.entities.StyleLabelLinePlacement;
-import org.polymap.p4.style.ui.label.StyleLabelLinePlacementUI;
+import org.polymap.p4.style.color.IColorInfo;
+import org.polymap.p4.style.entities.StyleFigure;
+import org.polymap.p4.style.icon.FigureLibraryInitializer;
+import org.polymap.p4.style.icon.IImageInfo;
+import org.polymap.p4.style.ui.point.StyleFigureUI;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.DefaultPanel;
 import org.polymap.rhei.batik.PanelIdentifier;
@@ -45,24 +48,30 @@ import org.polymap.rhei.form.batik.BatikFormContainer;
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public class StyleLabelLinePlacementPanel
+public class StyleFigurePanel
         extends DefaultPanel {
 
-    public static final PanelIdentifier ID = PanelIdentifier.parse( "line_placement" );
+    public static final PanelIdentifier ID                   = PanelIdentifier.parse( "style_figure" );
 
     private MdToolkit                   toolkit;
 
     @Scope(P4Plugin.Scope)
-    private Context<IStyleLabelInfo>    styleLabelInfo;
+    private Context<IStylePointInfo>    stylePointInfo;
 
-    private DefaultFormPage             linePlacementPage;
+    @Scope(P4Plugin.Scope)
+    private Context<IImageInfo>         imageInfo;
 
-    private BatikFormContainer          linePlacementPageContainer;
+    @Scope(P4Plugin.Scope)
+    private Context<IColorInfo>         colorInfo;
+
+    private DefaultFormPage             styleFigurePage;
+
+    private BatikFormContainer          styleFigurePageContainer;
 
 
     @Override
     public void createContents( Composite panelBody ) {
-        getSite().setTitle( "Style Label Line Placement" );
+        getSite().setTitle( "Marker Figure" );
         toolkit = (MdToolkit)getSite().toolkit();
         panelBody.setLayout( FormLayoutFactory.defaults().spacing( dp( 16 ).pix() ).create() );
         createControls( panelBody );
@@ -70,25 +79,27 @@ public class StyleLabelLinePlacementPanel
 
 
     private void createControls( Composite parent ) {
-        StyleLabelLinePlacementUI ui = new StyleLabelLinePlacementUI( getContext(), getSite() );
-        linePlacementPage = new DefaultFormPage() {
+        FigureLibraryInitializer figureLibraryInitializer = new FigureLibraryInitializer();
+        StyleFigureUI ui = new StyleFigureUI( getContext(), getSite(), imageInfo,
+                colorInfo, figureLibraryInitializer );
+        styleFigurePage = new DefaultFormPage() {
 
             @Override
             public void createFormContents( IFormPageSite formSite ) {
-                IStyleLabelInfo info = styleLabelInfo.get();
-                Property<StyleLabelLinePlacement> linePlacementProp = info.getStyleLabel().linePlacement;
-                StyleLabelLinePlacement linePlacement = null;
-                if(linePlacementProp.get() == null) {
-                    linePlacement = linePlacementProp.createValue( null );
+                IStylePointInfo info = stylePointInfo.get();
+                Property<StyleFigure> markerFigureProp = info.getStylePoint().markerFigure;
+                StyleFigure styleFigure = markerFigureProp.get();
+                if (styleFigure == null) {
+                    styleFigure = markerFigureProp.createValue( null );
                 }
-                ui.setModel( linePlacement );
+                ui.setModel( styleFigure );
                 ui.createContents( formSite );
             }
         };
-        linePlacementPageContainer = new BatikFormContainer( linePlacementPage );
+        styleFigurePageContainer = new BatikFormContainer( styleFigurePage );
         Composite formContainer = toolkit.createComposite( parent, SWT.NONE );
 
-        linePlacementPageContainer.createContents( formContainer );
+        styleFigurePageContainer.createContents( formContainer );
 
         Button applyButton = createApplyButton( parent );
 
@@ -104,10 +115,10 @@ public class StyleLabelLinePlacementPanel
             @Override
             public void widgetSelected( SelectionEvent e ) {
                 try {
-                    linePlacementPageContainer.submit(new NullProgressMonitor());
+                    styleFigurePageContainer.submit( new NullProgressMonitor() );
                     PanelPath path = getSite().getPath();
                     getContext().closePanel( path );
-                    EventManager.instance().publish( new EventObject( styleLabelInfo.get() ) );
+                    EventManager.instance().publish( new EventObject( stylePointInfo.get() ) );
                 }
                 catch (Exception exc) {
                     exc.printStackTrace();
@@ -116,12 +127,13 @@ public class StyleLabelLinePlacementPanel
         } );
         return applyButton;
     }
-    
+
+
     @Override
     public void dispose() {
-        IStyleLabelInfo info = styleLabelInfo.get();
+        IStylePointInfo info = stylePointInfo.get();
         if (info.getUnitOfWork() != null && info.getUnitOfWork().isOpen()) {
             info.getUnitOfWork().close();
         }
-    }    
+    }
 }

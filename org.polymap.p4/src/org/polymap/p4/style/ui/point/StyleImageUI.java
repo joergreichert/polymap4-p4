@@ -12,7 +12,7 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  */
-package org.polymap.p4.style.ui;
+package org.polymap.p4.style.ui.point;
 
 import org.eclipse.rap.rwt.service.ServerPushSession;
 import org.eclipse.swt.widgets.Composite;
@@ -24,6 +24,7 @@ import org.polymap.p4.style.icon.IconLibraryInitializer;
 import org.polymap.p4.style.icon.ImageHelper;
 import org.polymap.p4.style.icon.ImageInfo;
 import org.polymap.p4.style.icon.ImagePanel;
+import org.polymap.p4.style.ui.AbstractStylerFragmentUI;
 import org.polymap.p4.util.PropertyAdapter;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IAppContext;

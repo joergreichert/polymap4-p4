@@ -1,7 +1,6 @@
 /*
- * polymap.org 
- * Copyright (C) 2015 individual contributors as indicated by the @authors tag. 
- * All rights reserved.
+ * polymap.org Copyright (C) 2015 individual contributors as indicated by the
+ * @authors tag. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -30,6 +29,8 @@ import org.polymap.p4.style.entities.LineCapType;
 import org.polymap.p4.style.entities.StyleLine;
 import org.polymap.p4.style.icon.IImageInfo;
 import org.polymap.p4.style.icon.ShapeFigureLibraryInitializer;
+import org.polymap.p4.style.point.IStylePointInfo;
+import org.polymap.p4.style.ui.point.StylePointUI;
 import org.polymap.p4.util.PropertyAdapter;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IAppContext;
@@ -46,37 +47,40 @@ import org.polymap.rhei.form.IFormPageSite;
 public class StyleLineUI
         extends AbstractStylerFragmentUI {
 
-    private final IAppContext         context;
+    private final IAppContext              context;
 
-    private final IPanelSite          panelSite;
+    private final IPanelSite               panelSite;
 
-    private SpinnerFormField          lineWidthField;
+    private SpinnerFormField               lineWidthField;
 
-    private ColorFormField            colorFormField;
+    private ColorFormField                 colorFormField;
 
-    private SpinnerFormField          lineTransparencyField;
+    private SpinnerFormField               lineTransparencyField;
 
-    private final Context<IImageInfo> imageInfoInContext;
+    private final Context<IImageInfo>      imageInfoInContext;
 
-    private final Context<IColorInfo> colorInfoInContext;
+    private final Context<IColorInfo>      colorInfoInContext;
 
-    private PicklistFormField         lineCapFormField;
+    private final Context<IStylePointInfo> stylePointInfoInContext;
 
-    private Supplier<StyleLine>       styleLineSupplier   = null;
+    private PicklistFormField              lineCapFormField;
 
-    private UnitOfWork                styleLineUnitOfWork = null;
+    private Supplier<StyleLine>            styleLineSupplier   = null;
 
-    private StyleLine                 styleLine           = null;
+    private UnitOfWork                     styleLineUnitOfWork = null;
 
-    private boolean                   border              = false;
+    private StyleLine                      styleLine           = null;
+
+    private boolean                        border              = false;
 
 
     public StyleLineUI( IAppContext context, IPanelSite panelSite, Context<IImageInfo> imageInfoInContext,
-            Context<IColorInfo> colorInfoInContext ) {
+            Context<IColorInfo> colorInfoInContext, Context<IStylePointInfo> stylePointInfoInContext ) {
         this.context = context;
         this.panelSite = panelSite;
         this.imageInfoInContext = imageInfoInContext;
         this.colorInfoInContext = colorInfoInContext;
+        this.stylePointInfoInContext = stylePointInfoInContext;
     }
 
 
@@ -96,7 +100,7 @@ public class StyleLineUI
         Composite parent = site.getPageBody();
         parent.setLayout( ColumnLayoutFactory.defaults().spacing( 5 )
                 .margins( panelSite.getLayoutPreference().getSpacing() / 2 ).create() );
-        if(styleLine == null) {
+        if (styleLine == null) {
             styleLine = styleLineSupplier.get();
         }
         lineWidthField = new SpinnerFormField( 1, 128, 12 );
@@ -112,10 +116,10 @@ public class StyleLineUI
         }
         if (styleLine.lineSymbol.get() != null) {
             ShapeFigureLibraryInitializer shapeFigureLibraryInitializer = new ShapeFigureLibraryInitializer();
-            StylePointUI ui = new StylePointUI( context, panelSite, imageInfoInContext, colorInfoInContext,
-                    shapeFigureLibraryInitializer );
+            stylePointInfoInContext.get().setFigureLibraryInitializer( shapeFigureLibraryInitializer );
+            StylePointUI ui = new StylePointUI( context, panelSite, stylePointInfoInContext );
             ui.setUnitOfWork( styleLineUnitOfWork.newUnitOfWork() );
-            ui.setModelFunction( () -> styleLine.lineSymbol.get() );
+            ui.setModelFunction( ( ) -> styleLine.lineSymbol.get() );
             ui.createContents( site );
         }
         lineTransparencyField = new SpinnerFormField( 0, 1, 0.1, 1, 1 );
@@ -135,10 +139,11 @@ public class StyleLineUI
         site.newFormField( new PropertyAdapter( styleLine.lineCap ) ).label.put( "Line " + extraLabel + "cap" ).field
                 .put( lineCapFormField ).tooltip.put( "" ).create();
         if (extraLabel.isEmpty()) {
-            StyleLineUI borderUI = new StyleLineUI( context, panelSite, imageInfoInContext, colorInfoInContext );
+            StyleLineUI borderUI = new StyleLineUI( context, panelSite, imageInfoInContext, colorInfoInContext, stylePointInfoInContext );
             borderUI.setBorder( true );
             borderUI.setUnitOfWork( styleLineUnitOfWork.newUnitOfWork() );
-            borderUI.setModelFunction( () -> styleLine.border.get() == null ? styleLine.border.createValue( null ) : styleLine.border.get() );
+            borderUI.setModelFunction( ( ) -> styleLine.border.get() == null ? styleLine.border.createValue( null )
+                    : styleLine.border.get() );
             borderUI.createContents( site );
         }
         return site.getPageBody();
@@ -152,7 +157,7 @@ public class StyleLineUI
 
     @Override
     public void submitUI() {
-        if(styleLineUnitOfWork != null && styleLineUnitOfWork.isOpen()) {
+        if (styleLineUnitOfWork != null && styleLineUnitOfWork.isOpen()) {
             styleLineUnitOfWork.commit();
         }
     }
@@ -160,7 +165,7 @@ public class StyleLineUI
 
     @Override
     public void resetUI() {
-        if(styleLineUnitOfWork != null && styleLineUnitOfWork.isOpen()) {
+        if (styleLineUnitOfWork != null && styleLineUnitOfWork.isOpen()) {
             styleLineUnitOfWork.close();
         }
     }

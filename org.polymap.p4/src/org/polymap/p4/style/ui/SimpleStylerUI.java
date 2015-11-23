@@ -1,7 +1,6 @@
 /*
- * polymap.org 
- * Copyright (C) 2015 individual contributors as indicated by the @authors tag. 
- * All rights reserved.
+ * polymap.org Copyright (C) 2015 individual contributors as indicated by the
+ * @authors tag. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -33,6 +32,7 @@ import org.polymap.p4.style.entities.FeatureType;
 import org.polymap.p4.style.font.IFontInfo;
 import org.polymap.p4.style.icon.IImageInfo;
 import org.polymap.p4.style.label.IStyleLabelInfo;
+import org.polymap.p4.style.point.IStylePointInfo;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanelSite;
@@ -65,11 +65,12 @@ public class SimpleStylerUI
 
     public SimpleStylerUI( IAppContext context, IPanelSite panelSite, UnitOfWork newSimpleStylerUnitOfWork,
             Context<IImageInfo> imageInfoInContext, Context<IColorInfo> colorInfoInContext,
-            Context<IFontInfo> fontInfoInContext, Context<IStyleLabelInfo> styleLabelInfo ) {
+            Context<IFontInfo> fontInfoInContext, Context<IStyleLabelInfo> styleLabelInfo,
+            Context<IStylePointInfo> stylePointInfo ) {
         this.site = panelSite;
         this.newSimpleStylerUnitOfWork = newSimpleStylerUnitOfWork;
         stylerUIFactory = new StylerUIFactory( context, panelSite, newSimpleStylerUnitOfWork, imageInfoInContext,
-                colorInfoInContext, fontInfoInContext, styleLabelInfo );
+                colorInfoInContext, fontInfoInContext, styleLabelInfo, stylePointInfo );
         currentFeatureTypeProvider = new CurrentFeatureTypeProvider();
         stylerPageFactory = new StylerPageFactory( stylerUIFactory, currentFeatureTypeProvider,
                 newSimpleStylerUnitOfWork );
@@ -134,10 +135,10 @@ public class SimpleStylerUI
 
     private void addIdentCallback( MdTabFolder tabFolder ) {
         Callback<FeatureType> identCallback = new Callback<FeatureType>() {
-            
+
             @Override
-            public void handle(FeatureType ft) {
-                if(ft.name().equals( currentFeatureTypeProvider.get().name())) {
+            public void handle( FeatureType ft ) {
+                if (ft.name().equals( currentFeatureTypeProvider.get().name() )) {
                     // already handled
                     return;
                 }

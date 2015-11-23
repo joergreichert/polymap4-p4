@@ -95,6 +95,14 @@
             class="org.polymap.p4.style.label.StyleLabelHaloPanel"
             id="org.polymap.p4.StyleLabelHaloPanel">
       </panel>
+      <panel
+            class="org.polymap.p4.style.point.StyleFigurePanel"
+            id="org.polymap.p4.StyleFigurePanel">
+      </panel>
+      <panel
+            class="org.polymap.p4.style.point.StyleImagePanel"
+            id="org.polymap.p4.StyleImagePanel">
+      </panel>
    </extension>
    <extension
          point="org.polymap.service.fs.contentProviders">

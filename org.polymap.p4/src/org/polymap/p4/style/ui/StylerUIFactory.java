@@ -26,10 +26,11 @@ import org.polymap.p4.style.entities.StyleLine;
 import org.polymap.p4.style.entities.StylePoint;
 import org.polymap.p4.style.entities.StylePolygon;
 import org.polymap.p4.style.font.IFontInfo;
-import org.polymap.p4.style.icon.FigureLibraryInitializer;
 import org.polymap.p4.style.icon.IImageInfo;
 import org.polymap.p4.style.label.IStyleLabelInfo;
+import org.polymap.p4.style.point.IStylePointInfo;
 import org.polymap.p4.style.ui.label.StyleLabelUI;
+import org.polymap.p4.style.ui.point.StylePointUI;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanelSite;
@@ -55,13 +56,11 @@ public class StylerUIFactory {
 
     public StylerUIFactory( IAppContext context, IPanelSite panelSite, UnitOfWork newSimpleStylerUnitOfWork,
             Context<IImageInfo> imageInfoInContext, Context<IColorInfo> colorInfoInContext,
-            Context<IFontInfo> fontInfoInContext, Context<IStyleLabelInfo> styleLabelInfo ) {
+            Context<IFontInfo> fontInfoInContext, Context<IStyleLabelInfo> styleLabelInfo, Context<IStylePointInfo> stylePointInfo ) {
         identUI = new StyleIdentUI( context, panelSite );
         labelUI = new StyleLabelUI( context, panelSite, fontInfoInContext, colorInfoInContext, styleLabelInfo );
-        FigureLibraryInitializer figureLibraryInitializer = new FigureLibraryInitializer();
-        pointUI = new StylePointUI( context, panelSite, imageInfoInContext, colorInfoInContext,
-                figureLibraryInitializer );
-        lineUI = new StyleLineUI( context, panelSite, imageInfoInContext, colorInfoInContext );
+        pointUI = new StylePointUI( context, panelSite, stylePointInfo );
+        lineUI = new StyleLineUI( context, panelSite, imageInfoInContext, colorInfoInContext, stylePointInfo );
         polygonUI = new StylePolygonUI( context, panelSite, imageInfoInContext, colorInfoInContext );
 
         models = new HashMap<FeatureType,Supplier<? extends AbstractSLDModel>>();
