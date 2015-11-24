@@ -45,7 +45,7 @@
       </FeatureTypeStyle>
       <FeatureTypeStyle>
         <Rule>
-        <Name>highway</Name>
+          <Name>highway</Name>
           <ogc:Filter>
             <ogc:PropertyIsEqualTo>
               <ogc:PropertyName>type</ogc:PropertyName>

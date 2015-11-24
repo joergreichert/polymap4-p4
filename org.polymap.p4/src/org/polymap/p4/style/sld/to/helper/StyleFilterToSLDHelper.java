@@ -24,6 +24,7 @@ import org.geotools.styling.builder.RuleBuilder;
 import org.mockito.internal.matchers.And;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory;
+import org.opengis.filter.PropertyIsEqualTo;
 import org.opengis.filter.PropertyIsGreaterThan;
 import org.opengis.filter.PropertyIsGreaterThanOrEqualTo;
 import org.opengis.filter.PropertyIsLessThan;
@@ -96,6 +97,10 @@ public class StyleFilterToSLDHelper {
         }
         else if (PropertyIsGreaterThan.NAME.equals( simpleFilter.predicate.get() )) {
             filter = filterFactory.greater( filterFactory.property( simpleFilter.propertyName.get() ),
+                    filterFactory.literal( simpleFilter.value.get() ) );
+        }
+        else if (PropertyIsEqualTo.NAME.equals( simpleFilter.predicate.get() )) {
+            filter = filterFactory.equals( filterFactory.property( simpleFilter.propertyName.get() ),
                     filterFactory.literal( simpleFilter.value.get() ) );
         }
         return filter;
