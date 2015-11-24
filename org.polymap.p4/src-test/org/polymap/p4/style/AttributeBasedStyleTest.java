@@ -39,4 +39,10 @@ public class AttributeBasedStyleTest
     public void test09_attribute_based_polygon() throws Exception {
         assertRoundtrip( "3-polygon/09-attribute_based_polygon.sld" );
     }
+
+
+    @Test
+    public void test10_attribute_zoom_polygon() throws Exception {
+        assertRoundtrip( "3-polygon/10-attribute_zoom_polygon.sld" );
+    }
 }

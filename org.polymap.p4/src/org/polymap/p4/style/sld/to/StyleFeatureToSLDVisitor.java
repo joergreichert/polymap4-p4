@@ -17,8 +17,7 @@ import org.geotools.styling.builder.FeatureTypeStyleBuilder;
 import org.polymap.p4.style.SLDBuilder;
 import org.polymap.p4.style.entities.StyleFeature;
 import org.polymap.p4.style.sld.to.helper.StyleCompositeToSLDHelper;
-import org.polymap.p4.style.sld.to.helper.StyleFilterToSLDHelper;
-import org.polymap.p4.style.sld.to.helper.StyleZoomToSLDHelper;
+import org.polymap.p4.style.sld.to.helper.StyleConfigurationToSLDHelper;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -38,10 +37,8 @@ public class StyleFeatureToSLDVisitor
     @Override
     public void fillSLD( SLDBuilder builder ) {
         FeatureTypeStyleBuilder featureTypeStyleBuilder = singletonFeatureTypeStyle( builder );
-        styleFeature.zoomConfigurations.forEach( zoomConfiguration -> new StyleZoomToSLDHelper()
-                .handleZoomConfiguration( zoomConfiguration, builder, featureTypeStyleBuilder ) );
-        styleFeature.filterConfigurations.forEach( filterConfiguration -> new StyleFilterToSLDHelper()
-                .handleFilterConfiguration( filterConfiguration, builder, featureTypeStyleBuilder ) );
+        styleFeature.styleConfigurations.forEach( styleConfiguration -> new StyleConfigurationToSLDHelper()
+                .handleStyleConfiguration( styleConfiguration, builder, featureTypeStyleBuilder ) );
         new StyleCompositeToSLDHelper( styleFeature.styleComposite.get() ).fillSLD( builder,
                 ( ) -> featureTypeStyleBuilder.rule() );
     }

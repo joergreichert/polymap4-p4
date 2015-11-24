@@ -14,7 +14,6 @@
  */
 package org.polymap.p4.style.entities;
 
-import org.polymap.model2.CollectionProperty;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
 
@@ -25,16 +24,9 @@ import org.polymap.model2.Property;
 public class StyleFilterConfiguration
         extends AbstractSLDModelFragment {
 
-    public Property<String>                   ruleName;
+    @Nullable
+    public Property<StyleFilter>          simpleFilter;
 
     @Nullable
-    public Property<String>                   ruleTitle;
-
-    public CollectionProperty<StyleComposite> styleComposites;
-
-    @Nullable
-    public Property<StyleFilter>              simpleFilter;
-
-    @Nullable
-    public Property<StyleCompositeFilter>     complexFilter;
+    public Property<StyleCompositeFilter> complexFilter;
 }

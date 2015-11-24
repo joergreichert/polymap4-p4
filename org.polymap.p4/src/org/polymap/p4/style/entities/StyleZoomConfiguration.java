@@ -24,10 +24,6 @@ import org.polymap.model2.Property;
 public class StyleZoomConfiguration
         extends AbstractSLDModelFragment {
 
-    public Property<String>         zoomLevelName;
-
-    public Property<StyleComposite> styleComposite;
-
     @Nullable
     public Property<Double>         minScaleDenominator;
 

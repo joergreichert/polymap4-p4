@@ -43,18 +43,8 @@ public class StyleFilterFromSLDHelper
     public void visit( Rule rule ) {
         if (rule.getFilter() != null) {
             styleFilterConfiguration = styleFilterConfigurationInit.apply( rule.getName() );
-            if (rule.getDescription() != null && rule.getDescription().getTitle() != null) {
-                styleFilterConfiguration.ruleTitle.set( rule.getDescription().getTitle().toString() );
-            }
             Filter filter = rule.getFilter();
             filter.accept( new StyleFilterFromSLDVisitor( styleFilterConfiguration ), null );
-            fillSymbolizers( rule );
         }
-    }
-
-
-    private void fillSymbolizers( Rule rule ) {
-        styleFilterConfiguration.styleComposites.forEach( styleComposite -> new StyleCompositeFromSLDHelper(
-                styleComposite ).visit( rule ) );
     }
 }

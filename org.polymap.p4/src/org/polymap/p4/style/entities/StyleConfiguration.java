@@ -14,33 +14,26 @@
  */
 package org.polymap.p4.style.entities;
 
-import org.geotools.styling.StyledLayerDescriptor;
-import org.polymap.model2.CollectionProperty;
+import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
-import org.polymap.p4.style.SLDBuilder;
-import org.polymap.p4.style.sld.from.StyleFeatureFromSLDVisitor;
-import org.polymap.p4.style.sld.to.StyleFeatureToSLDVisitor;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public class StyleFeature
-        extends AbstractStyleSymbolizer {
+public class StyleConfiguration
+        extends AbstractSLDModelFragment {
 
-    public CollectionProperty<StyleConfiguration> styleConfigurations;
+    public Property<String>                   configurationName;
 
-    public Property<StyleComposite>               styleComposite;
+    @Nullable
+    public Property<String>                   configurationTitle;
 
+    public Property<StyleComposite>           styleComposite;
 
-    @Override
-    public void fromSLD( StyledLayerDescriptor style ) {
-        new StyleFeatureFromSLDVisitor( this ).visit( style );
-    }
+    @Nullable
+    public Property<StyleZoomConfiguration>   styleZoomConfiguration;
 
-
-    @Override
-    public void fillSLD( SLDBuilder builder ) {
-        new StyleFeatureToSLDVisitor( this ).fillSLD( builder );
-    }
+    @Nullable
+    public Property<StyleFilterConfiguration> styleFilterConfiguration;
 }

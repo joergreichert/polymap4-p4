@@ -1,7 +1,6 @@
 /*
- * polymap.org 
- * Copyright (C) 2015 individual contributors as indicated by the @authors tag. 
- * All rights reserved.
+ * polymap.org Copyright (C) 2015 individual contributors as indicated by the
+ * @authors tag. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -21,12 +20,10 @@ import java.util.stream.Collectors;
 import org.geotools.styling.FeatureTypeStyle;
 import org.geotools.styling.Rule;
 import org.geotools.styling.Style;
+import org.polymap.p4.style.entities.StyleConfiguration;
 import org.polymap.p4.style.entities.StyleFeature;
-import org.polymap.p4.style.entities.StyleFilterConfiguration;
-import org.polymap.p4.style.entities.StyleZoomConfiguration;
 import org.polymap.p4.style.sld.from.helper.StyleCompositeFromSLDHelper;
-import org.polymap.p4.style.sld.from.helper.StyleFilterFromSLDHelper;
-import org.polymap.p4.style.sld.from.helper.StyleZoomFromSLDHelper;
+import org.polymap.p4.style.sld.from.helper.StyleConfigurationFromSLDHelper;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -45,65 +42,41 @@ public class StyleFeatureFromSLDVisitor
 
     @Override
     public void visit( Style style ) {
-        long nonZoomedOrFilteredFeatureCount = getNonZoomedOrFilteredFeatureCount( style );
-        if (nonZoomedOrFilteredFeatureCount > 0) {
+        long NonConfiguredFeatureCount = getNonConfiguredFeatureCount( style );
+        if (NonConfiguredFeatureCount > 0) {
             new StyleCompositeFromSLDHelper( styleFeature.styleComposite.get() ).visit( style );
         }
         super.visit( style );
     }
 
 
-    private long getNonZoomedOrFilteredFeatureCount( Style style ) {
+    private long getNonConfiguredFeatureCount( Style style ) {
         return style.featureTypeStyles().stream()
                 .flatMap( featureTypeStyle -> featureTypeStyle.rules().stream() )
-                .filter( rule -> isNonZoomedOrFilteredRule(rule) ).count();
+                .filter( rule -> isNonConfiguredRule( rule ) ).count();
     }
 
-    public long getNonZoomedOrFilteredRulesCount( FeatureTypeStyle featureTypeStyle ) {
-        return featureTypeStyle.rules().stream().filter( rule -> isNonZoomedOrFilteredRule(rule) ).count();
+
+    public long getNonConfiguredRulesCount( FeatureTypeStyle featureTypeStyle ) {
+        return featureTypeStyle.rules().stream().filter( rule -> isNonConfiguredRule( rule ) ).count();
     }
 
-    boolean isNonZoomedOrFilteredRule(Rule rule) {
-        return !hasZoomAttributes( rule ) && !hasFilterAttribute( rule );
+
+    boolean isNonConfiguredRule( Rule rule ) {
+        StyleConfigurationFromSLDHelper helper = new StyleConfigurationFromSLDHelper( null );
+        return !helper.hasZoomAttributes( rule ) && !helper.hasFilterAttribute( rule );
     }
+
 
     public void visit( FeatureTypeStyle featureTypeStyle ) {
-        handleZoomFeatures( featureTypeStyle );
-        handleFilterFeatures( featureTypeStyle );
-    }
-
-
-    private void handleZoomFeatures( FeatureTypeStyle featureTypeStyle ) {
-        List<Rule> zoomedFeatures = featureTypeStyle.rules().stream().filter( rule -> hasZoomAttributes( rule ) )
+        List<Rule> configuredFeatures = featureTypeStyle.rules().stream().filter( rule -> !isNonConfiguredRule( rule ) )
                 .collect( Collectors.toList() );
-        Function<String,StyleZoomConfiguration> fun = ( String label ) -> styleFeature.zoomConfigurations
-                .createElement( zoomConfiguration -> {
-                    zoomConfiguration.zoomLevelName.set( label );
-                    zoomConfiguration.styleComposite.createValue( null );
-                    return zoomConfiguration;
+        Function<String,StyleConfiguration> fun = ( String label ) -> styleFeature.styleConfigurations
+                .createElement( styleConfiguration -> {
+                    styleConfiguration.configurationName.set( label );
+                    styleConfiguration.styleComposite.createValue( null );
+                    return styleConfiguration;
                 } );
-        zoomedFeatures.stream().forEach( rule -> new StyleZoomFromSLDHelper( fun ).visit( rule ) );
-    }
-
-
-    private boolean hasZoomAttributes( Rule rule ) {
-        return rule.getMinScaleDenominator() != 0 || rule.getMaxScaleDenominator() != Double.POSITIVE_INFINITY;
-    }
-    
-    private void handleFilterFeatures( FeatureTypeStyle featureTypeStyle ) {
-        List<Rule> filterFeatures = featureTypeStyle.rules().stream().filter( rule -> hasFilterAttribute( rule ) )
-                .collect( Collectors.toList() );
-        Function<String,StyleFilterConfiguration> fun = ( String label ) -> styleFeature.filterConfigurations
-                .createElement( filterConfiguration -> {
-                    filterConfiguration.ruleName.set( label );
-                    filterConfiguration.styleComposites.createElement( null );
-                    return filterConfiguration;
-                } );
-        filterFeatures.stream().forEach( rule -> new StyleFilterFromSLDHelper( fun ).visit( rule ) );
-    }
-
-
-    private boolean hasFilterAttribute( Rule rule ) {
-        return rule.getFilter() != null;
+        configuredFeatures.stream().forEach( rule -> new StyleConfigurationFromSLDHelper( fun ).visit( rule ) );
     }
 }

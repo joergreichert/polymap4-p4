@@ -17,26 +17,39 @@ package org.polymap.p4.style.sld.to.helper;
 import org.geotools.styling.builder.FeatureTypeStyleBuilder;
 import org.geotools.styling.builder.RuleBuilder;
 import org.polymap.p4.style.SLDBuilder;
+import org.polymap.p4.style.entities.StyleConfiguration;
 import org.polymap.p4.style.entities.StyleZoomConfiguration;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public class StyleZoomToSLDHelper {
+public class StyleConfigurationToSLDHelper {
 
-    public void handleZoomConfiguration( StyleZoomConfiguration zoomConfiguration, SLDBuilder builder,
+    public void handleStyleConfiguration( StyleConfiguration styleConfiguration, SLDBuilder builder,
             FeatureTypeStyleBuilder featureTypeStyleBuilder ) {
         RuleBuilder ruleBuilder = featureTypeStyleBuilder.rule();
-        if (zoomConfiguration.zoomLevelName.get() != null) {
-            ruleBuilder.name( zoomConfiguration.zoomLevelName.get() );
+        if (styleConfiguration.configurationName.get() != null) {
+            ruleBuilder.name( styleConfiguration.configurationName.get() );
+            if (styleConfiguration.configurationTitle.get() != null) {
+                ruleBuilder.title( styleConfiguration.configurationTitle.get() );
+            }
         }
+        if (styleConfiguration.styleZoomConfiguration.get() != null) {
+            handleZoomConfiguration( styleConfiguration.styleZoomConfiguration.get(), ruleBuilder );
+        }
+        if (styleConfiguration.styleFilterConfiguration.get() != null) {
+            new StyleFilterToSLDHelper().handleFilterConfiguration( styleConfiguration.styleFilterConfiguration.get(), ruleBuilder );
+        }
+        new StyleCompositeToSLDHelper( styleConfiguration.styleComposite.get() ).fillSLD( builder, ( ) -> ruleBuilder );
+    }
+    
+    private void handleZoomConfiguration( StyleZoomConfiguration zoomConfiguration, RuleBuilder ruleBuilder ) {
         if (zoomConfiguration.minScaleDenominator.get() != null) {
             ruleBuilder.min( zoomConfiguration.minScaleDenominator.get() );
         }
         if (zoomConfiguration.maxScaleDenominator.get() != null) {
             ruleBuilder.max( zoomConfiguration.maxScaleDenominator.get() );
         }
-        new StyleCompositeToSLDHelper( zoomConfiguration.styleComposite.get() ).fillSLD( builder, ( ) -> ruleBuilder );
     }
 }

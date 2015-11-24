@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.geotools.filter.FilterFactoryImpl;
-import org.geotools.styling.builder.FeatureTypeStyleBuilder;
 import org.geotools.styling.builder.RuleBuilder;
 import org.mockito.internal.matchers.And;
 import org.opengis.filter.Filter;
@@ -28,7 +27,6 @@ import org.opengis.filter.PropertyIsEqualTo;
 import org.opengis.filter.PropertyIsGreaterThan;
 import org.opengis.filter.PropertyIsGreaterThanOrEqualTo;
 import org.opengis.filter.PropertyIsLessThan;
-import org.polymap.p4.style.SLDBuilder;
 import org.polymap.p4.style.entities.StyleCompositeFilter;
 import org.polymap.p4.style.entities.StyleFilter;
 import org.polymap.p4.style.entities.StyleFilterConfiguration;
@@ -39,15 +37,7 @@ import org.polymap.p4.style.entities.StyleFilterConfiguration;
  */
 public class StyleFilterToSLDHelper {
 
-    public void handleFilterConfiguration( StyleFilterConfiguration filterConfiguration, SLDBuilder builder,
-            FeatureTypeStyleBuilder featureTypeStyleBuilder ) {
-        RuleBuilder ruleBuilder = featureTypeStyleBuilder.rule();
-        if (filterConfiguration.ruleName.get() != null) {
-            ruleBuilder.name( filterConfiguration.ruleName.get() );
-            if (filterConfiguration.ruleTitle.get() != null) {
-                ruleBuilder.title( filterConfiguration.ruleTitle.get() );
-            }
-        }
+    public void handleFilterConfiguration( StyleFilterConfiguration filterConfiguration, RuleBuilder ruleBuilder) {
         if (filterConfiguration.simpleFilter.get() != null) {
             StyleFilter simpleFilter = filterConfiguration.simpleFilter.get();
             FilterFactory filterFactory = new FilterFactoryImpl();
@@ -64,8 +54,6 @@ public class StyleFilterToSLDHelper {
                 ruleBuilder.filter( filter );
             }
         }
-        filterConfiguration.styleComposites.forEach( styleComposite -> new StyleCompositeToSLDHelper( styleComposite )
-                .fillSLD( builder, ( ) -> ruleBuilder ) );
     }
 
 

@@ -41,14 +41,8 @@ public class StyleZoomFromSLDHelper
     public void visit( Rule rule ) {
         if (rule.getMinScaleDenominator() != 0 || rule.getMaxScaleDenominator() != Double.POSITIVE_INFINITY) {
             styleZoomConfiguration = styleZoomConfigurationInit.apply( rule.getName() );
-            fillSymbolizers( rule );
             styleZoomConfiguration.minScaleDenominator.set( rule.getMinScaleDenominator() );
             styleZoomConfiguration.maxScaleDenominator.set( rule.getMaxScaleDenominator() );
         }
-    }
-
-
-    private void fillSymbolizers( Rule rule ) {
-        new StyleCompositeFromSLDHelper( styleZoomConfiguration.styleComposite.get() ).visit( rule );
     }
 }

@@ -33,6 +33,9 @@ public class StylePolygon
 
     @Nullable
     public Property<StyleColor>  fill;
+    
+    @Nullable
+    public Property<Double>      fillOpacity;
 
     @Nullable
     public Property<Double>      strokeWidth;

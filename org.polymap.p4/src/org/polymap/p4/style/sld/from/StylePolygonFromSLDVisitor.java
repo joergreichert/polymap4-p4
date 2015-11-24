@@ -73,6 +73,9 @@ public class StylePolygonFromSLDVisitor
     public void visit( Fill fill ) {
         if (fill.getColor() != null) {
             new StyleColorFromSLDHelper().fromSLD( stylePolygon.fill, fill.getColor() );
+            if(fill.getOpacity() != null) {
+                stylePolygon.fillOpacity.set( (double)fill.getOpacity().accept( getNumberExpressionVisitor(), null ) );
+            }
         }
         super.visit( fill );
     }

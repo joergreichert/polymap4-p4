@@ -57,6 +57,9 @@ public class StylePolygonToSLDVisitor
             if (stylePolygon.fill.get() != null) {
                 FillBuilder fillBuilder = builder.polygonFill( polygonBuilder );
                 fillBuilder.color( new StyleColorToSLDHelper().getSLDColor( stylePolygon.fill.get() ) );
+                if(stylePolygon.fillOpacity.get() != null) {
+                    fillBuilder.opacity( stylePolygon.fillOpacity.get() );
+                }
             }
             if (stylePolygon.strokeWidth.get() != null) {
                 StrokeBuilder strokeBuilder = polygonBuilder.stroke();
