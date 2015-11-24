@@ -14,9 +14,12 @@
  */
 package org.polymap.p4.style.sld.from;
 
+import java.util.List;
+
 import org.opengis.filter.And;
 import org.opengis.filter.BinaryComparisonOperator;
 import org.opengis.filter.ExcludeFilter;
+import org.opengis.filter.Filter;
 import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.Id;
 import org.opengis.filter.IncludeFilter;
@@ -126,13 +129,18 @@ public class StyleFilterFromSLDVisitor
      */
     @Override
     public Object visit( And filter, Object extraData ) {
+        handleJoinFilter( And.class, filter.getChildren() );
+        return null;
+    }
+
+
+    private void handleJoinFilter( Class<?> filter, List<Filter> children ) {
         StyleCompositeFilter complexFilter = styleFilterConfiguration.complexFilter.createValue( f -> {
-            f.predicate.set( And.class.getSimpleName() );
+            f.predicate.set( filter.getSimpleName() );
             return f;
         } );
         StyleComplexFilterFromSLDVisitor styleComplexFilterFromSLDVisitor = new StyleComplexFilterFromSLDVisitor(complexFilter);
-        filter.getChildren().stream().forEach( f -> f.accept( styleComplexFilterFromSLDVisitor, null ) );
-        return null;
+        children.stream().forEach( f -> f.accept( styleComplexFilterFromSLDVisitor, null ) );
     }
 
 
@@ -170,7 +178,7 @@ public class StyleFilterFromSLDVisitor
      */
     @Override
     public Object visit( Or filter, Object extraData ) {
-        // TODO Auto-generated method stub
+        handleJoinFilter( Or.class, filter.getChildren() );
         return null;
     }
 

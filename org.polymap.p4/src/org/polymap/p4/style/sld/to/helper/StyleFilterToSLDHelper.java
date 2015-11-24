@@ -23,10 +23,12 @@ import org.geotools.styling.builder.RuleBuilder;
 import org.mockito.internal.matchers.And;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory;
+import org.opengis.filter.Or;
 import org.opengis.filter.PropertyIsEqualTo;
 import org.opengis.filter.PropertyIsGreaterThan;
 import org.opengis.filter.PropertyIsGreaterThanOrEqualTo;
 import org.opengis.filter.PropertyIsLessThan;
+import org.opengis.filter.PropertyIsLessThanOrEqualTo;
 import org.polymap.p4.style.entities.StyleCompositeFilter;
 import org.polymap.p4.style.entities.StyleFilter;
 import org.polymap.p4.style.entities.StyleFilterConfiguration;
@@ -37,7 +39,7 @@ import org.polymap.p4.style.entities.StyleFilterConfiguration;
  */
 public class StyleFilterToSLDHelper {
 
-    public void handleFilterConfiguration( StyleFilterConfiguration filterConfiguration, RuleBuilder ruleBuilder) {
+    public void handleFilterConfiguration( StyleFilterConfiguration filterConfiguration, RuleBuilder ruleBuilder ) {
         if (filterConfiguration.simpleFilter.get() != null) {
             StyleFilter simpleFilter = filterConfiguration.simpleFilter.get();
             FilterFactory filterFactory = new FilterFactoryImpl();
@@ -69,6 +71,9 @@ public class StyleFilterToSLDHelper {
         if (And.class.getSimpleName().equals( complexFilter.predicate.get() )) {
             filter = filterFactory.and( children );
         }
+        else if (Or.class.getSimpleName().equals( complexFilter.predicate.get() )) {
+            filter = filterFactory.or( children );
+        }
         return filter;
     }
 
@@ -77,6 +82,10 @@ public class StyleFilterToSLDHelper {
         Filter filter = null;
         if (PropertyIsLessThan.NAME.equals( simpleFilter.predicate.get() )) {
             filter = filterFactory.less( filterFactory.property( simpleFilter.propertyName.get() ),
+                    filterFactory.literal( simpleFilter.value.get() ) );
+        }
+        else if (PropertyIsLessThanOrEqualTo.NAME.equals( simpleFilter.predicate.get() )) {
+            filter = filterFactory.lessOrEqual( filterFactory.property( simpleFilter.propertyName.get() ),
                     filterFactory.literal( simpleFilter.value.get() ) );
         }
         else if (PropertyIsGreaterThanOrEqualTo.NAME.equals( simpleFilter.predicate.get() )) {
