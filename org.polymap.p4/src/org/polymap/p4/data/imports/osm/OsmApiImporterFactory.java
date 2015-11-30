@@ -14,53 +14,30 @@
  */
 package org.polymap.p4.data.imports.osm;
 
-import java.io.File;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.polymap.p4.data.imports.ContextIn;
 import org.polymap.p4.data.imports.ImporterFactory;
-
-import com.google.common.collect.Sets;
 
 /**
  * 
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public class OsmImporterFactory
+public class OsmApiImporterFactory
         implements ImporterFactory {
 
-    private static Log log = LogFactory.getLog( OsmImporterFactory.class );
+    private static Log log = LogFactory.getLog( OsmApiImporterFactory.class );
     
-    public final static Set<String> supportedTypes = Sets.newHashSet(".osm", ".xml"); 
-    
-    @ContextIn
-    protected File                  file;
     
     @ContextIn
-    protected List<File>            files;
+    protected Object                any;
     
 
     @Override
     public void createImporters( ImporterBuilder builder ) throws Exception {
-        if (isSupported( file )) {
-            builder.newImporter( new OsmImporter(), file );
+        if (any == null) {
+            builder.newImporter( new OsmApiImporter() );
         }
-    }
-
-
-    private boolean isSupported(File file) {
-        if (file == null) {
-            return false;
-        }
-        for (String type : supportedTypes) {
-            if (file.getName().toLowerCase().endsWith( type )) {
-                return true;
-            }
-        }
-        return false;
     }
 }

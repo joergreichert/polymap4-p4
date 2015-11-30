@@ -18,7 +18,9 @@ import static org.polymap.rhei.batik.app.SvgImageRegistryHelper.NORMAL24;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
@@ -27,13 +29,9 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.widgets.Composite;
-import org.geotools.data.DataUtilities;
-import org.geotools.feature.DefaultFeatureCollection;
-import org.geotools.feature.FeatureCollection;
-import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.feature.SchemaException;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.polymap.p4.P4Plugin;
 import org.polymap.p4.data.imports.ContextIn;
@@ -45,7 +43,6 @@ import org.polymap.p4.data.imports.shapefile.ShpFeatureTableViewer;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 import de.topobyte.osm4j.core.access.OsmIterator;
 import de.topobyte.osm4j.core.model.iface.EntityContainer;
@@ -58,22 +55,22 @@ import de.topobyte.osm4j.xml.dynsax.OsmXmlIterator;
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public class OsmImporter
+public class OsmFileImporter
         implements Importer {
 
     @ContextIn
-    protected File              file;
+    protected File                      file;
 
     @ContextOut
-    protected FeatureCollection features;
+    protected IterableFeatureCollection features;
 
-    protected ImporterSite      site;
+    protected ImporterSite              site;
 
-    private Exception           exception;
+    private Exception                   exception;
 
-    private IPanelToolkit       toolkit;
+    private IPanelToolkit               toolkit;
 
-    private CharsetPrompt       charsetPrompt;
+    private CharsetPrompt               charsetPrompt;
 
 
     /*
@@ -126,51 +123,9 @@ public class OsmImporter
      */
     @Override
     public void verify( IProgressMonitor monitor ) {
-        String typeName = FilenameUtils.getBaseName( file.getName() );
-        TreeMap<String,SortedSet<String>> allTags = new TreeMap<String,SortedSet<String>>();
+        TreeMap<String,SortedSet<String>> tags = new TreeMap<String,SortedSet<String>>();
         try (InputStream in = new FileInputStream( file )) {
-            allTags.putAll( getTags( in ) );
-            String longKey = "LON:Double";
-            String latKey = "LAT:Double";
-            allTags.put( longKey, Sets.newTreeSet() );
-            allTags.put( latKey, Sets.newTreeSet() );
-            StringBuffer typeSpec = new StringBuffer();
-            for (String key : allTags.keySet()) {
-                if (!StringUtils.isBlank( typeSpec )) {
-                    typeSpec.append( "," );
-                }
-                typeSpec.append( key ).append( ":String" );
-            }
-            final SimpleFeatureType TYPE = DataUtilities.createType( typeName, typeSpec.toString() );
-            final SimpleFeatureBuilder featureBuilder = new SimpleFeatureBuilder( TYPE );
-            // TODO: use iterable feature collection
-            features = new DefaultFeatureCollection( null, TYPE );
-            try (InputStream input = new FileInputStream( file )) {
-                OsmIterator iterator = new OsmXmlIterator( input, false );
-                for (EntityContainer container : iterator) {
-                    if (container.getType() == EntityType.Node) {
-                        OsmNode node = (OsmNode)container.getEntity();
-                        featureBuilder.add( node.getLongitude() );
-                        featureBuilder.add( node.getLatitude() );
-                        Map<String,String> tags = OsmModelUtil.getTagsAsMap( node );
-                        Object value;
-                        for (String key : allTags.keySet()) {
-                            if (key.equals( longKey )) {
-                                value = node.getLongitude();
-                            }
-                            else if (key.equals( latKey )) {
-                                value = node.getLatitude();
-                            }
-                            else {
-                                value = !tags.containsKey( key ) || tags.get( key ) == null ? "" //$NON-NLS-1$
-                                        : tags.get( key );
-                            }
-                            featureBuilder.add( value );
-                        }
-                        ((DefaultFeatureCollection)features).add( featureBuilder.buildFeature( null ) );
-                    }
-                }
-            }
+            tags.putAll( TagInfo.getTagsFromContent( in ) );
             site.ok.set( true );
             exception = null;
         }
@@ -178,36 +133,17 @@ public class OsmImporter
             site.ok.set( false );
             exception = e;
         }
-    }
-
-
-    private TreeMap<String,SortedSet<String>> getTags( InputStream input ) throws Exception {
-        TreeMap<String,SortedSet<String>> allTags = new TreeMap<String,SortedSet<String>>();
-        OsmIterator iterator = new OsmXmlIterator( input, false );
-        for (EntityContainer container : iterator) {
-            if (container.getType() == EntityType.Node) {
-                OsmNode node = (OsmNode)container.getEntity();
-                Map<String,String> tags = OsmModelUtil.getTagsAsMap( node );
-                for (Entry<String,String> entry : tags.entrySet()) {
-                    collectTags( allTags, entry.getKey(), entry.getValue() );
-                }
+        if (site.ok.isPresent() && site.ok.get()) {
+            ArrayList<String> keys = new ArrayList<String>( tags.keySet() );
+            try {
+                features = new IterableFeatureCollection( FilenameUtils.getBaseName( file.getName() ), file, keys );
+            }
+            catch (FileNotFoundException | SchemaException e) {
+                site.ok.set( false );
+                exception = e;
             }
         }
-        return allTags;
     }
-
-
-    public void collectTags( SortedMap<String,SortedSet<String>> tags, String key, String value ) {
-        SortedSet<String> values = tags.get( key );
-        if (values == null) {
-            values = new TreeSet<String>();
-            tags.put( key, values );
-        }
-        if (value != null && !values.contains( value )) {
-            values.add( value );
-        }
-    }
-
 
     /*
      * (non-Javadoc)
