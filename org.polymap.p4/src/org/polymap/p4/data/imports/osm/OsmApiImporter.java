@@ -24,12 +24,16 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.geotools.feature.SchemaException;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
 import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.polymap.p4.P4Plugin;
@@ -38,8 +42,11 @@ import org.polymap.p4.data.imports.Importer;
 import org.polymap.p4.data.imports.ImporterSite;
 import org.polymap.p4.data.imports.shapefile.ShpFeatureTableViewer;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
+import org.polymap.rhei.table.DefaultFeatureTableColumn;
+import org.polymap.rhei.table.FeatureTableViewer;
 
 import com.google.common.base.Joiner;
+import com.vividsolutions.jts.geom.Geometry;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -57,9 +64,7 @@ public class OsmApiImporter
 
     private IPanelToolkit               toolkit;
 
-    private TagPrompt tagPrompt;
-    
-    private boolean tagPromptExecuted = false;
+    private TagPrompt                   tagPrompt;
 
 
     /*
@@ -99,9 +104,7 @@ public class OsmApiImporter
      */
     @Override
     public void createPrompts( IProgressMonitor monitor ) throws Exception {
-        tagPromptExecuted = false;
         tagPrompt = new TagPrompt( site );
-        tagPromptExecuted = true;
     }
 
 
@@ -113,28 +116,31 @@ public class OsmApiImporter
      */
     @Override
     public void verify( IProgressMonitor monitor ) {
-        try {
-            // TODO get from CRS Prompt (not yet merged to master)
-            CoordinateReferenceSystem crs = CRS.decode( "EPSG:4326" );
-            List<String> keys = TagInfo.getStaticKeys();
-            // TODO get from currently visible map
-            String bboxStr = getBBOXStr( crs );
-            String filterStr = getFilterString(tagPrompt.selection());
-            URL url = new URL( "http://www.overpass-api.de/api/xapi?map?" + bboxStr + filterStr );
-            features = new IterableFeatureCollection( "osm", url, keys );
-        }
-        catch (SchemaException | IOException | FactoryException e) {
-            site.ok.set( false );
-            exception = e;
+        if (tagPrompt.isOk() && tagPrompt.isImporterActive()) {
+            try {
+                // TODO get from CRS Prompt (not yet merged to master)
+                CoordinateReferenceSystem crs = CRS.decode( "EPSG:4326" );
+                List<String> keys = TagInfo.getStaticKeys();
+                // TODO get from currently visible map
+                String bboxStr = getBBOXStr( crs );
+                String filterStr = getFilterString( tagPrompt.selection() );
+                URL url = new URL( "http://www.overpass-api.de/api/xapi?map?" + bboxStr + filterStr );
+                features = new IterableFeatureCollection( "osm", url, keys );
+            }
+            catch (SchemaException | IOException | FactoryException e) {
+                site.ok.set( false );
+                exception = e;
+            }
         }
     }
 
 
-    private String getFilterString(List<Pair<String, String>> filters) throws UnsupportedEncodingException {
-        if(filters.size() > 0 && !"*".equals( filters.get( 0 ).getKey())) {
+    private String getFilterString( List<Pair<String,String>> filters ) throws UnsupportedEncodingException {
+        if (filters.size() > 0 && !"*".equals( filters.get( 0 ).getKey() )) {
             // TODO make encoding configurable?
             return "&" + URLEncoder.encode( "node[" + Joiner.on( "|" ).join( filters ) + "]", "UTF-8" );
-        } else {
+        }
+        else {
             return "";
         }
     }
@@ -161,6 +167,7 @@ public class OsmApiImporter
         return new ReferencedEnvelope( minLon, maxLon, minLat, maxLat, crs );
     }
 
+
     private ReferencedEnvelope getPlagwitzBBOX( CoordinateReferenceSystem crs ) {
         double minLon = 12.309451;
         double maxLon = 51.320662;
@@ -168,6 +175,7 @@ public class OsmApiImporter
         double maxLat = 51.331309;
         return new ReferencedEnvelope( minLon, maxLon, minLat, maxLat, crs );
     }
+
 
     /*
      * (non-Javadoc)
@@ -178,15 +186,27 @@ public class OsmApiImporter
      */
     @Override
     public void createResultViewer( Composite parent, IPanelToolkit toolkit ) {
-        if (exception != null) {
-            toolkit.createFlowText( parent, "\nUnable to read the data.\n\n" + "**Reason**: " + exception.getMessage() );
-        }
-        else {
-            if(tagPromptExecuted) {
-                SimpleFeatureType schema = (SimpleFeatureType)features.getSchema();
-                ShpFeatureTableViewer table = new ShpFeatureTableViewer( parent, schema );
-                table.setContentProvider( new FeatureLazyContentProvider(features) );
+        if (tagPrompt.isOk() && tagPrompt.isImporterActive()) {
+            if (exception != null) {
+                toolkit.createFlowText( parent,
+                        "\nUnable to read the data.\n\n" + "**Reason**: " + exception.getMessage() );
             }
+            else {
+                SimpleFeatureType schema = (SimpleFeatureType)features.getSchema();
+                FeatureTableViewer table = new FeatureTableViewer(parent, SWT.VIRTUAL | SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION);
+                for (PropertyDescriptor prop : schema.getDescriptors()) {
+                    if ("LAT".equals( prop.getName().toString()) || "LON".equals( prop.getName().toString())) {
+                        // skip Geometry
+                    }
+                    else {
+                        table.addColumn( new DefaultFeatureTableColumn( prop ) );
+                    }
+                }
+                table.setContentProvider( new FeatureLazyContentProvider2( table, features ) );
+            }
+        } else {
+            toolkit.createFlowText( parent,
+                    "\nOSM Importer is currently deactivated" );
         }
     }
 

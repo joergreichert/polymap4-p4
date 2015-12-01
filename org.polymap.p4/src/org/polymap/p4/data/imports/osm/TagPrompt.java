@@ -25,9 +25,11 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.eclipse.swt.widgets.Composite;
 import org.polymap.p4.data.imports.ImporterPrompt;
 import org.polymap.p4.data.imports.ImporterPrompt.Severity;
 import org.polymap.p4.data.imports.ImporterSite;
+import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 
 import com.google.common.base.Joiner;
 
@@ -38,71 +40,91 @@ import com.google.common.base.Joiner;
  */
 public class TagPrompt {
 
-    private static Log                       log       = LogFactory.getLog( TagPrompt.class );
+    private static Log                       log              = LogFactory.getLog( TagPrompt.class );
 
-    private static List<Pair<String,String>> DEFAULT   = new ArrayList<Pair<String,String>>();
+    private static List<Pair<String,String>> DEFAULT          = new ArrayList<Pair<String,String>>();
 
     private ImporterSite                     site;
 
-    private List<Pair<String,String>>        selection = DEFAULT;
+    private List<Pair<String,String>>        selection        = DEFAULT;
+
+    private final ImporterPrompt             prompt;
+
+    private boolean                          isImporterActive = false;
 
 
     public TagPrompt( ImporterSite site ) {
         this.site = site;
 
-        site.newPrompt( "tagFilter" ).summary.put( "Tag filter" ).description
-                .put( "Optional tag filters." ).value.put( getReadable() ).severity
-                .put( Severity.VERIFY ).extendedUI.put( new FilteredMapPromptUIBuilder() {
-            
-            private SortedMap<String,SortedSet<String>> tags = null;
+        prompt = site.newPrompt( "tagFilter" ).summary.put( "Importer activation / Tag filter" ).description
+                .put( "Should this importer run? And if yes, with which optional tag filters?" ).value
+                .put( getReadable() ).severity
+                .put( Severity.REQUIRED ).ok.put( false ).
+                extendedUI.put( new FilteredMapPromptUIBuilder() {
 
-            @Override
-            public void submit( ImporterPrompt prompt ) {
-                prompt.ok.set( true );
-                prompt.value.put( getReadable() );
-            }
+                    private SortedMap<String,SortedSet<String>> tags = null;
 
 
-            @Override
-            protected SortedMap<String,SortedSet<String>> listItems() {
-                if(tags == null) {
-                    tags = new TreeMap<String,SortedSet<String>>();
-                    TreeSet<String> star = new TreeSet<String>();
-                    star.add("*");
-                    tags.put( "*", star );
-                    try {
-                        tags.putAll( TagInfo.getStaticTags() );
+                    @Override
+                    public void submit( ImporterPrompt prompt ) {
+                        prompt.value.put( isImporterActive() ? getReadable() : "Importer is deactivated." );
+                        prompt.ok.set( true );
                     }
-                    catch (IOException e) {
-                        e.printStackTrace();
+
+
+                    @Override
+                    protected SortedMap<String,SortedSet<String>> listItems() {
+                        if (tags == null) {
+                            tags = new TreeMap<String,SortedSet<String>>();
+                            TreeSet<String> star = new TreeSet<String>();
+                            star.add( "*" );
+                            tags.put( "*", star );
+                            try {
+                                tags.putAll( TagInfo.getStaticTags() );
+                            }
+                            catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        return tags;
                     }
-                }
-                return tags;
-            }
 
 
-            @Override
-            protected List<Pair<String,String>> initiallySelectedItems() {
-                if(selection.isEmpty()) {
-                    return Arrays.asList( Pair.of( "*", "*" ) );
-                }
-                return selection;
-            }
+                    @Override
+                    protected List<Pair<String,String>> initiallySelectedItems() {
+                        if (selection.isEmpty()) {
+                            return Arrays.asList( Pair.of( "*", "*" ) );
+                        }
+                        return selection;
+                    }
 
 
-            @Override
-            protected void handleSelection( Pair<String,String> selected ) {
-                selection.add( selected );
-                assert selection != null;
-            }
+                    @Override
+                    protected void handleSelection( Pair<String,String> selected ) {
+                        selection.add( selected );
+                        assert selection != null;
+                    }
 
 
-            @Override
-            protected void handleUnselection( Pair<String,String> selected ) {
-                selection.remove( selected );
-                assert selection != null;
-            }
-        } );
+                    @Override
+                    protected void handleUnselection( Pair<String,String> selected ) {
+                        selection.remove( selected );
+                        assert selection != null;
+                    }
+
+
+                    @Override
+                    protected void setImporterActive( boolean selection ) {
+                        TagPrompt.this.isImporterActive = selection;
+                    }
+
+
+                    @Override
+                    protected boolean isImporterActive() {
+                        return TagPrompt.this.isImporterActive;
+                    }
+                } );
+        prompt.ok.set( false );
     }
 
 
@@ -122,5 +144,15 @@ public class TagPrompt {
      */
     public List<Pair<String,String>> selection() {
         return selection;
+    }
+
+
+    public boolean isOk() {
+        return prompt.ok.get();
+    }
+
+
+    public boolean isImporterActive() {
+        return isImporterActive;
     }
 }
