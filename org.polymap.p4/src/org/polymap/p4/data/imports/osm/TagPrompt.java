@@ -16,13 +16,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.polymap.p4.data.imports.ImporterPrompt;
 import org.polymap.p4.data.imports.ImporterPrompt.Severity;
 import org.polymap.p4.data.imports.ImporterSite;
-import org.polymap.p4.data.imports.utils.FilteredListPromptUIBuilder;
 
 import com.google.common.base.Joiner;
 
@@ -33,22 +38,23 @@ import com.google.common.base.Joiner;
  */
 public class TagPrompt {
 
-    private static Log          log       = LogFactory.getLog( TagPrompt.class );
+    private static Log                       log       = LogFactory.getLog( TagPrompt.class );
 
-    private static List<String> DEFAULT   = new ArrayList<String>();
+    private static List<Pair<String,String>> DEFAULT   = new ArrayList<Pair<String,String>>();
 
-    private ImporterSite        site;
+    private ImporterSite                     site;
 
-    private List<String>        selection = DEFAULT;
+    private List<Pair<String,String>>        selection = DEFAULT;
 
 
     public TagPrompt( ImporterSite site ) {
         this.site = site;
 
-        String readable = getReadable();
         site.newPrompt( "tagFilter" ).summary.put( "Tag filter" ).description
-                .put( "Optional tag filters." ).value.put( readable ).severity
-                .put( Severity.VERIFY ).extendedUI.put( new FilteredListPromptUIBuilder() {
+                .put( "Optional tag filters." ).value.put( getReadable() ).severity
+                .put( Severity.VERIFY ).extendedUI.put( new FilteredMapPromptUIBuilder() {
+            
+            private SortedMap<String,SortedSet<String>> tags = null;
 
             @Override
             public void submit( ImporterPrompt prompt ) {
@@ -58,27 +64,42 @@ public class TagPrompt {
 
 
             @Override
-            protected String[] listItems() {
-                java.util.List<String> keys = new ArrayList<String>();
-                try {
-                    keys.addAll(TagInfo.getStaticKeys());
+            protected SortedMap<String,SortedSet<String>> listItems() {
+                if(tags == null) {
+                    tags = new TreeMap<String,SortedSet<String>>();
+                    TreeSet<String> star = new TreeSet<String>();
+                    star.add("*");
+                    tags.put( "*", star );
+                    try {
+                        tags.putAll( TagInfo.getStaticTags() );
+                    }
+                    catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
-                catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return keys.toArray( new String[keys.size()] );
+                return tags;
             }
 
 
             @Override
-            protected String initiallySelectedItem() {
-                return getReadable();
+            protected List<Pair<String,String>> initiallySelectedItems() {
+                if(selection.isEmpty()) {
+                    return Arrays.asList( Pair.of( "*", "*" ) );
+                }
+                return selection;
             }
 
 
             @Override
-            protected void handleSelection( String selected ) {
-                selection = Arrays.asList(selected.split( "," ));
+            protected void handleSelection( Pair<String,String> selected ) {
+                selection.add( selected );
+                assert selection != null;
+            }
+
+
+            @Override
+            protected void handleUnselection( Pair<String,String> selected ) {
+                selection.remove( selected );
                 assert selection != null;
             }
         } );
@@ -86,9 +107,11 @@ public class TagPrompt {
 
 
     private String getReadable() {
-        String readable = Joiner.on( "," ).join( selection);
-        if(readable.length() > 30) {
-            readable = readable.substring( 0, 30 ) + " ...";
+        String readable = Joiner.on( "," ).join(
+                selection.stream().map( filter -> filter.getKey() + "=" + filter.getValue() )
+                        .collect( Collectors.toList() ) );
+        if (readable.length() > 80) {
+            readable = readable.substring( 0, 80 ) + " ...";
         }
         return readable;
     }
@@ -97,7 +120,7 @@ public class TagPrompt {
     /**
      * The selected tags to use as filter.
      */
-    public List<String> selection() {
+    public List<Pair<String,String>> selection() {
         return selection;
     }
 }

@@ -24,10 +24,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.FilenameUtils;
 import org.geotools.data.DataUtilities;
+import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.SchemaException;
 import org.geotools.feature.collection.AbstractFeatureCollection;
+import org.geotools.feature.collection.SimpleFeatureIteratorImpl;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.simple.SimpleFeature;
@@ -52,7 +53,7 @@ public class IterableFeatureCollection
 
     private static String              LAT_KEY  = "LAT";
 
-    private static String              LONG_KEY = "LON";
+    private static String              LON_KEY = "LON";
 
     private final List<String>         keys;
 
@@ -87,10 +88,11 @@ public class IterableFeatureCollection
 
     private static SimpleFeatureType getMemberType( String typeName, List<String> keys ) throws SchemaException {
         StringBuffer typeSpec = new StringBuffer();
-        typeSpec.append( "LAT" );
-        typeSpec.append( "LONG" );
-        keys.stream().forEach( key -> typeSpec.append( key ).append( ":String" ) );
-        return DataUtilities.createType( typeName, typeSpec.toString() );
+        typeSpec.append( "LAT:Double" ).append(",");
+        typeSpec.append( "LON:Double" ).append(",");
+        keys.stream().forEach( key -> typeSpec.append( key.replace( ":", "_" ).replace( ",", "_" ) ).append( ":String," ) );
+        String typeSpecStr = typeSpec.substring( 0, typeSpec.length()-1 );
+        return DataUtilities.createType( typeName, typeSpecStr );
     }
 
 
@@ -114,9 +116,10 @@ public class IterableFeatureCollection
                     container = iterator.next();
                     if (container.getType() == EntityType.Node) {
                         currentNode = (OsmNode)container.getEntity();
+                        foundNextEntity = true;
                     }
                 }
-                return iterator.hasNext();
+                return foundNextEntity;
             }
 
 
@@ -125,8 +128,8 @@ public class IterableFeatureCollection
                 double longitude = currentNode.getLongitude();
                 double latitude = currentNode.getLatitude();
                 Map<String,String> attributes = OsmModelUtil.getTagsAsMap( currentNode );
+                attributes.put( LON_KEY, String.valueOf( longitude ) );
                 attributes.put( LAT_KEY, String.valueOf( latitude ) );
-                attributes.put( LONG_KEY, String.valueOf( longitude ) );
                 boolean changed = false;
                 if (minLon == -1 || minLon > longitude) {
                     minLon = longitude;
@@ -144,8 +147,8 @@ public class IterableFeatureCollection
                     maxLat = latitude;
                     changed = true;
                 }
+                featureBuilder.add( attributes.get( LON_KEY ) );
                 featureBuilder.add( attributes.get( LAT_KEY ) );
-                featureBuilder.add( attributes.get( LONG_KEY ) );
                 for (String key : keys) {
                     featureBuilder.add( attributes.get( key ) );
                 }

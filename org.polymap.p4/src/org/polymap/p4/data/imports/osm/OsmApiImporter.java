@@ -23,6 +23,7 @@ import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.widgets.Composite;
 import org.geotools.feature.SchemaException;
@@ -57,6 +58,8 @@ public class OsmApiImporter
     private IPanelToolkit               toolkit;
 
     private TagPrompt tagPrompt;
+    
+    private boolean tagPromptExecuted = false;
 
 
     /*
@@ -96,7 +99,9 @@ public class OsmApiImporter
      */
     @Override
     public void createPrompts( IProgressMonitor monitor ) throws Exception {
+        tagPromptExecuted = false;
         tagPrompt = new TagPrompt( site );
+        tagPromptExecuted = true;
     }
 
 
@@ -110,7 +115,7 @@ public class OsmApiImporter
     public void verify( IProgressMonitor monitor ) {
         try {
             // TODO get from CRS Prompt (not yet merged to master)
-            CoordinateReferenceSystem crs = CRS.decode( "WGS-84" );
+            CoordinateReferenceSystem crs = CRS.decode( "EPSG:4326" );
             List<String> keys = TagInfo.getStaticKeys();
             // TODO get from currently visible map
             String bboxStr = getBBOXStr( crs );
@@ -125,8 +130,8 @@ public class OsmApiImporter
     }
 
 
-    private String getFilterString(List<String> filters) throws UnsupportedEncodingException {
-        if(filters.size() > 0) {
+    private String getFilterString(List<Pair<String, String>> filters) throws UnsupportedEncodingException {
+        if(filters.size() > 0 && !"*".equals( filters.get( 0 ).getKey())) {
             // TODO make encoding configurable?
             return "&" + URLEncoder.encode( "node[" + Joiner.on( "|" ).join( filters ) + "]", "UTF-8" );
         } else {
@@ -177,9 +182,11 @@ public class OsmApiImporter
             toolkit.createFlowText( parent, "\nUnable to read the data.\n\n" + "**Reason**: " + exception.getMessage() );
         }
         else {
-            SimpleFeatureType schema = (SimpleFeatureType)features.getSchema();
-            ShpFeatureTableViewer table = new ShpFeatureTableViewer( parent, schema );
-            table.setContent( features );
+            if(tagPromptExecuted) {
+                SimpleFeatureType schema = (SimpleFeatureType)features.getSchema();
+                ShpFeatureTableViewer table = new ShpFeatureTableViewer( parent, schema );
+                table.setContentProvider( new FeatureLazyContentProvider(features) );
+            }
         }
     }
 
