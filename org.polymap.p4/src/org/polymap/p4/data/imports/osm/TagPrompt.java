@@ -25,11 +25,9 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.eclipse.swt.widgets.Composite;
 import org.polymap.p4.data.imports.ImporterPrompt;
 import org.polymap.p4.data.imports.ImporterPrompt.Severity;
 import org.polymap.p4.data.imports.ImporterSite;
-import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 
 import com.google.common.base.Joiner;
 
@@ -40,24 +38,22 @@ import com.google.common.base.Joiner;
  */
 public class TagPrompt {
 
-    private static Log                       log              = LogFactory.getLog( TagPrompt.class );
+    private static Log                       log       = LogFactory.getLog( TagPrompt.class );
 
-    private static List<Pair<String,String>> DEFAULT          = new ArrayList<Pair<String,String>>();
+    private static List<Pair<String,String>> DEFAULT   = new ArrayList<Pair<String,String>>();
 
     private ImporterSite                     site;
 
-    private List<Pair<String,String>>        selection        = DEFAULT;
+    private List<Pair<String,String>>        selection = DEFAULT;
 
     private final ImporterPrompt             prompt;
-
-    private boolean                          isImporterActive = false;
 
 
     public TagPrompt( ImporterSite site ) {
         this.site = site;
 
-        prompt = site.newPrompt( "tagFilter" ).summary.put( "Importer activation / Tag filter" ).description
-                .put( "Should this importer run? And if yes, with which optional tag filters?" ).value
+        prompt = site.newPrompt( "tagFilter" ).summary.put( "Tag filter" ).description
+                .put( "Filter features to import by their tags." ).value
                 .put( getReadable() ).severity
                 .put( Severity.REQUIRED ).ok.put( false ).
                 extendedUI.put( new FilteredMapPromptUIBuilder() {
@@ -67,7 +63,7 @@ public class TagPrompt {
 
                     @Override
                     public void submit( ImporterPrompt prompt ) {
-                        prompt.value.put( isImporterActive() ? getReadable() : "Importer is deactivated." );
+                        prompt.value.put( getReadable() );
                         prompt.ok.set( true );
                     }
 
@@ -111,18 +107,6 @@ public class TagPrompt {
                         selection.remove( selected );
                         assert selection != null;
                     }
-
-
-                    @Override
-                    protected void setImporterActive( boolean selection ) {
-                        TagPrompt.this.isImporterActive = selection;
-                    }
-
-
-                    @Override
-                    protected boolean isImporterActive() {
-                        return TagPrompt.this.isImporterActive;
-                    }
                 } );
         prompt.ok.set( false );
     }
@@ -149,10 +133,5 @@ public class TagPrompt {
 
     public boolean isOk() {
         return prompt.ok.get();
-    }
-
-
-    public boolean isImporterActive() {
-        return isImporterActive;
     }
 }

@@ -72,10 +72,6 @@ public abstract class FilteredMapPromptUIBuilder
     public void createContents( ImporterPrompt prompt, Composite parent, IPanelToolkit tk ) {
         parent.setLayout( FormLayoutFactory.defaults().spacing( 0 ).create() );
 
-        Button box = new Button( parent, SWT.CHECK );
-        box.setText( "Use this importer" );
-        box.setSelection( isImporterActive() );
-
         Set<String> keys = listItems().keySet();
         Pair<String,String> initiallySelectedItem = null;
         if (initiallySelectedItems().size() > 0) {
@@ -138,34 +134,13 @@ public abstract class FilteredMapPromptUIBuilder
             }
         } );
 
-        on( filterComposite ).left( 0 ).right( 100 ).top( box, 20 );
+        on( filterComposite ).left( 0 ).right( 100 );
         on( addButton ).left( 0 ).right( 100 ).top( filterComposite, 10 );
         on( selectedFiltersComp ).left( 0 ).right( 100 ).top( addButton, 20 );
         on( deleteButton ).left( 0 ).right( 100 ).top( selectedFiltersComp, 10 );
 
-        boolean enabled = box.getSelection();
-        filterComposite.setEnabled( enabled );
-        addButton.setEnabled( enabled );
-        selectedFiltersComp.setEnabled( enabled );
-        deleteButton.setEnabled( enabled );
-
-        box.addSelectionListener( new SelectionAdapter() {
-
-            public void widgetSelected( org.eclipse.swt.events.SelectionEvent e ) {
-                boolean enabled = box.getSelection();
-                setImporterActive( enabled );
-                filterComposite.setEnabled( enabled );
-                addButton.setEnabled( enabled );
-                selectedFiltersComp.setEnabled( enabled );
-                deleteButton.setEnabled( enabled );
-            }
-        } );
-
         parent.pack();
     }
-
-
-    protected abstract void setImporterActive( boolean selection );
 
 
     private void createKeyFilter( Composite filterComposite, String[] listItems, String initiallySelectedItem ) {
@@ -252,6 +227,7 @@ public abstract class FilteredMapPromptUIBuilder
             valueList.add( value );
         }
         valueList.select( 0 );
+        valueList.setText( "" );
         valueProposalProvider.setProposals( valueList.getItems() );
     }
 
@@ -298,7 +274,4 @@ public abstract class FilteredMapPromptUIBuilder
     private String getSelectedItem( Combo combo ) {
         return combo.getItem( combo.getSelectionIndex() );
     }
-
-
-    protected abstract boolean isImporterActive();
 }

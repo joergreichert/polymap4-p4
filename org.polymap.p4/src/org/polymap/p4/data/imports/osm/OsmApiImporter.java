@@ -22,10 +22,9 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -40,13 +39,11 @@ import org.polymap.p4.P4Plugin;
 import org.polymap.p4.data.imports.ContextOut;
 import org.polymap.p4.data.imports.Importer;
 import org.polymap.p4.data.imports.ImporterSite;
-import org.polymap.p4.data.imports.shapefile.ShpFeatureTableViewer;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.table.DefaultFeatureTableColumn;
 import org.polymap.rhei.table.FeatureTableViewer;
 
 import com.google.common.base.Joiner;
-import com.vividsolutions.jts.geom.Geometry;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -116,16 +113,17 @@ public class OsmApiImporter
      */
     @Override
     public void verify( IProgressMonitor monitor ) {
-        if (tagPrompt.isOk() && tagPrompt.isImporterActive()) {
+        if (tagPrompt.isOk()) {
             try {
                 // TODO get from CRS Prompt (not yet merged to master)
                 CoordinateReferenceSystem crs = CRS.decode( "EPSG:4326" );
-                List<String> keys = TagInfo.getStaticKeys();
                 // TODO get from currently visible map
                 String bboxStr = getBBOXStr( crs );
+                List<Pair<String,String>> tags = tagPrompt.selection();
+                List<String> selectedKeys = tags.stream().map( tag -> tag.getKey() ).collect( Collectors.toList() );
                 String filterStr = getFilterString( tagPrompt.selection() );
                 URL url = new URL( "http://www.overpass-api.de/api/xapi?map?" + bboxStr + filterStr );
-                features = new IterableFeatureCollection( "osm", url, keys );
+                features = new IterableFeatureCollection( "osm", url, selectedKeys );
             }
             catch (SchemaException | IOException | FactoryException e) {
                 site.ok.set( false );
@@ -186,7 +184,7 @@ public class OsmApiImporter
      */
     @Override
     public void createResultViewer( Composite parent, IPanelToolkit toolkit ) {
-        if (tagPrompt.isOk() && tagPrompt.isImporterActive()) {
+        if (tagPrompt.isOk()) {
             if (exception != null) {
                 toolkit.createFlowText( parent,
                         "\nUnable to read the data.\n\n" + "**Reason**: " + exception.getMessage() );
@@ -202,7 +200,7 @@ public class OsmApiImporter
                         table.addColumn( new DefaultFeatureTableColumn( prop ) );
                     }
                 }
-                table.setContentProvider( new FeatureLazyContentProvider2( table, features ) );
+                table.setContentProvider( new FeatureLazyContentProvider( features ) );
             }
         } else {
             toolkit.createFlowText( parent,
