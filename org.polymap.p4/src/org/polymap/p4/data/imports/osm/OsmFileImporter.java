@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.widgets.Composite;
@@ -83,8 +82,7 @@ public class OsmFileImporter
         site.icon.set( P4Plugin.images().svgImage( "file-multiple.svg", NORMAL24 ) );
         site.summary.set( "OSM-Import" );
         site.description.set( "Importing an OSM XML file." );
-        site.terminal.set( "osm".equalsIgnoreCase( FilenameUtils.getExtension(
-                file.getName() ) ) );
+        site.terminal.set(true);
     }
 
 
@@ -113,7 +111,7 @@ public class OsmFileImporter
             try {
                 List<Pair<String,String>> tagFilters = tagPrompt.selection();
                 features = new IterableFeatureCollection( "osm", file, tagFilters );
-                if (features.iterator().hasNext() && features.getException() != null) {
+                if (features.iterator().hasNext() && features.getException() == null) {
                     site.ok.set( true );
                 }
                 else {

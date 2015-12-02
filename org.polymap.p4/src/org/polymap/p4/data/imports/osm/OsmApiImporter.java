@@ -57,7 +57,7 @@ public class OsmApiImporter
 
     private IPanelToolkit               toolkit;
 
-    private TagFilterPrompt                   tagPrompt;
+    private TagFilterPrompt             tagPrompt;
 
 
     /*
@@ -85,6 +85,7 @@ public class OsmApiImporter
         site.icon.set( P4Plugin.images().svgImage( "file-multiple.svg", NORMAL24 ) );
         site.summary.set( "OSM-Import" );
         site.description.set( "Importing OpenStreetMap data via API." );
+        site.terminal.set( true );
     }
 
 
@@ -119,9 +120,10 @@ public class OsmApiImporter
                 String filterStr = getFilterString( tagFilters );
                 URL url = new URL( "http://www.overpass-api.de/api/xapi?map?" + bboxStr + filterStr );
                 features = new IterableFeatureCollection( "osm", url, tagFilters );
-                if(features.iterator().hasNext() && features.getException() != null) {
+                if (features.iterator().hasNext() && features.getException() == null) {
                     site.ok.set( true );
-                } else {
+                }
+                else {
                     exception = features.getException();
                     site.ok.set( false );
                 }
