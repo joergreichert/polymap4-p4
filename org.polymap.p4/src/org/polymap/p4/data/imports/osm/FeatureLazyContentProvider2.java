@@ -13,7 +13,6 @@
  */
 package org.polymap.p4.data.imports.osm;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,9 +22,7 @@ import org.eclipse.jface.viewers.ILazyContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
-import org.geotools.util.NullProgressListener;
 import org.opengis.feature.Feature;
-import org.opengis.feature.FeatureVisitor;
 import org.polymap.rhei.table.FeatureTableViewer;
 import org.polymap.rhei.table.IFeatureTableElement;
 
@@ -126,7 +123,9 @@ public class FeatureLazyContentProvider2
     @Override
     public void dispose() {
         cached = null;
-        featureIterator.close();
+        if(featureIterator != null) {
+            featureIterator.close();
+        }
         featureIterator = null;
     }
 
@@ -141,7 +140,7 @@ public class FeatureLazyContentProvider2
     @Override
     public void inputChanged( Viewer viewer, Object oldInput, Object newInput ) {
         this.viewer = (FeatureTableViewer)viewer;
-        if(!this.viewer.getControl().isDisposed()) {
+        if(featureIterator != null) {
             featureIterator.close();
         }
         cached = null;

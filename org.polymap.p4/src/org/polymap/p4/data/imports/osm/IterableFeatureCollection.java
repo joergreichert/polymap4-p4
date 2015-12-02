@@ -15,31 +15,25 @@
 package org.polymap.p4.data.imports.osm;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.geotools.data.DataUtilities;
 import org.geotools.feature.SchemaException;
 import org.geotools.feature.collection.AbstractFeatureCollection;
-import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
-import de.topobyte.osm4j.core.model.iface.EntityContainer;
-import de.topobyte.osm4j.core.model.iface.EntityType;
-import de.topobyte.osm4j.core.model.iface.OsmNode;
-import de.topobyte.osm4j.core.model.util.OsmModelUtil;
-import de.topobyte.osm4j.xml.dynsax.OsmXmlIterator;
+import com.vividsolutions.jts.geom.Point;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -48,36 +42,36 @@ import de.topobyte.osm4j.xml.dynsax.OsmXmlIterator;
 public class IterableFeatureCollection
         extends AbstractFeatureCollection {
 
-    private ReferencedEnvelope              env     = null;
+    private ReferencedEnvelope              env                 = null;
 
-    private int                             size    = 0;
+    private Double                          minLon              = -1d;
 
-    private static String                   LAT_KEY = "LAT";
+    private Double                          maxLon              = -1d;
 
-    private static String                   LON_KEY = "LON";
+    private Double                          minLat              = -1d;
 
-    private Double                          minLon  = -1d, maxLon = -1d, minLat = -1d, maxLat = -1d;
-
-    private final SimpleFeatureBuilder      featureBuilder;
-
-    private final OsmXmlIterator            iterator;
-
-    private final InputStream               input;
+    private Double                          maxLat              = -1d;
 
     private final List<Pair<String,String>> filters;
 
+    private final URL                       url;
+
+    private Exception                       exception           = null;
+
+    private List<OsmFeatureIterator>        osmFeatureIterators = new ArrayList<OsmFeatureIterator>();
+
+    private int                             size;
+
+
     public IterableFeatureCollection( String typeName, File file, List<Pair<String,String>> filters )
-            throws SchemaException,
-            FileNotFoundException {
+            throws FileNotFoundException, MalformedURLException {
         super( getMemberType( typeName, getKeys( filters ) ) );
-        input = new FileInputStream( file );
-        iterator = new OsmXmlIterator( input, false );
-        featureBuilder = new SimpleFeatureBuilder( super.getSchema() );
+        this.url = file.toURI().toURL();
         this.filters = filters;
     }
 
 
-    private static List<String> getKeys( List<Pair<String,String>> filters ) {
+    static List<String> getKeys( List<Pair<String,String>> filters ) {
         return filters.stream().map( tag -> tag.getKey() ).collect( Collectors.toList() );
     }
 
@@ -86,21 +80,19 @@ public class IterableFeatureCollection
             throws SchemaException, IOException
     {
         super( getMemberType( typeName, getKeys( filters ) ) );
-        input = url.openStream();
-        iterator = new OsmXmlIterator( input, false );
-        featureBuilder = new SimpleFeatureBuilder( super.getSchema() );
+        this.url = url;
         this.filters = new ArrayList<Pair<String,String>>();
     }
 
 
-    private static SimpleFeatureType getMemberType( String typeName, List<String> keys ) throws SchemaException {
-        StringBuffer typeSpec = new StringBuffer();
-        typeSpec.append( "LAT:Double" ).append( "," );
-        typeSpec.append( "LON:Double" ).append( "," );
-        keys.stream().forEach(
-                key -> typeSpec.append( key.replace( ":", "_" ).replace( ",", "_" ) ).append( ":String," ) );
-        String typeSpecStr = typeSpec.substring( 0, typeSpec.length() - 1 );
-        return DataUtilities.createType( typeName, typeSpecStr );
+    private static SimpleFeatureType getMemberType( String typeName, List<String> keys ) {
+        final SimpleFeatureTypeBuilder featureTypeBuilder = new SimpleFeatureTypeBuilder();
+        featureTypeBuilder.setName( typeName );
+        featureTypeBuilder.setCRS( DefaultGeographicCRS.WGS84 );
+        featureTypeBuilder.setDefaultGeometry( "theGeom" );
+        featureTypeBuilder.add( "theGeom", Point.class );
+        keys.forEach( key -> featureTypeBuilder.add( key, String.class ) );
+        return featureTypeBuilder.buildFeatureType();
     }
 
 
@@ -111,70 +103,15 @@ public class IterableFeatureCollection
      */
     @Override
     protected Iterator<SimpleFeature> openIterator() {
-        final List<String> keys = getKeys( filters );
-        return new Iterator<SimpleFeature>() {
-
-            private OsmNode currentNode = null;
-
-
-            @Override
-            public boolean hasNext() {
-                EntityContainer container;
-                while (iterator.hasNext()) {
-                    container = iterator.next();
-                    if (container.getType() == EntityType.Node) {
-                        currentNode = (OsmNode)container.getEntity();
-                        Map<String,String> tags = OsmModelUtil.getTagsAsMap( currentNode );
-                        for (Pair<String,String> filter : filters) {
-                            if (filter.getKey() == "*"
-                                    || (tags.containsKey( filter.getKey() ) && (filter.getValue() == "*") || (filter
-                                            .getValue() != null && filter.getValue().equals(
-                                            (tags.get( filter.getKey() )) )))) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                return false;
-            }
-
-
-            @Override
-            public SimpleFeature next() {
-                double longitude = currentNode.getLongitude();
-                double latitude = currentNode.getLatitude();
-                Map<String,String> attributes = OsmModelUtil.getTagsAsMap( currentNode );
-                attributes.put( LON_KEY, String.valueOf( longitude ) );
-                attributes.put( LAT_KEY, String.valueOf( latitude ) );
-                boolean changed = false;
-                if (minLon == -1 || minLon > longitude) {
-                    minLon = longitude;
-                    changed = true;
-                }
-                if (maxLon == -1 || maxLon < longitude) {
-                    maxLon = longitude;
-                    changed = true;
-                }
-                if (minLat == -1 || minLat > latitude) {
-                    minLat = latitude;
-                    changed = true;
-                }
-                if (maxLat == -1 || maxLat < latitude) {
-                    maxLat = latitude;
-                    changed = true;
-                }
-                featureBuilder.add( attributes.get( LON_KEY ) );
-                featureBuilder.add( attributes.get( LAT_KEY ) );
-                for (String key : keys) {
-                    featureBuilder.add( attributes.get( key ) );
-                }
-                size++;
-                if (changed) {
-                    env = null;
-                }
-                return featureBuilder.buildFeature( null );
-            }
-        };
+        try {
+            OsmFeatureIterator osmFeatureIterator = new OsmFeatureIterator( this );
+            osmFeatureIterators.add( osmFeatureIterator );
+            return osmFeatureIterator;
+        }
+        catch (IOException e) {
+            exception = e;
+            return new ArrayList<SimpleFeature>().iterator();
+        }
     }
 
 
@@ -185,6 +122,15 @@ public class IterableFeatureCollection
      */
     @Override
     public int size() {
+        if (size == -1) {
+            if (osmFeatureIterators.size() == 0) {
+                openIterator();
+            }
+            if (osmFeatureIterators.size() > 0) {
+                OsmFeatureIterator osmFeatureIterator = osmFeatureIterators.get( 0 );
+                size = osmFeatureIterator.size();
+            }
+        }
         return size;
     }
 
@@ -203,8 +149,53 @@ public class IterableFeatureCollection
     }
 
 
-    public void complete() throws IOException {
-        iterator.complete();
-        input.close();
+    void updateBBOX( double longitude, double latitude ) {
+        boolean changed = false;
+        if (this.minLon == -1 || this.minLon > longitude) {
+            this.minLon = longitude;
+            changed = true;
+        }
+        if (this.maxLon == -1 || this.maxLon < longitude) {
+            this.maxLon = longitude;
+            changed = true;
+        }
+        if (this.minLat == -1 || this.minLat > latitude) {
+            this.minLat = latitude;
+            changed = true;
+        }
+        if (this.maxLat == -1 || this.maxLat < latitude) {
+            this.maxLat = latitude;
+            changed = true;
+        }
+        if (changed) {
+            this.env = null;
+        }
+    }
+
+
+    public void complete() {
+        for (OsmFeatureIterator osmFeatureIterator : osmFeatureIterators) {
+            osmFeatureIterator.complete();
+        }
+    }
+
+
+    public Exception getException() {
+        return exception;
+    }
+
+
+    public void setException( Exception e ) {
+        this.exception = e;
+    }
+
+
+    public List<Pair<String,String>> getFilters() {
+        return filters;
+    }
+
+
+    public URL getUrl() {
+        return url;
     }
 }

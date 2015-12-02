@@ -25,22 +25,19 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.geotools.feature.SchemaException;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.polymap.p4.P4Plugin;
 import org.polymap.p4.data.imports.ContextOut;
 import org.polymap.p4.data.imports.Importer;
 import org.polymap.p4.data.imports.ImporterSite;
+import org.polymap.p4.data.imports.shapefile.ShpFeatureTableViewer;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
-import org.polymap.rhei.table.DefaultFeatureTableColumn;
-import org.polymap.rhei.table.FeatureTableViewer;
 
 import com.google.common.base.Joiner;
 
@@ -122,6 +119,12 @@ public class OsmApiImporter
                 String filterStr = getFilterString( tagFilters );
                 URL url = new URL( "http://www.overpass-api.de/api/xapi?map?" + bboxStr + filterStr );
                 features = new IterableFeatureCollection( "osm", url, tagFilters );
+                if(features.iterator().hasNext() && features.getException() != null) {
+                    site.ok.set( true );
+                } else {
+                    exception = features.getException();
+                    site.ok.set( false );
+                }
             }
             catch (SchemaException | IOException | FactoryException e) {
                 site.ok.set( false );
@@ -189,18 +192,12 @@ public class OsmApiImporter
             }
             else {
                 SimpleFeatureType schema = (SimpleFeatureType)features.getSchema();
-                FeatureTableViewer table = new FeatureTableViewer(parent, SWT.VIRTUAL | SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION);
-                for (PropertyDescriptor prop : schema.getDescriptors()) {
-                    if ("LAT".equals( prop.getName().toString()) || "LON".equals( prop.getName().toString())) {
-                        // skip Geometry
-                    }
-                    else {
-                        table.addColumn( new DefaultFeatureTableColumn( prop ) );
-                    }
-                }
+                ShpFeatureTableViewer table = new ShpFeatureTableViewer( parent, schema );
                 table.setContentProvider( new FeatureLazyContentProvider( features ) );
+                table.setInput( features );
             }
-        } else {
+        }
+        else {
             toolkit.createFlowText( parent,
                     "\nOSM Importer is currently deactivated" );
         }

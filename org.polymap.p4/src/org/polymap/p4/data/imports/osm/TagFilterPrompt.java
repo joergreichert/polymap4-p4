@@ -53,7 +53,7 @@ public class TagFilterPrompt {
         this.site = site;
 
         prompt = site.newPrompt( "tagFilter" ).summary.put( "Tag filter" ).description
-                .put( "Filter features to import by their tags." ).value
+                .put( "Filters features by their tags" ).value
                 .put( getReadable() ).severity
                 .put( Severity.REQUIRED ).ok.put( false ).
                 extendedUI.put( new TagFilterPromptUIBuilder() {
@@ -108,7 +108,6 @@ public class TagFilterPrompt {
                         assert selection != null;
                     }
                 } );
-        prompt.ok.set( false );
     }
 
 

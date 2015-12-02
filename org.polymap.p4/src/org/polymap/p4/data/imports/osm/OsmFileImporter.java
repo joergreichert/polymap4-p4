@@ -23,20 +23,16 @@ import java.util.List;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.geotools.feature.SchemaException;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.feature.type.PropertyDescriptor;
 import org.polymap.p4.P4Plugin;
 import org.polymap.p4.data.imports.ContextIn;
 import org.polymap.p4.data.imports.ContextOut;
 import org.polymap.p4.data.imports.Importer;
 import org.polymap.p4.data.imports.ImporterSite;
 import org.polymap.p4.data.imports.shapefile.CharsetPrompt;
+import org.polymap.p4.data.imports.shapefile.ShpFeatureTableViewer;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
-import org.polymap.rhei.table.DefaultFeatureTableColumn;
-import org.polymap.rhei.table.FeatureTableViewer;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -87,7 +83,8 @@ public class OsmFileImporter
         site.icon.set( P4Plugin.images().svgImage( "file-multiple.svg", NORMAL24 ) );
         site.summary.set( "OSM-Import" );
         site.description.set( "Importing an OSM XML file." );
-//        site.terminal.set( "osm".equalsIgnoreCase( FilenameUtils.getExtension( file.getName() ) ) );
+        site.terminal.set( "osm".equalsIgnoreCase( FilenameUtils.getExtension(
+                file.getName() ) ) );
     }
 
 
@@ -116,8 +113,15 @@ public class OsmFileImporter
             try {
                 List<Pair<String,String>> tagFilters = tagPrompt.selection();
                 features = new IterableFeatureCollection( "osm", file, tagFilters );
+                if (features.iterator().hasNext() && features.getException() != null) {
+                    site.ok.set( true );
+                }
+                else {
+                    exception = features.getException();
+                    site.ok.set( false );
+                }
             }
-            catch (SchemaException | IOException e) {
+            catch (IOException e) {
                 site.ok.set( false );
                 exception = e;
             }
@@ -141,17 +145,9 @@ public class OsmFileImporter
             }
             else {
                 SimpleFeatureType schema = (SimpleFeatureType)features.getSchema();
-                FeatureTableViewer table = new FeatureTableViewer( parent, SWT.VIRTUAL | SWT.H_SCROLL | SWT.V_SCROLL
-                        | SWT.FULL_SELECTION );
-                for (PropertyDescriptor prop : schema.getDescriptors()) {
-                    if ("LAT".equals( prop.getName().toString() ) || "LON".equals( prop.getName().toString() )) {
-                        // skip Geometry
-                    }
-                    else {
-                        table.addColumn( new DefaultFeatureTableColumn( prop ) );
-                    }
-                }
+                ShpFeatureTableViewer table = new ShpFeatureTableViewer( parent, schema );
                 table.setContentProvider( new FeatureLazyContentProvider( features ) );
+                table.setInput( features );
             }
         }
         else {
