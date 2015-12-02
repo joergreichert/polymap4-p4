@@ -36,9 +36,9 @@ import com.google.common.base.Joiner;
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public class TagPrompt {
+public class TagFilterPrompt {
 
-    private static Log                       log       = LogFactory.getLog( TagPrompt.class );
+    private static Log                       log       = LogFactory.getLog( TagFilterPrompt.class );
 
     private static List<Pair<String,String>> DEFAULT   = new ArrayList<Pair<String,String>>();
 
@@ -49,14 +49,14 @@ public class TagPrompt {
     private final ImporterPrompt             prompt;
 
 
-    public TagPrompt( ImporterSite site ) {
+    public TagFilterPrompt( ImporterSite site ) {
         this.site = site;
 
         prompt = site.newPrompt( "tagFilter" ).summary.put( "Tag filter" ).description
                 .put( "Filter features to import by their tags." ).value
                 .put( getReadable() ).severity
                 .put( Severity.REQUIRED ).ok.put( false ).
-                extendedUI.put( new FilteredMapPromptUIBuilder() {
+                extendedUI.put( new TagFilterPromptUIBuilder() {
 
                     private SortedMap<String,SortedSet<String>> tags = null;
 

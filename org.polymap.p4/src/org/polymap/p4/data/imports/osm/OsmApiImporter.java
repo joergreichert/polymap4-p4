@@ -61,7 +61,7 @@ public class OsmApiImporter
 
     private IPanelToolkit               toolkit;
 
-    private TagPrompt                   tagPrompt;
+    private TagFilterPrompt                   tagPrompt;
 
 
     /*
@@ -101,7 +101,7 @@ public class OsmApiImporter
      */
     @Override
     public void createPrompts( IProgressMonitor monitor ) throws Exception {
-        tagPrompt = new TagPrompt( site );
+        tagPrompt = new TagFilterPrompt( site );
     }
 
 

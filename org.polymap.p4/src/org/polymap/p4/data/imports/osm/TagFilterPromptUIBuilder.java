@@ -33,8 +33,6 @@ import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -49,24 +47,11 @@ import org.polymap.rhei.batik.toolkit.IPanelToolkit;
  * @author Joerg Reichert <joerg@mapzone.io>
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public abstract class FilteredMapPromptUIBuilder
+public abstract class TagFilterPromptUIBuilder
         implements PromptUIBuilder {
 
     private Combo keyList, valueList;
     private SimpleContentProposalProvider valueProposalProvider;
-
-
-    protected abstract SortedMap<String,SortedSet<String>> listItems();
-
-
-    protected abstract List<Pair<String,String>> initiallySelectedItems();
-
-
-    protected abstract void handleSelection( Pair<String,String> selectedItem );
-
-
-    protected abstract void handleUnselection( Pair<String,String> selectedItem );
-
 
     @Override
     public void createContents( ImporterPrompt prompt, Composite parent, IPanelToolkit tk ) {
@@ -87,29 +72,37 @@ public abstract class FilteredMapPromptUIBuilder
         values.add( "*" );
 
         Composite filterComposite = new Composite( parent, SWT.NONE );
-        filterComposite.setLayout( new GridLayout( 2, false ) );
-        createKeyFilter( filterComposite, keys.toArray( new String[keys.size()] ),
-                initiallySelectedItem.getKey() );
-        createValueFilter( filterComposite, values.toArray( new String[values.size()] ),
-                initiallySelectedItem.getValue() );
+        filterComposite.setLayout( FormLayoutFactory.defaults().spacing( 0 ).create() );
+        Composite tagComposite = new Composite( filterComposite, SWT.NONE );
+        tagComposite.setLayout( FormLayoutFactory.defaults().spacing( 0 ).create() );
+        Label tagLabel = on(new Label( tagComposite, SWT.NONE )).fill().noRight().noBottom().control();
+        tagLabel.setText( "Tag:" );
+        keyList = on(createKeyFilter( tagComposite, keys.toArray( new String[keys.size()] ),
+                initiallySelectedItem.getKey() )).top( tagLabel, 5 ).width(150).noRight().control();
+        Label opLabel = on(new Label( filterComposite, SWT.NONE )).left( tagComposite, 10 ).noRight().bottom( 90 ).control();
+        opLabel.setText( "=" );
+        Composite valueComposite = on(new Composite( filterComposite, SWT.NONE )).left( opLabel, 10 ).control();
+        valueComposite.setLayout( FormLayoutFactory.defaults().spacing( 0 ).create() );
+        Label valueLabel = on(new Label( valueComposite, SWT.NONE )).noBottom().control();
+        valueLabel.setText( "Value:" );
+        valueList = on(createValueFilter( valueComposite, values.toArray( new String[values.size()] ),
+                initiallySelectedItem.getValue() )).top( valueLabel, 5 ).width(150).right( 100 ).control();
+        
 
-        Composite selectedFiltersComp = new Composite( parent, SWT.NONE );
-        selectedFiltersComp.setLayout( FormLayoutFactory.defaults().spacing( 0 ).create() );
-        Label selectedFiltersLabel = on( new Label( selectedFiltersComp, SWT.NONE ) )
-                .fill().noBottom().control();
-        selectedFiltersLabel.setText( getSelectedLabel() );
+        Composite buttonBar = new Composite( parent, SWT.NONE );
+        buttonBar.setLayout( FormLayoutFactory.defaults().spacing( 0 ).create() );
+        
         org.eclipse.swt.widgets.List selectedFilters = on(
-                new org.eclipse.swt.widgets.List( selectedFiltersComp, SWT.V_SCROLL ) )
-                .fill().top( selectedFiltersLabel, 10 ).width( 250 ).height( 150 ).control();
+                new org.eclipse.swt.widgets.List( parent, SWT.V_SCROLL ) )
+                .fill().top( buttonBar, 10 ).width( 250 ).height( 150 ).control();
         for (Pair<String,String> item : initiallySelectedItems()) {
             if (!"*".equals( item.getKey() )) {
                 selectedFilters.add( item.getKey() + "=" + item.getValue() );
             }
         }
-        on( selectedFilters ).fill().top( selectedFiltersLabel );
 
-        Button addButton = new Button( parent, SWT.NONE );
-        addButton.setText( "Add Filter" );
+        Button addButton = on(new Button( buttonBar, SWT.NONE )).left(0).right(50).control();
+        addButton.setText( "Add" );
         addButton.addSelectionListener( new SelectionAdapter() {
 
             public void widgetSelected( SelectionEvent e ) {
@@ -121,9 +114,10 @@ public abstract class FilteredMapPromptUIBuilder
                 }
             }
         } );
-        Button deleteButton = new Button( parent, SWT.NONE );
-        deleteButton.setText( "Remove Filter" );
-        deleteButton.addSelectionListener( new SelectionAdapter() {
+        Button removeButton = on(new Button( buttonBar, SWT.NONE )).left( addButton, 10 ).right( 100 ).control();
+        removeButton.setText( "Remove" );
+        removeButton.setEnabled( false );
+        removeButton.addSelectionListener( new SelectionAdapter() {
 
             public void widgetSelected( SelectionEvent e ) {
                 for (String selectedItem : selectedFilters.getSelection()) {
@@ -131,27 +125,30 @@ public abstract class FilteredMapPromptUIBuilder
                     String[] parts = selectedItem.split( "=" );
                     handleUnselection( Pair.of( parts[0], parts[1] ) );
                 }
+                removeButton.setEnabled( selectedFilters.getSelection() != null );
+            }
+        } );
+        selectedFilters.addSelectionListener( new SelectionAdapter() {
+            
+            @Override
+            public void widgetSelected( SelectionEvent e ) {
+                removeButton.setEnabled( true );
             }
         } );
 
         on( filterComposite ).left( 0 ).right( 100 );
-        on( addButton ).left( 0 ).right( 100 ).top( filterComposite, 10 );
-        on( selectedFiltersComp ).left( 0 ).right( 100 ).top( addButton, 20 );
-        on( deleteButton ).left( 0 ).right( 100 ).top( selectedFiltersComp, 10 );
+        on( buttonBar ).left( 0 ).right( 100 ).top( filterComposite, 20 );
 
         parent.pack();
     }
 
 
-    private void createKeyFilter( Composite filterComposite, String[] listItems, String initiallySelectedItem ) {
-        Label label = new Label( filterComposite, SWT.NONE );
-        label.setText( getKeyLabel() );
+    private Combo createKeyFilter( Composite filterComposite, String[] listItems, String initiallySelectedItem ) {
 
         ComboViewer comboViewer = new ComboViewer( filterComposite, SWT.DROP_DOWN );
-        keyList = comboViewer.getCombo();
+        Combo keyList = comboViewer.getCombo();
         keyList.setItems( listItems );
         keyList.select( Arrays.asList( listItems ).indexOf( initiallySelectedItem ) );
-        keyList.setToolTipText( getKeyFilterTooltip() );
 
         SimpleContentProposalProvider proposalProvider = new SimpleContentProposalProvider( keyList.getItems() );
         ContentProposalAdapter proposalAdapter = new ContentProposalAdapter(
@@ -164,11 +161,7 @@ public abstract class FilteredMapPromptUIBuilder
         proposalAdapter.setPropagateKeys( true );
         proposalAdapter.setProposalAcceptanceStyle( ContentProposalAdapter.PROPOSAL_REPLACE );
         proposalAdapter.addContentProposalListener( prop -> handleKeySelection( prop.getContent() ));
-
-        GridData data = new GridData();
-        data.grabExcessHorizontalSpace = true;
-        data.horizontalAlignment = GridData.FILL;
-        keyList.setLayoutData( data );
+        return keyList;
     }
 
     private static final String LCL = "abcdefghijklmnopqrstuvwxyz";
@@ -192,15 +185,11 @@ public abstract class FilteredMapPromptUIBuilder
     }
 
 
-    private void createValueFilter( Composite filterComposite, String[] listItems, String initiallySelectedItem ) {
-        Label label = new Label( filterComposite, SWT.NONE );
-        label.setText( getValueLabel() );
-
+    private Combo createValueFilter( Composite filterComposite, String[] listItems, String initiallySelectedItem ) {
         ComboViewer comboViewer = new ComboViewer( filterComposite, SWT.DROP_DOWN );
-        valueList = comboViewer.getCombo();
+        Combo valueList = comboViewer.getCombo();
         valueList.setItems( listItems );
         valueList.select( Arrays.asList( listItems ).indexOf( initiallySelectedItem ) );
-        valueList.setToolTipText( getValueFilterTooltip() );
 
         valueProposalProvider = new SimpleContentProposalProvider( listItems );
         ContentProposalAdapter proposalAdapter = new ContentProposalAdapter(
@@ -212,11 +201,7 @@ public abstract class FilteredMapPromptUIBuilder
         valueProposalProvider.setFiltering( true );
         proposalAdapter.setPropagateKeys( true );
         proposalAdapter.setProposalAcceptanceStyle( ContentProposalAdapter.PROPOSAL_REPLACE );
-
-        GridData data = new GridData();
-        data.grabExcessHorizontalSpace = true;
-        data.horizontalAlignment = GridData.FILL;
-        valueList.setLayoutData( data );
+        return valueList;
     }
 
 
@@ -229,31 +214,6 @@ public abstract class FilteredMapPromptUIBuilder
         valueList.select( 0 );
         valueList.setText( "" );
         valueProposalProvider.setProposals( valueList.getItems() );
-    }
-
-
-    protected String getKeyLabel() {
-        return "Key:";
-    }
-
-
-    protected String getKeyFilterTooltip() {
-        return "Key of tag";
-    }
-
-
-    protected String getValueLabel() {
-        return "Value:";
-    }
-
-
-    protected String getValueFilterTooltip() {
-        return "Value of tag";
-    }
-
-
-    protected String getSelectedLabel() {
-        return "Selected tag filters";
     }
 
 
@@ -274,4 +234,15 @@ public abstract class FilteredMapPromptUIBuilder
     private String getSelectedItem( Combo combo ) {
         return combo.getItem( combo.getSelectionIndex() );
     }
+    
+    protected abstract SortedMap<String,SortedSet<String>> listItems();
+
+
+    protected abstract List<Pair<String,String>> initiallySelectedItems();
+
+
+    protected abstract void handleSelection( Pair<String,String> selectedItem );
+
+
+    protected abstract void handleUnselection( Pair<String,String> selectedItem );    
 }
