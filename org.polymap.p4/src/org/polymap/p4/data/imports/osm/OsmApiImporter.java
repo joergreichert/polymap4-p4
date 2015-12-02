@@ -22,7 +22,6 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -119,11 +118,10 @@ public class OsmApiImporter
                 CoordinateReferenceSystem crs = CRS.decode( "EPSG:4326" );
                 // TODO get from currently visible map
                 String bboxStr = getBBOXStr( crs );
-                List<Pair<String,String>> tags = tagPrompt.selection();
-                List<String> selectedKeys = tags.stream().map( tag -> tag.getKey() ).collect( Collectors.toList() );
-                String filterStr = getFilterString( tagPrompt.selection() );
+                List<Pair<String,String>> tagFilters = tagPrompt.selection();
+                String filterStr = getFilterString( tagFilters );
                 URL url = new URL( "http://www.overpass-api.de/api/xapi?map?" + bboxStr + filterStr );
-                features = new IterableFeatureCollection( "osm", url, selectedKeys );
+                features = new IterableFeatureCollection( "osm", url, tagFilters );
             }
             catch (SchemaException | IOException | FactoryException e) {
                 site.ok.set( false );

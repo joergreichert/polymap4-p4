@@ -17,39 +17,26 @@ package org.polymap.p4.data.imports.osm;
 import static org.polymap.rhei.batik.app.SvgImageRegistryHelper.NORMAL24;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.io.IOException;
+import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.geotools.feature.SchemaException;
 import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.PropertyDescriptor;
 import org.polymap.p4.P4Plugin;
 import org.polymap.p4.data.imports.ContextIn;
 import org.polymap.p4.data.imports.ContextOut;
 import org.polymap.p4.data.imports.Importer;
 import org.polymap.p4.data.imports.ImporterSite;
 import org.polymap.p4.data.imports.shapefile.CharsetPrompt;
-import org.polymap.p4.data.imports.shapefile.ShpFeatureTableViewer;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
-
-import com.google.common.collect.Lists;
-
-import de.topobyte.osm4j.core.access.OsmIterator;
-import de.topobyte.osm4j.core.model.iface.EntityContainer;
-import de.topobyte.osm4j.core.model.iface.EntityType;
-import de.topobyte.osm4j.core.model.iface.OsmNode;
-import de.topobyte.osm4j.core.model.util.OsmModelUtil;
-import de.topobyte.osm4j.xml.dynsax.OsmXmlIterator;
+import org.polymap.rhei.table.DefaultFeatureTableColumn;
+import org.polymap.rhei.table.FeatureTableViewer;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -71,6 +58,8 @@ public class OsmFileImporter
     private IPanelToolkit               toolkit;
 
     private CharsetPrompt               charsetPrompt;
+
+    private TagFilterPrompt             tagPrompt;
 
 
     /*
@@ -98,7 +87,7 @@ public class OsmFileImporter
         site.icon.set( P4Plugin.images().svgImage( "file-multiple.svg", NORMAL24 ) );
         site.summary.set( "OSM-Import" );
         site.description.set( "Importing an OSM XML file." );
-        site.terminal.set( "osm".equalsIgnoreCase( FilenameUtils.getExtension( file.getName() ) ) );
+//        site.terminal.set( "osm".equalsIgnoreCase( FilenameUtils.getExtension( file.getName() ) ) );
     }
 
 
@@ -111,7 +100,7 @@ public class OsmFileImporter
      */
     @Override
     public void createPrompts( IProgressMonitor monitor ) throws Exception {
-        charsetPrompt = new CharsetPrompt( site, Lists.newArrayList( file ) );
+        tagPrompt = new TagFilterPrompt( site );
     }
 
 
@@ -123,27 +112,18 @@ public class OsmFileImporter
      */
     @Override
     public void verify( IProgressMonitor monitor ) {
-        TreeMap<String,SortedSet<String>> tags = new TreeMap<String,SortedSet<String>>();
-        try (InputStream in = new FileInputStream( file )) {
-            tags.putAll( TagInfo.getTagsFromContent( in ) );
-            site.ok.set( true );
-            exception = null;
-        }
-        catch (Exception e) {
-            site.ok.set( false );
-            exception = e;
-        }
-        if (site.ok.isPresent() && site.ok.get()) {
-            ArrayList<String> keys = new ArrayList<String>( tags.keySet() );
+        if (tagPrompt.isOk()) {
             try {
-                features = new IterableFeatureCollection( FilenameUtils.getBaseName( file.getName() ), file, keys );
+                List<Pair<String,String>> tagFilters = tagPrompt.selection();
+                features = new IterableFeatureCollection( "osm", file, tagFilters );
             }
-            catch (FileNotFoundException | SchemaException e) {
+            catch (SchemaException | IOException e) {
                 site.ok.set( false );
                 exception = e;
             }
         }
     }
+
 
     /*
      * (non-Javadoc)
@@ -154,13 +134,29 @@ public class OsmFileImporter
      */
     @Override
     public void createResultViewer( Composite parent, IPanelToolkit toolkit ) {
-        if (exception != null) {
-            toolkit.createFlowText( parent, "\nUnable to read the data.\n\n" + "**Reason**: " + exception.getMessage() );
+        if (tagPrompt.isOk()) {
+            if (exception != null) {
+                toolkit.createFlowText( parent,
+                        "\nUnable to read the data.\n\n" + "**Reason**: " + exception.getMessage() );
+            }
+            else {
+                SimpleFeatureType schema = (SimpleFeatureType)features.getSchema();
+                FeatureTableViewer table = new FeatureTableViewer( parent, SWT.VIRTUAL | SWT.H_SCROLL | SWT.V_SCROLL
+                        | SWT.FULL_SELECTION );
+                for (PropertyDescriptor prop : schema.getDescriptors()) {
+                    if ("LAT".equals( prop.getName().toString() ) || "LON".equals( prop.getName().toString() )) {
+                        // skip Geometry
+                    }
+                    else {
+                        table.addColumn( new DefaultFeatureTableColumn( prop ) );
+                    }
+                }
+                table.setContentProvider( new FeatureLazyContentProvider( features ) );
+            }
         }
         else {
-            SimpleFeatureType schema = (SimpleFeatureType)features.getSchema();
-            ShpFeatureTableViewer table = new ShpFeatureTableViewer( parent, schema );
-            table.setContent( features );
+            toolkit.createFlowText( parent,
+                    "\nOSM Importer is currently deactivated" );
         }
     }
 

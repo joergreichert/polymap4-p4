@@ -20,15 +20,16 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.geotools.data.DataUtilities;
-import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.feature.SchemaException;
 import org.geotools.feature.collection.AbstractFeatureCollection;
-import org.geotools.feature.collection.SimpleFeatureIteratorImpl;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.simple.SimpleFeature;
@@ -47,51 +48,58 @@ import de.topobyte.osm4j.xml.dynsax.OsmXmlIterator;
 public class IterableFeatureCollection
         extends AbstractFeatureCollection {
 
-    private ReferencedEnvelope         env      = null;
+    private ReferencedEnvelope              env     = null;
 
-    private int                        size     = 0;
+    private int                             size    = 0;
 
-    private static String              LAT_KEY  = "LAT";
+    private static String                   LAT_KEY = "LAT";
 
-    private static String              LON_KEY = "LON";
+    private static String                   LON_KEY = "LON";
 
-    private final List<String>         keys;
+    private Double                          minLon  = -1d, maxLon = -1d, minLat = -1d, maxLat = -1d;
 
-    private Double                     minLon   = -1d, maxLon = -1d, minLat = -1d, maxLat = -1d;
+    private final SimpleFeatureBuilder      featureBuilder;
 
-    private final SimpleFeatureBuilder featureBuilder;
+    private final OsmXmlIterator            iterator;
 
-    private final OsmXmlIterator       iterator;
+    private final InputStream               input;
 
-    private final InputStream          input;
+    private final List<Pair<String,String>> filters;
 
-
-    public IterableFeatureCollection( String typeName, File file, List<String> keys ) throws SchemaException,
+    public IterableFeatureCollection( String typeName, File file, List<Pair<String,String>> filters )
+            throws SchemaException,
             FileNotFoundException {
-        super( getMemberType( typeName, keys ) );
+        super( getMemberType( typeName, getKeys( filters ) ) );
         input = new FileInputStream( file );
         iterator = new OsmXmlIterator( input, false );
         featureBuilder = new SimpleFeatureBuilder( super.getSchema() );
-        this.keys = keys;
+        this.filters = filters;
     }
 
 
-    public IterableFeatureCollection( String typeName, URL url, List<String> keys ) throws SchemaException, IOException
+    private static List<String> getKeys( List<Pair<String,String>> filters ) {
+        return filters.stream().map( tag -> tag.getKey() ).collect( Collectors.toList() );
+    }
+
+
+    public IterableFeatureCollection( String typeName, URL url, List<Pair<String,String>> filters )
+            throws SchemaException, IOException
     {
-        super( getMemberType( typeName, keys ) );
+        super( getMemberType( typeName, getKeys( filters ) ) );
         input = url.openStream();
         iterator = new OsmXmlIterator( input, false );
         featureBuilder = new SimpleFeatureBuilder( super.getSchema() );
-        this.keys = keys;
+        this.filters = new ArrayList<Pair<String,String>>();
     }
 
 
     private static SimpleFeatureType getMemberType( String typeName, List<String> keys ) throws SchemaException {
         StringBuffer typeSpec = new StringBuffer();
-        typeSpec.append( "LAT:Double" ).append(",");
-        typeSpec.append( "LON:Double" ).append(",");
-        keys.stream().forEach( key -> typeSpec.append( key.replace( ":", "_" ).replace( ",", "_" ) ).append( ":String," ) );
-        String typeSpecStr = typeSpec.substring( 0, typeSpec.length()-1 );
+        typeSpec.append( "LAT:Double" ).append( "," );
+        typeSpec.append( "LON:Double" ).append( "," );
+        keys.stream().forEach(
+                key -> typeSpec.append( key.replace( ":", "_" ).replace( ",", "_" ) ).append( ":String," ) );
+        String typeSpecStr = typeSpec.substring( 0, typeSpec.length() - 1 );
         return DataUtilities.createType( typeName, typeSpecStr );
     }
 
@@ -103,6 +111,7 @@ public class IterableFeatureCollection
      */
     @Override
     protected Iterator<SimpleFeature> openIterator() {
+        final List<String> keys = getKeys( filters );
         return new Iterator<SimpleFeature>() {
 
             private OsmNode currentNode = null;
@@ -110,16 +119,23 @@ public class IterableFeatureCollection
 
             @Override
             public boolean hasNext() {
-                boolean foundNextEntity = false;
                 EntityContainer container;
-                while (iterator.hasNext() && !foundNextEntity) {
+                while (iterator.hasNext()) {
                     container = iterator.next();
                     if (container.getType() == EntityType.Node) {
                         currentNode = (OsmNode)container.getEntity();
-                        foundNextEntity = true;
+                        Map<String,String> tags = OsmModelUtil.getTagsAsMap( currentNode );
+                        for (Pair<String,String> filter : filters) {
+                            if (filter.getKey() == "*"
+                                    || (tags.containsKey( filter.getKey() ) && (filter.getValue() == "*") || (filter
+                                            .getValue() != null && filter.getValue().equals(
+                                            (tags.get( filter.getKey() )) )))) {
+                                return true;
+                            }
+                        }
                     }
                 }
-                return foundNextEntity;
+                return false;
             }
 
 
