@@ -37,24 +37,24 @@ import org.polymap.rhei.batik.toolkit.IPanelToolkit;
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public class OsmFileImporter
+public class OsmXmlFileImporter
         implements Importer {
 
     @ContextIn
-    protected File                      file;
+    protected File                            file;
 
     @ContextOut
-    protected IterableFeatureCollection features;
+    protected OsmXmlIterableFeatureCollection features;
 
-    protected ImporterSite              site;
+    protected ImporterSite                    site;
 
-    private Exception                   exception;
+    private Exception                         exception;
 
-    private IPanelToolkit               toolkit;
+    private IPanelToolkit                     toolkit;
 
-    private CharsetPrompt               charsetPrompt;
+    private CharsetPrompt                     charsetPrompt;
 
-    private TagFilterPrompt             tagPrompt;
+    private TagFilterPrompt                   tagPrompt;
 
 
     /*
@@ -82,7 +82,7 @@ public class OsmFileImporter
         site.icon.set( P4Plugin.images().svgImage( "file-multiple.svg", NORMAL24 ) );
         site.summary.set( "OSM-Import" );
         site.description.set( "Importing an OSM XML file." );
-        site.terminal.set(true);
+        site.terminal.set( true );
     }
 
 
@@ -110,7 +110,7 @@ public class OsmFileImporter
         if (tagPrompt.isOk()) {
             try {
                 List<Pair<String,String>> tagFilters = tagPrompt.selection();
-                features = new IterableFeatureCollection( "osm", file, tagFilters );
+                features = new OsmXmlIterableFeatureCollection( "osm", file, tagFilters );
                 if (features.iterator().hasNext() && features.getException() == null) {
                     site.ok.set( true );
                 }

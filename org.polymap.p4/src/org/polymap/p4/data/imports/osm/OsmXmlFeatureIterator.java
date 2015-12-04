@@ -34,28 +34,28 @@ import de.topobyte.osm4j.core.model.iface.OsmNode;
 import de.topobyte.osm4j.core.model.util.OsmModelUtil;
 import de.topobyte.osm4j.xml.dynsax.OsmXmlIterator;
 
-class OsmFeatureIterator
+class OsmXmlFeatureIterator
         implements Iterator<SimpleFeature> {
 
-    private final IterableFeatureCollection iterableFeatureCollection;
+    private final OsmXmlIterableFeatureCollection iterableFeatureCollection;
 
-    private final SimpleFeatureBuilder      featureBuilder;
+    private final SimpleFeatureBuilder            featureBuilder;
 
-    private final InputStream               input;
+    private final InputStream                     input;
 
-    private final OsmXmlIterator            iterator;
+    private final OsmXmlIterator                  iterator;
 
-    private OsmNode                         currentNode = null;
+    private OsmNode                               currentNode = null;
 
-    final List<String>                      keys;
+    final List<String>                            keys;
 
-    private int                             size        = -1;
+    private int                                   size        = -1;
 
 
-    public OsmFeatureIterator( IterableFeatureCollection iterableFeatureCollection ) throws IOException {
+    public OsmXmlFeatureIterator( OsmXmlIterableFeatureCollection iterableFeatureCollection ) throws IOException {
         this.iterableFeatureCollection = iterableFeatureCollection;
         featureBuilder = new SimpleFeatureBuilder( iterableFeatureCollection.getSchema() );
-        keys = IterableFeatureCollection.getKeys( this.iterableFeatureCollection.getFilters() );
+        keys = OsmXmlIterableFeatureCollection.getKeys( this.iterableFeatureCollection.getFilters() );
         input = this.iterableFeatureCollection.getUrl().openStream();
         iterator = new OsmXmlIterator( input, false );
     }
@@ -136,9 +136,11 @@ class OsmFeatureIterator
         if (size == -1) {
             try {
                 // by this a new input stream is created for the URL
-                // trade-off: two (API/file) requests (with stream same content) (this is the current way) vs. 
-                // one (API/file) request and then storing node objects while counting an reusing them when building feature 
-                OsmFeatureIterator osmFeatureIterator = new OsmFeatureIterator( this.iterableFeatureCollection );
+                // trade-off: two (API/file) requests (with stream same content)
+                // (this is the current way) vs.
+                // one (API/file) request and then storing node objects while
+                // counting an reusing them when building feature
+                OsmXmlFeatureIterator osmFeatureIterator = new OsmXmlFeatureIterator( this.iterableFeatureCollection );
                 int count = 0;
                 while (osmFeatureIterator.hasNext( true )) {
                     count++;

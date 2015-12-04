@@ -14,28 +14,30 @@
  */
 package org.polymap.p4.data.imports.osm;
 
-import java.io.File;
 import java.util.List;
 import java.util.Set;
 
+import java.io.File;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.polymap.p4.data.imports.ContextIn;
-import org.polymap.p4.data.imports.ImporterFactory;
 
 import com.google.common.collect.Sets;
+
+import org.polymap.p4.data.imports.ContextIn;
+import org.polymap.p4.data.imports.ImporterFactory;
 
 /**
  * 
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public class OsmFileImporterFactory
+public class OsmPbfFileImporterFactory
         implements ImporterFactory {
 
-    private static Log log = LogFactory.getLog( OsmFileImporterFactory.class );
+    private static Log log = LogFactory.getLog( OsmPbfFileImporterFactory.class );
     
-    public final static Set<String> supportedTypes = Sets.newHashSet(".osm", ".xml"); 
+    public final static Set<String> supportedTypes = Sets.newHashSet(".pbf"); 
     
     @ContextIn
     protected File                  file;
@@ -46,21 +48,8 @@ public class OsmFileImporterFactory
 
     @Override
     public void createImporters( ImporterBuilder builder ) throws Exception {
-        if (isSupported( file )) {
-            builder.newImporter( new OsmFileImporter(), file );
+        if (file != null && file.getName().toLowerCase().endsWith( ".pbf" )) {
+            builder.newImporter( new OsmPbfFileImporter(), file );
         }
-    }
-
-
-    private boolean isSupported(File file) {
-        if (file == null) {
-            return false;
-        }
-        for (String type : supportedTypes) {
-            if (file.getName().toLowerCase().endsWith( type )) {
-                return true;
-            }
-        }
-        return false;
     }
 }

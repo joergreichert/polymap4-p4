@@ -72,7 +72,10 @@
 			<!-- OSM Importer -->
 		    <dependency groupId="de.topobyte" artifactId="osm4j-core" version="0.0.8" />
 		    <dependency groupId="de.topobyte" artifactId="osm4j-xml" version="0.0.2" />
-			
+
+			<!-- Protobuf, as used by OSM PBF Importer -->
+			<dependency groupId="com.google.protobuf" artifactId="protobuf-java" version="2.4.1"/>
+
 			<!-- testing -->
 		    <dependency groupId="org.mockito" artifactId="mockito-all" version="1.10.19" />
 		    <dependency groupId="org.powermock" artifactId="powermock-module-junit4" version="1.6.2" />

@@ -39,7 +39,7 @@ import com.vividsolutions.jts.geom.Point;
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public class IterableFeatureCollection
+public class OsmPbfIterableFeatureCollection
         extends AbstractFeatureCollection {
 
     private ReferencedEnvelope              env                 = null;
@@ -58,12 +58,12 @@ public class IterableFeatureCollection
 
     private Exception                       exception           = null;
 
-    private List<OsmFeatureIterator>        osmFeatureIterators = new ArrayList<OsmFeatureIterator>();
+    private List<OsmPbfFeatureIterator>     osmFeatureIterators = new ArrayList<OsmPbfFeatureIterator>();
 
     private int                             size;
 
 
-    public IterableFeatureCollection( String typeName, File file, List<Pair<String,String>> filters )
+    public OsmPbfIterableFeatureCollection( String typeName, File file, List<Pair<String,String>> filters )
             throws FileNotFoundException, MalformedURLException {
         super( getMemberType( typeName, getKeys( filters ) ) );
         this.url = file.toURI().toURL();
@@ -76,7 +76,7 @@ public class IterableFeatureCollection
     }
 
 
-    public IterableFeatureCollection( String typeName, URL url, List<Pair<String,String>> filters )
+    public OsmPbfIterableFeatureCollection( String typeName, URL url, List<Pair<String,String>> filters )
             throws SchemaException, IOException
     {
         super( getMemberType( typeName, getKeys( filters ) ) );
@@ -104,7 +104,7 @@ public class IterableFeatureCollection
     @Override
     protected Iterator<SimpleFeature> openIterator() {
         try {
-            OsmFeatureIterator osmFeatureIterator = new OsmFeatureIterator( this );
+            OsmPbfFeatureIterator osmFeatureIterator = new OsmPbfFeatureIterator( this );
             osmFeatureIterators.add( osmFeatureIterator );
             return osmFeatureIterator;
         }
@@ -127,7 +127,7 @@ public class IterableFeatureCollection
                 openIterator();
             }
             if (osmFeatureIterators.size() > 0) {
-                OsmFeatureIterator osmFeatureIterator = osmFeatureIterators.get( 0 );
+                OsmPbfFeatureIterator osmFeatureIterator = osmFeatureIterators.get( 0 );
                 size = osmFeatureIterator.size();
             }
         }
@@ -174,7 +174,7 @@ public class IterableFeatureCollection
 
 
     public void complete() {
-        for (OsmFeatureIterator osmFeatureIterator : osmFeatureIterators) {
+        for (OsmPbfFeatureIterator osmFeatureIterator : osmFeatureIterators) {
             osmFeatureIterator.complete();
         }
     }

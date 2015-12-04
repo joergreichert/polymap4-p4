@@ -62,7 +62,8 @@ import org.polymap.p4.data.imports.ImporterFactory.ImporterBuilder;
 import org.polymap.p4.data.imports.ImporterPrompt.Severity;
 import org.polymap.p4.data.imports.archive.ArchiveFileImporterFactory;
 import org.polymap.p4.data.imports.osm.OsmApiImporterFactory;
-import org.polymap.p4.data.imports.osm.OsmFileImporterFactory;
+import org.polymap.p4.data.imports.osm.OsmPbfFileImporterFactory;
+import org.polymap.p4.data.imports.osm.OsmXmlFileImporterFactory;
 import org.polymap.p4.data.imports.refine.csv.CSVFileImporterFactory;
 import org.polymap.p4.data.imports.refine.excel.ExcelFileImporterFactory;
 import org.polymap.p4.data.imports.shapefile.ShpImporterFactory;
@@ -86,7 +87,8 @@ public class ImporterContext
             CSVFileImporterFactory.class, 
             ExcelFileImporterFactory.class,
             OsmApiImporterFactory.class,
-            OsmFileImporterFactory.class,
+            OsmXmlFileImporterFactory.class,
+            OsmPbfFileImporterFactory.class,
             ShpImporterFactory.class,
             WmsImporterFactory.class };
     

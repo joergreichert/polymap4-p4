@@ -16,48 +16,45 @@ package org.polymap.p4.data.imports.osm;
 
 import static org.polymap.rhei.batik.app.SvgImageRegistryHelper.NORMAL24;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.widgets.Composite;
-import org.geotools.feature.SchemaException;
-import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.geotools.referencing.CRS;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.polymap.p4.P4Plugin;
+import org.polymap.p4.data.imports.ContextIn;
 import org.polymap.p4.data.imports.ContextOut;
 import org.polymap.p4.data.imports.Importer;
 import org.polymap.p4.data.imports.ImporterSite;
+import org.polymap.p4.data.imports.shapefile.CharsetPrompt;
 import org.polymap.p4.data.imports.shapefile.ShpFeatureTableViewer;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
-
-import com.google.common.base.Joiner;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
  *
  */
-public class OsmApiImporter
+public class OsmPbfFileImporter
         implements Importer {
 
+    @ContextIn
+    protected File                            file;
+
     @ContextOut
-    protected OsmXmlIterableFeatureCollection features;
+    protected OsmPbfIterableFeatureCollection features;
 
-    protected ImporterSite              site;
+    protected ImporterSite                    site;
 
-    private Exception                   exception;
+    private Exception                         exception;
 
-    private IPanelToolkit               toolkit;
+    private IPanelToolkit                     toolkit;
 
-    private TagFilterPrompt             tagPrompt;
+    private CharsetPrompt                     charsetPrompt;
+
+    private TagFilterPrompt                   tagPrompt;
 
 
     /*
@@ -84,7 +81,7 @@ public class OsmApiImporter
 
         site.icon.set( P4Plugin.images().svgImage( "file-multiple.svg", NORMAL24 ) );
         site.summary.set( "OSM-Import" );
-        site.description.set( "Importing OpenStreetMap data via API." );
+        site.description.set( "Importing an OSM PBF file." );
         site.terminal.set( true );
     }
 
@@ -112,14 +109,8 @@ public class OsmApiImporter
     public void verify( IProgressMonitor monitor ) {
         if (tagPrompt.isOk()) {
             try {
-                // TODO get from CRS Prompt (not yet merged to master)
-                CoordinateReferenceSystem crs = CRS.decode( "EPSG:4326" );
-                // TODO get from currently visible map
-                String bboxStr = getBBOXStr( crs );
                 List<Pair<String,String>> tagFilters = tagPrompt.selection();
-                String filterStr = getFilterString( tagFilters );
-                URL url = new URL( "http://www.overpass-api.de/api/xapi?map?" + bboxStr + filterStr );
-                features = new OsmXmlIterableFeatureCollection( "osm", url, tagFilters );
+                features = new OsmPbfIterableFeatureCollection( "osm", file, tagFilters );
                 if (features.iterator().hasNext() && features.getException() == null) {
                     site.ok.set( true );
                 }
@@ -128,53 +119,11 @@ public class OsmApiImporter
                     site.ok.set( false );
                 }
             }
-            catch (SchemaException | IOException | FactoryException e) {
+            catch (IOException e) {
                 site.ok.set( false );
                 exception = e;
             }
         }
-    }
-
-
-    private String getFilterString( List<Pair<String,String>> filters ) throws UnsupportedEncodingException {
-        if (filters.size() > 0 && !"*".equals( filters.get( 0 ).getKey() )) {
-            // TODO make encoding configurable?
-            return "&" + URLEncoder.encode( "node[" + Joiner.on( "|" ).join( filters ) + "]", "UTF-8" );
-        }
-        else {
-            return "";
-        }
-    }
-
-
-    private String getBBOXStr( CoordinateReferenceSystem crs ) throws UnsupportedEncodingException {
-        ReferencedEnvelope bbox = getBBOX( crs );
-        List<Double> values = Arrays.asList( bbox.getMinX(), bbox.getMaxX(), bbox.getMinY(), bbox.getMaxY() );
-        // TODO make encoding configurable?
-        return URLEncoder.encode( "bbox=" + Joiner.on( "," ).join( values ), "UTF-8" );
-    }
-
-
-    private ReferencedEnvelope getBBOX( CoordinateReferenceSystem crs ) {
-        return getPlagwitzBBOX( crs );
-    }
-
-
-    private ReferencedEnvelope getLeipzigBBOX( CoordinateReferenceSystem crs ) {
-        double minLon = 12.263489;
-        double maxLon = 51.28597;
-        double minLat = 12.453003;
-        double maxLat = 51.419764;
-        return new ReferencedEnvelope( minLon, maxLon, minLat, maxLat, crs );
-    }
-
-
-    private ReferencedEnvelope getPlagwitzBBOX( CoordinateReferenceSystem crs ) {
-        double minLon = 12.309451;
-        double maxLon = 51.320662;
-        double minLat = 12.348933;
-        double maxLat = 51.331309;
-        return new ReferencedEnvelope( minLon, maxLon, minLat, maxLat, crs );
     }
 
 

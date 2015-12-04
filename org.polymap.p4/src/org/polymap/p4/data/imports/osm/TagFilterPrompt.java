@@ -76,7 +76,7 @@ public class TagFilterPrompt {
                             star.add( "*" );
                             tags.put( "*", star );
                             try {
-                                tags.putAll( TagInfo.getStaticTags() );
+                                tags.putAll( TagStaticInfo.getStaticTags() );
                             }
                             catch (IOException e) {
                                 e.printStackTrace();
