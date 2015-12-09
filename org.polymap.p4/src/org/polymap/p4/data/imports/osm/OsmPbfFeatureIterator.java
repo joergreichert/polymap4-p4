@@ -93,7 +93,6 @@ class OsmPbfFeatureIterator
 
     private int                                   currentInputStreamPosition     = 0;
 
-
     public OsmPbfFeatureIterator( OsmPbfIterableFeatureCollection iterableFeatureCollection ) throws IOException {
         this.iterableFeatureCollection = iterableFeatureCollection;
         featureBuilder = new SimpleFeatureBuilder( iterableFeatureCollection.getSchema() );
@@ -115,6 +114,9 @@ class OsmPbfFeatureIterator
             }
             while (currentPrimitivegroupListIndex != -1) {
                 handlePrimitivegroupList( currentPrimitivegroupListIndex, countMode );
+                if (!countMode && currentLon != null) {
+                    return true;
+                }
             }
             while (currentInputStreamPosition != -1) {
                 handlePbfInputStream( countMode );
@@ -138,12 +140,14 @@ class OsmPbfFeatureIterator
         GeometryFactory gf = new GeometryFactory();
         Point point = gf.createPoint( new Coordinate( longitude, latitude ) );
         featureBuilder.add( point );
-        Map<String,String> attributes = currentTags;
+        Map<String,String> attributes = new HashMap<String,String>();
+        attributes.putAll( currentTags );
         iterableFeatureCollection.updateBBOX( longitude, latitude );
         for (String key : keys) {
             featureBuilder.add( attributes.get( key ) );
         }
         currentLon = null;
+        currentTags = null;
         if (!hasNext()) {
             complete();
         }
@@ -238,6 +242,7 @@ class OsmPbfFeatureIterator
                 contentData = ByteString.copyFrom( zlibDataBuffer );
             }
             handlePrimitiveBlock( countMode, contentData );
+            contentData = null;
         }
         else {
             input.skip( contentDataSize );
@@ -249,6 +254,7 @@ class OsmPbfFeatureIterator
     private void handlePrimitiveBlock( boolean countMode, ByteString contentData )
             throws InvalidProtocolBufferException, IOException {
         currentPrimblock = Osmformat.PrimitiveBlock.parseFrom( contentData );
+        contentData = null;
         StringTable stringTable = currentPrimblock.getStringtable();
         currentStrings = new String[stringTable.getSCount()];
         for (int i = 0; i < currentStrings.length; i++) {
@@ -268,10 +274,15 @@ class OsmPbfFeatureIterator
         for (int i = primitivegroupListIndex; i < groupList.size(); i++) {
             groupmessage = currentPrimblock.getPrimitivegroupList().get( i );
             if (groupmessage.hasDense()) {
-                currentTagIndex = 0;
+                currentTagIndex = currentNextDenseNodePosition == -1 ? 0 : currentTagIndex-1;
                 matches = handleDenseNodes( groupmessage.getDense(), currentNextDenseNodePosition, countMode );
                 if (matches) {
-                    currentPrimitivegroupListIndex = i;
+                    if(currentNextDenseNodePosition != -1) {
+                        currentPrimitivegroupListIndex = i;
+                    } else {
+                        currentPrimitivegroupListIndex = currentPrimitivegroupListIndex + 1 == groupList.size() ? -1
+                                : currentPrimitivegroupListIndex + 1;
+                    }
                     return;
                 }
             }
@@ -287,7 +298,7 @@ class OsmPbfFeatureIterator
         for (int i = nextDenseNodePosition; i < nodes.getIdCount(); i++) {
             matches = handleDenseNode( nodes, countMode, i );
             if (matches) {
-                break;
+                return true;
             }
         }
         return false;
