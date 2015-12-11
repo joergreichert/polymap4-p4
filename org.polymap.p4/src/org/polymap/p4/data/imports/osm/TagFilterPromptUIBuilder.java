@@ -17,19 +17,15 @@ package org.polymap.p4.data.imports.osm;
 import static org.polymap.core.ui.FormDataFactory.on;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.eclipse.jface.bindings.keys.KeyStroke;
-import org.eclipse.jface.fieldassist.ComboContentAdapter;
-import org.eclipse.jface.fieldassist.ContentProposalAdapter;
-import org.eclipse.jface.fieldassist.SimpleContentProposalProvider;
-import org.eclipse.jface.viewers.ComboViewer;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -37,10 +33,19 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+
+import org.eclipse.jface.bindings.keys.KeyStroke;
+import org.eclipse.jface.fieldassist.ComboContentAdapter;
+import org.eclipse.jface.fieldassist.ContentProposalAdapter;
+import org.eclipse.jface.fieldassist.SimpleContentProposalProvider;
+import org.eclipse.jface.viewers.ComboViewer;
+
 import org.polymap.core.ui.FormLayoutFactory;
+
+import org.polymap.rhei.batik.toolkit.IPanelToolkit;
+
 import org.polymap.p4.data.imports.ImporterPrompt;
 import org.polymap.p4.data.imports.ImporterPrompt.PromptUIBuilder;
-import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 
 /**
  * 
@@ -50,14 +55,16 @@ import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 public abstract class TagFilterPromptUIBuilder
         implements PromptUIBuilder {
 
-    private Combo keyList, valueList;
+    private Combo                         keyList, valueList;
+
     private SimpleContentProposalProvider valueProposalProvider;
+
 
     @Override
     public void createContents( ImporterPrompt prompt, Composite parent, IPanelToolkit tk ) {
         parent.setLayout( FormLayoutFactory.defaults().spacing( 0 ).create() );
 
-        Set<String> keys = listItems().keySet();
+        Collection<String> keys = keys();
         Pair<String,String> initiallySelectedItem = null;
         if (initiallySelectedItems().size() > 0) {
             initiallySelectedItem = initiallySelectedItems().get( 0 );
@@ -65,7 +72,7 @@ public abstract class TagFilterPromptUIBuilder
         else {
             initiallySelectedItem = Pair.of( "*", "*" );
         }
-        SortedSet<String> values = listItems().get( initiallySelectedItem.getKey() );
+        Collection<String> values = values(initiallySelectedItem.getKey());
         if (values == null) {
             values = new TreeSet<String>();
         }
@@ -75,23 +82,23 @@ public abstract class TagFilterPromptUIBuilder
         filterComposite.setLayout( FormLayoutFactory.defaults().spacing( 0 ).create() );
         Composite tagComposite = new Composite( filterComposite, SWT.NONE );
         tagComposite.setLayout( FormLayoutFactory.defaults().spacing( 0 ).create() );
-        Label tagLabel = on(new Label( tagComposite, SWT.NONE )).fill().noRight().noBottom().control();
+        Label tagLabel = on( new Label( tagComposite, SWT.NONE ) ).fill().noRight().noBottom().control();
         tagLabel.setText( "Tag:" );
-        keyList = on(createKeyFilter( tagComposite, keys.toArray( new String[keys.size()] ),
-                initiallySelectedItem.getKey() )).top( tagLabel, 5 ).width(150).noRight().control();
-        Label opLabel = on(new Label( filterComposite, SWT.NONE )).left( tagComposite, 10 ).noRight().bottom( 90 ).control();
+        keyList = on( createKeyFilter( tagComposite, keys.toArray( new String[keys.size()] ),
+                initiallySelectedItem.getKey() ) ).top( tagLabel, 5 ).width( 150 ).noRight().control();
+        Label opLabel = on( new Label( filterComposite, SWT.NONE ) ).left( tagComposite, 10 ).noRight().bottom( 90 )
+                .control();
         opLabel.setText( "=" );
-        Composite valueComposite = on(new Composite( filterComposite, SWT.NONE )).left( opLabel, 10 ).control();
+        Composite valueComposite = on( new Composite( filterComposite, SWT.NONE ) ).left( opLabel, 10 ).control();
         valueComposite.setLayout( FormLayoutFactory.defaults().spacing( 0 ).create() );
-        Label valueLabel = on(new Label( valueComposite, SWT.NONE )).noBottom().control();
+        Label valueLabel = on( new Label( valueComposite, SWT.NONE ) ).noBottom().control();
         valueLabel.setText( "Value:" );
-        valueList = on(createValueFilter( valueComposite, values.toArray( new String[values.size()] ),
-                initiallySelectedItem.getValue() )).top( valueLabel, 5 ).width(150).right( 100 ).control();
-        
+        valueList = on( createValueFilter( valueComposite, values.toArray( new String[values.size()] ),
+                initiallySelectedItem.getValue() ) ).top( valueLabel, 5 ).width( 150 ).right( 100 ).control();
 
         Composite buttonBar = new Composite( parent, SWT.NONE );
         buttonBar.setLayout( FormLayoutFactory.defaults().spacing( 0 ).create() );
-        
+
         org.eclipse.swt.widgets.List selectedFilters = on(
                 new org.eclipse.swt.widgets.List( parent, SWT.V_SCROLL ) )
                 .fill().top( buttonBar, 10 ).width( 250 ).height( 150 ).control();
@@ -101,7 +108,7 @@ public abstract class TagFilterPromptUIBuilder
             }
         }
 
-        Button addButton = on(new Button( buttonBar, SWT.NONE )).left(0).right(50).control();
+        Button addButton = on( new Button( buttonBar, SWT.NONE ) ).left( 0 ).right( 50 ).control();
         addButton.setText( "Add" );
         addButton.addSelectionListener( new SelectionAdapter() {
 
@@ -114,7 +121,7 @@ public abstract class TagFilterPromptUIBuilder
                 }
             }
         } );
-        Button removeButton = on(new Button( buttonBar, SWT.NONE )).left( addButton, 10 ).right( 100 ).control();
+        Button removeButton = on( new Button( buttonBar, SWT.NONE ) ).left( addButton, 10 ).right( 100 ).control();
         removeButton.setText( "Remove" );
         removeButton.setEnabled( false );
         removeButton.addSelectionListener( new SelectionAdapter() {
@@ -129,7 +136,7 @@ public abstract class TagFilterPromptUIBuilder
             }
         } );
         selectedFilters.addSelectionListener( new SelectionAdapter() {
-            
+
             @Override
             public void widgetSelected( SelectionEvent e ) {
                 removeButton.setEnabled( true );
@@ -160,14 +167,17 @@ public abstract class TagFilterPromptUIBuilder
         proposalProvider.setFiltering( true );
         proposalAdapter.setPropagateKeys( true );
         proposalAdapter.setProposalAcceptanceStyle( ContentProposalAdapter.PROPOSAL_REPLACE );
-        proposalAdapter.addContentProposalListener( prop -> handleKeySelection( prop.getContent() ));
+        proposalAdapter.addContentProposalListener( prop -> handleKeySelection( prop.getContent() ) );
         return keyList;
     }
 
-    private static final String LCL = "abcdefghijklmnopqrstuvwxyz";
-    private static final String UCL = LCL.toUpperCase();
+    private static final String LCL  = "abcdefghijklmnopqrstuvwxyz";
+
+    private static final String UCL  = LCL.toUpperCase();
+
     private static final String NUMS = "0123456789";
-    
+
+
     // this logic is from swt addons project
     static char[] getAutoactivationChars() {
 
@@ -177,6 +187,7 @@ public abstract class TagFilterPromptUIBuilder
         String allChars = LCL + UCL + NUMS + delete;
         return allChars.toCharArray();
     }
+
 
     static KeyStroke getActivationKeystroke() {
         KeyStroke instance = KeyStroke.getInstance(
@@ -234,7 +245,18 @@ public abstract class TagFilterPromptUIBuilder
     private String getSelectedItem( Combo combo ) {
         return combo.getItem( combo.getSelectionIndex() );
     }
-    
+
+
+    protected Collection<String> keys() {
+        return listItems().keySet();
+    }
+
+
+    protected Collection<String> values( String key ) {
+        return listItems().get( key );
+    }
+
+
     protected abstract SortedMap<String,SortedSet<String>> listItems();
 
 
@@ -244,5 +266,5 @@ public abstract class TagFilterPromptUIBuilder
     protected abstract void handleSelection( Pair<String,String> selectedItem );
 
 
-    protected abstract void handleUnselection( Pair<String,String> selectedItem );    
+    protected abstract void handleUnselection( Pair<String,String> selectedItem );
 }

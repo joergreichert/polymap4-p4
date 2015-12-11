@@ -45,6 +45,10 @@ class OsmXmlFeatureIterator
 
     private final OsmXmlIterator                  iterator;
 
+    private final int                             limit;
+
+    private int                                   index       = 0;
+
     private OsmNode                               currentNode = null;
 
     final List<String>                            keys;
@@ -52,8 +56,10 @@ class OsmXmlFeatureIterator
     private int                                   size        = -1;
 
 
-    public OsmXmlFeatureIterator( OsmXmlIterableFeatureCollection iterableFeatureCollection ) throws IOException {
+    public OsmXmlFeatureIterator( OsmXmlIterableFeatureCollection iterableFeatureCollection, int limit )
+            throws IOException {
         this.iterableFeatureCollection = iterableFeatureCollection;
+        this.limit = limit;
         featureBuilder = new SimpleFeatureBuilder( iterableFeatureCollection.getSchema() );
         keys = OsmXmlIterableFeatureCollection.getKeys( this.iterableFeatureCollection.getFilters() );
         input = this.iterableFeatureCollection.getUrl().openStream();
@@ -68,6 +74,9 @@ class OsmXmlFeatureIterator
 
 
     private boolean hasNext( boolean countMode ) {
+        if (limit >= 0 && index > limit) {
+            return false;
+        }
         if (!countMode && currentNode != null) {
             return true;
         }
@@ -91,6 +100,7 @@ class OsmXmlFeatureIterator
                 if (matches) {
                     if (!countMode) {
                         currentNode = node;
+                        index++;
                     }
                     return true;
                 }
@@ -140,7 +150,8 @@ class OsmXmlFeatureIterator
                 // (this is the current way) vs.
                 // one (API/file) request and then storing node objects while
                 // counting an reusing them when building feature
-                OsmXmlFeatureIterator osmFeatureIterator = new OsmXmlFeatureIterator( this.iterableFeatureCollection );
+                OsmXmlFeatureIterator osmFeatureIterator = new OsmXmlFeatureIterator( this.iterableFeatureCollection,
+                        -1 );
                 int count = 0;
                 while (osmFeatureIterator.hasNext( true )) {
                     count++;

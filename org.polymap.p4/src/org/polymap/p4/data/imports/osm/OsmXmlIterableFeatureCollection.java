@@ -58,9 +58,11 @@ public class OsmXmlIterableFeatureCollection
 
     private Exception                       exception           = null;
 
-    private List<OsmXmlFeatureIterator>        osmFeatureIterators = new ArrayList<OsmXmlFeatureIterator>();
+    private List<OsmXmlFeatureIterator>     osmFeatureIterators = new ArrayList<OsmXmlFeatureIterator>();
 
     private int                             size;
+
+    private int                             limit               = -1;
 
 
     public OsmXmlIterableFeatureCollection( String typeName, File file, List<Pair<String,String>> filters )
@@ -81,7 +83,7 @@ public class OsmXmlIterableFeatureCollection
     {
         super( getMemberType( typeName, getKeys( filters ) ) );
         this.url = url;
-        this.filters = new ArrayList<Pair<String,String>>();
+        this.filters = filters;
     }
 
 
@@ -104,7 +106,7 @@ public class OsmXmlIterableFeatureCollection
     @Override
     protected Iterator<SimpleFeature> openIterator() {
         try {
-            OsmXmlFeatureIterator osmFeatureIterator = new OsmXmlFeatureIterator( this );
+            OsmXmlFeatureIterator osmFeatureIterator = new OsmXmlFeatureIterator( this, limit );
             osmFeatureIterators.add( osmFeatureIterator );
             return osmFeatureIterator;
         }
@@ -197,5 +199,11 @@ public class OsmXmlIterableFeatureCollection
 
     public URL getUrl() {
         return url;
+    }
+
+
+    public void setLimit( int limit ) {
+        this.limit = limit;
+        this.size = limit;
     }
 }

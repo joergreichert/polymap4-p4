@@ -62,6 +62,8 @@ public class OsmPbfIterableFeatureCollection
 
     private int                             size;
 
+    private int                             limit               = -1;
+
 
     public OsmPbfIterableFeatureCollection( String typeName, File file, List<Pair<String,String>> filters )
             throws FileNotFoundException, MalformedURLException {
@@ -104,7 +106,7 @@ public class OsmPbfIterableFeatureCollection
     @Override
     protected Iterator<SimpleFeature> openIterator() {
         try {
-            OsmPbfFeatureIterator osmFeatureIterator = new OsmPbfFeatureIterator( this );
+            OsmPbfFeatureIterator osmFeatureIterator = new OsmPbfFeatureIterator( this, limit );
             osmFeatureIterators.add( osmFeatureIterator );
             return osmFeatureIterator;
         }
@@ -198,4 +200,10 @@ public class OsmPbfIterableFeatureCollection
     public URL getUrl() {
         return url;
     }
+
+
+    public void setLimit( int limit ) {
+        this.limit = limit;
+        this.size = limit;
+    }    
 }

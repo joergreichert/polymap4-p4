@@ -16,30 +16,41 @@ package org.polymap.p4.data.imports.osm;
 
 import static org.polymap.rhei.batik.app.SvgImageRegistryHelper.NORMAL24;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.Arrays;
-import java.util.List;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.swt.widgets.Composite;
 import org.geotools.feature.SchemaException;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+
+import org.apache.commons.lang3.tuple.Pair;
+
+import com.google.common.base.Joiner;
+import com.google.common.io.CharStreams;
+
+import org.eclipse.swt.widgets.Composite;
+
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.rap.json.JsonArray;
+import org.eclipse.rap.json.JsonObject;
+
+import org.polymap.rhei.batik.toolkit.IPanelToolkit;
+
 import org.polymap.p4.P4Plugin;
 import org.polymap.p4.data.imports.ContextOut;
 import org.polymap.p4.data.imports.Importer;
 import org.polymap.p4.data.imports.ImporterSite;
 import org.polymap.p4.data.imports.shapefile.ShpFeatureTableViewer;
-import org.polymap.rhei.batik.toolkit.IPanelToolkit;
-
-import com.google.common.base.Joiner;
 
 /**
  * @author Joerg Reichert <joerg@mapzone.io>
@@ -48,16 +59,20 @@ import com.google.common.base.Joiner;
 public class OsmApiImporter
         implements Importer {
 
+    private static int                        ELEMENT_PREVIEW_LIMIT = 100;
+
+    private static int                        ELEMENT_IMPORT_LIMIT  = 50000;
+
     @ContextOut
     protected OsmXmlIterableFeatureCollection features;
 
-    protected ImporterSite              site;
+    protected ImporterSite                    site;
 
-    private Exception                   exception;
+    private Exception                         exception;
 
-    private IPanelToolkit               toolkit;
+    private TagFilterPrompt                   tagPrompt;
 
-    private TagFilterPrompt             tagPrompt;
+    private int                               totalCount            = -1;
 
 
     /*
@@ -79,8 +94,8 @@ public class OsmApiImporter
      * , org.eclipse.core.runtime.IProgressMonitor)
      */
     @Override
-    public void init( ImporterSite site, IProgressMonitor monitor ) throws Exception {
-        this.site = site;
+    public void init( ImporterSite aSite, IProgressMonitor monitor ) throws Exception {
+        this.site = aSite;
 
         site.icon.set( P4Plugin.images().svgImage( "file-multiple.svg", NORMAL24 ) );
         site.summary.set( "OSM-Import" );
@@ -117,8 +132,24 @@ public class OsmApiImporter
                 // TODO get from currently visible map
                 String bboxStr = getBBOXStr( crs );
                 List<Pair<String,String>> tagFilters = tagPrompt.selection();
-                String filterStr = getFilterString( tagFilters );
-                URL url = new URL( "http://www.overpass-api.de/api/xapi?map?" + bboxStr + filterStr );
+                String tagFilterStr = getTagFilterString( tagFilters );
+                String filterStr = bboxStr.length() + tagFilterStr.length() > 0 ? "node" + tagFilterStr + bboxStr + ";"
+                        : "";
+                String baseURL = "http://www.overpass-api.de/api/interpreter?data=";
+                // TODO make encoding configurable?
+                URL countUrl = new URL( baseURL + URLEncoder.encode( "[out:json];" + filterStr + "out count;", "UTF-8" ) );
+                String countJSONString = CharStreams.toString( new InputStreamReader( countUrl.openStream(), "UTF-8" ) );
+                JsonObject root = JsonObject.readFrom( countJSONString );
+                JsonArray elements = (JsonArray)root.get( "elements" );
+                totalCount = Integer.valueOf( String.valueOf( ((JsonObject)((JsonObject)elements.get( 0 ))
+                        .get( "count" )).get( "nodes" ) ) );
+                if (totalCount > ELEMENT_IMPORT_LIMIT) {
+                    throw new IndexOutOfBoundsException( "Your query results in more than " + ELEMENT_IMPORT_LIMIT
+                            + " elements. Please select a smaller bounding box or refine your tag filters." );
+                }
+                int fetchCount = totalCount > ELEMENT_PREVIEW_LIMIT ? ELEMENT_PREVIEW_LIMIT : totalCount;
+                // TODO make encoding configurable?
+                URL url = new URL( baseURL + URLEncoder.encode( filterStr + "out " + fetchCount + ";", "UTF-8" ) );
                 features = new OsmXmlIterableFeatureCollection( "osm", url, tagFilters );
                 if (features.iterator().hasNext() && features.getException() == null) {
                     site.ok.set( true );
@@ -128,7 +159,7 @@ public class OsmApiImporter
                     site.ok.set( false );
                 }
             }
-            catch (SchemaException | IOException | FactoryException e) {
+            catch (SchemaException | IOException | FactoryException | IndexOutOfBoundsException e) {
                 site.ok.set( false );
                 exception = e;
             }
@@ -136,10 +167,31 @@ public class OsmApiImporter
     }
 
 
-    private String getFilterString( List<Pair<String,String>> filters ) throws UnsupportedEncodingException {
+    private String getTagFilterString( List<Pair<String,String>> filters ) throws UnsupportedEncodingException {
+        List<String> formattedFilters = filters.stream().filter( filter -> !"*".equals( filter.getKey() ) )
+                .map( filter -> {
+                    String filterStr;
+                    String keyStr;
+                    if ("".equals( filter.getKey() )) {
+                        keyStr = "~\"^$\"";
+                    }
+                        else {
+                            keyStr = "\"" + filter.getKey() + "\"";
+                        }
+                        if ("*".equals( filter.getValue() )) {
+                            filterStr = keyStr;
+                        }
+                        else if ("".equals( filter.getValue() )) {
+                            filterStr = keyStr + "~\"^$\"";
+                        }
+                        else {
+                            filterStr = keyStr + "=\"" + filter.getValue() + "\"";
+                        }
+                        return filterStr;
+                    } ).collect( Collectors.toList() );
+
         if (filters.size() > 0 && !"*".equals( filters.get( 0 ).getKey() )) {
-            // TODO make encoding configurable?
-            return "&" + URLEncoder.encode( "node[" + Joiner.on( "|" ).join( filters ) + "]", "UTF-8" );
+            return "[" + Joiner.on( "][" ).join( formattedFilters ) + "]";
         }
         else {
             return "";
@@ -149,21 +201,21 @@ public class OsmApiImporter
 
     private String getBBOXStr( CoordinateReferenceSystem crs ) throws UnsupportedEncodingException {
         ReferencedEnvelope bbox = getBBOX( crs );
-        List<Double> values = Arrays.asList( bbox.getMinX(), bbox.getMaxX(), bbox.getMinY(), bbox.getMaxY() );
-        // TODO make encoding configurable?
-        return URLEncoder.encode( "bbox=" + Joiner.on( "," ).join( values ), "UTF-8" );
+        List<Double> values = Arrays.asList( bbox.getMinY(), bbox.getMinX(), bbox.getMaxY(), bbox.getMaxX() );
+        return "(" + Joiner.on( "," ).join( values ) + ")";
     }
 
 
     private ReferencedEnvelope getBBOX( CoordinateReferenceSystem crs ) {
+        // TODO: use map preview in prompt (or in preview?) as BBOX input
         return getPlagwitzBBOX( crs );
     }
 
 
     private ReferencedEnvelope getLeipzigBBOX( CoordinateReferenceSystem crs ) {
         double minLon = 12.263489;
-        double maxLon = 51.28597;
-        double minLat = 12.453003;
+        double maxLon = 12.453003;
+        double minLat = 51.28597;
         double maxLat = 51.419764;
         return new ReferencedEnvelope( minLon, maxLon, minLat, maxLat, crs );
     }
@@ -171,8 +223,8 @@ public class OsmApiImporter
 
     private ReferencedEnvelope getPlagwitzBBOX( CoordinateReferenceSystem crs ) {
         double minLon = 12.309451;
-        double maxLon = 51.320662;
-        double minLat = 12.348933;
+        double maxLon = 12.348933;
+        double minLat = 51.320662;
         double maxLat = 51.331309;
         return new ReferencedEnvelope( minLon, maxLon, minLat, maxLat, crs );
     }
@@ -195,6 +247,11 @@ public class OsmApiImporter
             else {
                 SimpleFeatureType schema = (SimpleFeatureType)features.getSchema();
                 ShpFeatureTableViewer table = new ShpFeatureTableViewer( parent, schema );
+                if (totalCount > ELEMENT_PREVIEW_LIMIT) {
+                    toolkit.createFlowText( parent, "\nShowing " + ELEMENT_PREVIEW_LIMIT + " items of totally found "
+                            + totalCount + " elements." );
+                    features.setLimit( ELEMENT_PREVIEW_LIMIT );
+                }
                 table.setContentProvider( new FeatureLazyContentProvider( features ) );
                 table.setInput( features );
             }
@@ -216,5 +273,8 @@ public class OsmApiImporter
     public void execute( IProgressMonitor monitor ) throws Exception {
         // create all params for contextOut
         // all is done in verify
+        if (totalCount > ELEMENT_IMPORT_LIMIT) {
+            features.setLimit( ELEMENT_IMPORT_LIMIT );
+        }
     }
 }

@@ -65,6 +65,10 @@ class OsmPbfFeatureIterator
 
     final List<String>                            keys;
 
+    private final int                             limit;
+
+    private int                                   index       = 0;
+
     private Double                                currentLon                     = null;
 
     private Double                                currentLat                     = null;
@@ -93,8 +97,9 @@ class OsmPbfFeatureIterator
 
     private int                                   currentInputStreamPosition     = 0;
 
-    public OsmPbfFeatureIterator( OsmPbfIterableFeatureCollection iterableFeatureCollection ) throws IOException {
+    public OsmPbfFeatureIterator( OsmPbfIterableFeatureCollection iterableFeatureCollection, int limit ) throws IOException {
         this.iterableFeatureCollection = iterableFeatureCollection;
+        this.limit = limit;
         featureBuilder = new SimpleFeatureBuilder( iterableFeatureCollection.getSchema() );
         keys = OsmPbfIterableFeatureCollection.getKeys( this.iterableFeatureCollection.getFilters() );
         input = this.iterableFeatureCollection.getUrl().openStream();
@@ -108,6 +113,9 @@ class OsmPbfFeatureIterator
 
 
     private boolean hasNext( boolean countMode ) {
+        if (limit >= 0 && index > limit) {
+            return false;
+        }
         try {
             if (!countMode && currentLon != null) {
                 return true;
@@ -173,7 +181,7 @@ class OsmPbfFeatureIterator
                 // (this is the current way) vs.
                 // one (API/file) request and then storing node objects while
                 // counting an reusing them when building feature
-                OsmPbfFeatureIterator osmFeatureIterator = new OsmPbfFeatureIterator( this.iterableFeatureCollection );
+                OsmPbfFeatureIterator osmFeatureIterator = new OsmPbfFeatureIterator( this.iterableFeatureCollection, -1 );
                 int count = 0;
                 while (osmFeatureIterator.hasNext( true )) {
                     count++;
@@ -336,6 +344,7 @@ class OsmPbfFeatureIterator
                 currentLon = parseLat( nodes.getLon( denseNodesIndex ) );
                 currentTags = tagMap;
                 currentNextDenseNodePosition = denseNodesIndex >= nodes.getIdCount() ? -1 : denseNodesIndex + 1;
+                index++;
             }
             return true;
         }
