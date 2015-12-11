@@ -87,8 +87,8 @@ public class ImporterContext
             CSVFileImporterFactory.class, 
             ExcelFileImporterFactory.class,
             OsmApiImporterFactory.class,
-            OsmXmlFileImporterFactory.class,
-            OsmPbfFileImporterFactory.class,
+//            OsmXmlFileImporterFactory.class,
+//            OsmPbfFileImporterFactory.class,
             ShpImporterFactory.class,
             WmsImporterFactory.class };
     

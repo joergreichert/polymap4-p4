@@ -52,12 +52,12 @@ public class OsmXmlFileImporterFactory
     }
 
 
-    private boolean isSupported(File file) {
-        if (file == null) {
+    private boolean isSupported(File f) {
+        if (f == null) {
             return false;
         }
         for (String type : supportedTypes) {
-            if (file.getName().toLowerCase().endsWith( type )) {
+            if (f.getName().toLowerCase().endsWith( type )) {
                 return true;
             }
         }

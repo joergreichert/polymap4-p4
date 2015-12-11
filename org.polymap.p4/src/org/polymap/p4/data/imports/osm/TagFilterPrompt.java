@@ -12,9 +12,7 @@
  */
 package org.polymap.p4.data.imports.osm;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -22,14 +20,17 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import java.io.IOException;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import com.google.common.base.Joiner;
+
 import org.polymap.p4.data.imports.ImporterPrompt;
 import org.polymap.p4.data.imports.ImporterPrompt.Severity;
 import org.polymap.p4.data.imports.ImporterSite;
-
-import com.google.common.base.Joiner;
 
 /**
  * 
@@ -38,19 +39,25 @@ import com.google.common.base.Joiner;
  */
 public class TagFilterPrompt {
 
-    private static Log                       log       = LogFactory.getLog( TagFilterPrompt.class );
+    private static Log                       log     = LogFactory.getLog( TagFilterPrompt.class );
 
-    private static List<Pair<String,String>> DEFAULT   = new ArrayList<Pair<String,String>>();
+    private static List<Pair<String,String>> DEFAULT = new ArrayList<Pair<String,String>>();
 
     private ImporterSite                     site;
 
-    private List<Pair<String,String>>        selection = DEFAULT;
+    private List<Pair<String,String>>        selection;
 
     private final ImporterPrompt             prompt;
+
+    static {
+        DEFAULT.add( Pair.of( "name", "*" ) );
+    }
 
 
     public TagFilterPrompt( ImporterSite site ) {
         this.site = site;
+        selection = new ArrayList<Pair<String,String>>();
+        selection.addAll( DEFAULT );
 
         prompt = site.newPrompt( "tagFilter" ).summary.put( "Tag filter" ).description
                 .put( "Filters features by their tags" ).value
@@ -58,13 +65,15 @@ public class TagFilterPrompt {
                 .put( Severity.REQUIRED ).ok.put( false ).
                 extendedUI.put( new TagFilterPromptUIBuilder() {
 
+                    private java.util.Collection<String>        keys = null;
+
                     private SortedMap<String,SortedSet<String>> tags = null;
 
 
                     @Override
-                    public void submit( ImporterPrompt prompt ) {
-                        prompt.value.put( getReadable() );
-                        prompt.ok.set( true );
+                    public void submit( ImporterPrompt ip ) {
+                        ip.value.put( getReadable() );
+                        ip.ok.set( true );
                     }
 
 
@@ -88,9 +97,6 @@ public class TagFilterPrompt {
 
                     @Override
                     protected List<Pair<String,String>> initiallySelectedItems() {
-                        if (selection.isEmpty()) {
-                            return Arrays.asList( Pair.of( "*", "*" ) );
-                        }
                         return selection;
                     }
 

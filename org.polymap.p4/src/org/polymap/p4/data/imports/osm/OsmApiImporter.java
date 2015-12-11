@@ -30,7 +30,6 @@ import org.geotools.feature.SchemaException;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -69,6 +68,8 @@ public class OsmApiImporter
     protected ImporterSite                    site;
 
     private Exception                         exception;
+
+    private BBOXPrompt                        bboxPrompt;
 
     private TagFilterPrompt                   tagPrompt;
 
@@ -113,6 +114,9 @@ public class OsmApiImporter
      */
     @Override
     public void createPrompts( IProgressMonitor monitor ) throws Exception {
+        // TODO get from CRS Prompt (not yet merged to master)
+        CoordinateReferenceSystem crs = CRS.decode( "EPSG:4326" );
+        bboxPrompt = new BBOXPrompt( site, crs );
         tagPrompt = new TagFilterPrompt( site );
     }
 
@@ -127,10 +131,7 @@ public class OsmApiImporter
     public void verify( IProgressMonitor monitor ) {
         if (tagPrompt.isOk()) {
             try {
-                // TODO get from CRS Prompt (not yet merged to master)
-                CoordinateReferenceSystem crs = CRS.decode( "EPSG:4326" );
-                // TODO get from currently visible map
-                String bboxStr = getBBOXStr( crs );
+                String bboxStr = getBBOXStr( bboxPrompt.selection() );
                 List<Pair<String,String>> tagFilters = tagPrompt.selection();
                 String tagFilterStr = getTagFilterString( tagFilters );
                 String filterStr = bboxStr.length() + tagFilterStr.length() > 0 ? "node" + tagFilterStr + bboxStr + ";"
@@ -159,7 +160,7 @@ public class OsmApiImporter
                     site.ok.set( false );
                 }
             }
-            catch (SchemaException | IOException | FactoryException | IndexOutOfBoundsException e) {
+            catch (SchemaException | IOException | IndexOutOfBoundsException e) {
                 site.ok.set( false );
                 exception = e;
             }
@@ -199,34 +200,9 @@ public class OsmApiImporter
     }
 
 
-    private String getBBOXStr( CoordinateReferenceSystem crs ) throws UnsupportedEncodingException {
-        ReferencedEnvelope bbox = getBBOX( crs );
+    private String getBBOXStr( ReferencedEnvelope bbox ) throws UnsupportedEncodingException {
         List<Double> values = Arrays.asList( bbox.getMinY(), bbox.getMinX(), bbox.getMaxY(), bbox.getMaxX() );
         return "(" + Joiner.on( "," ).join( values ) + ")";
-    }
-
-
-    private ReferencedEnvelope getBBOX( CoordinateReferenceSystem crs ) {
-        // TODO: use map preview in prompt (or in preview?) as BBOX input
-        return getPlagwitzBBOX( crs );
-    }
-
-
-    private ReferencedEnvelope getLeipzigBBOX( CoordinateReferenceSystem crs ) {
-        double minLon = 12.263489;
-        double maxLon = 12.453003;
-        double minLat = 51.28597;
-        double maxLat = 51.419764;
-        return new ReferencedEnvelope( minLon, maxLon, minLat, maxLat, crs );
-    }
-
-
-    private ReferencedEnvelope getPlagwitzBBOX( CoordinateReferenceSystem crs ) {
-        double minLon = 12.309451;
-        double maxLon = 12.348933;
-        double minLat = 51.320662;
-        double maxLat = 51.331309;
-        return new ReferencedEnvelope( minLon, maxLon, minLat, maxLat, crs );
     }
 
 

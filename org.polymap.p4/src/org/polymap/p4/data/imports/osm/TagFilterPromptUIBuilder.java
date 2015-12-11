@@ -66,10 +66,9 @@ public abstract class TagFilterPromptUIBuilder
 
         Collection<String> keys = keys();
         Pair<String,String> initiallySelectedItem = null;
-        if (initiallySelectedItems().size() > 0) {
-            initiallySelectedItem = initiallySelectedItems().get( 0 );
-        }
-        else {
+        if(!keys.isEmpty()) {
+            initiallySelectedItem = Pair.of( keys.iterator().next(), "*" );
+        } else {
             initiallySelectedItem = Pair.of( "*", "*" );
         }
         Collection<String> values = values(initiallySelectedItem.getKey());
@@ -153,13 +152,13 @@ public abstract class TagFilterPromptUIBuilder
     private Combo createKeyFilter( Composite filterComposite, String[] listItems, String initiallySelectedItem ) {
 
         ComboViewer comboViewer = new ComboViewer( filterComposite, SWT.DROP_DOWN );
-        Combo keyList = comboViewer.getCombo();
-        keyList.setItems( listItems );
-        keyList.select( Arrays.asList( listItems ).indexOf( initiallySelectedItem ) );
+        Combo keys = comboViewer.getCombo();
+        keys.setItems( listItems );
+        keys.select( Arrays.asList( listItems ).indexOf( initiallySelectedItem ) );
 
-        SimpleContentProposalProvider proposalProvider = new SimpleContentProposalProvider( keyList.getItems() );
+        SimpleContentProposalProvider proposalProvider = new SimpleContentProposalProvider( keys.getItems() );
         ContentProposalAdapter proposalAdapter = new ContentProposalAdapter(
-                keyList,
+                keys,
                 new ComboContentAdapter(),
                 proposalProvider,
                 getActivationKeystroke(),
@@ -168,7 +167,7 @@ public abstract class TagFilterPromptUIBuilder
         proposalAdapter.setPropagateKeys( true );
         proposalAdapter.setProposalAcceptanceStyle( ContentProposalAdapter.PROPOSAL_REPLACE );
         proposalAdapter.addContentProposalListener( prop -> handleKeySelection( prop.getContent() ) );
-        return keyList;
+        return keys;
     }
 
     private static final String LCL  = "abcdefghijklmnopqrstuvwxyz";
@@ -198,13 +197,13 @@ public abstract class TagFilterPromptUIBuilder
 
     private Combo createValueFilter( Composite filterComposite, String[] listItems, String initiallySelectedItem ) {
         ComboViewer comboViewer = new ComboViewer( filterComposite, SWT.DROP_DOWN );
-        Combo valueList = comboViewer.getCombo();
-        valueList.setItems( listItems );
-        valueList.select( Arrays.asList( listItems ).indexOf( initiallySelectedItem ) );
+        Combo values = comboViewer.getCombo();
+        values.setItems( listItems );
+        values.select( Arrays.asList( listItems ).indexOf( initiallySelectedItem ) );
 
         valueProposalProvider = new SimpleContentProposalProvider( listItems );
         ContentProposalAdapter proposalAdapter = new ContentProposalAdapter(
-                valueList,
+                values,
                 new ComboContentAdapter(),
                 valueProposalProvider,
                 getActivationKeystroke(),
@@ -212,7 +211,7 @@ public abstract class TagFilterPromptUIBuilder
         valueProposalProvider.setFiltering( true );
         proposalAdapter.setPropagateKeys( true );
         proposalAdapter.setProposalAcceptanceStyle( ContentProposalAdapter.PROPOSAL_REPLACE );
-        return valueList;
+        return values;
     }
 
 
@@ -222,8 +221,7 @@ public abstract class TagFilterPromptUIBuilder
         for (String value : listItems().get( selectedItem )) {
             valueList.add( value );
         }
-        valueList.select( 0 );
-        valueList.setText( "" );
+        valueList.setText( "*" );
         valueProposalProvider.setProposals( valueList.getItems() );
     }
 
